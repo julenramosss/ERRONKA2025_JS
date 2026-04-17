@@ -14,8 +14,22 @@ function jsonResponse(body: unknown, status: number): Response {
 }
 
 export const res = {
-  ok<T>(data: T): Response {
-    return jsonResponse(data, 200);
+  ok<T>(
+    data: T,
+    cookies?: { name: string; value: string; httpOnly?: boolean }[]
+  ): Response {
+    const response = new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (cookies) {
+      cookies.forEach(({ name, value, httpOnly = false }) => {
+        const cookieStr = `${name}=${value}; Path=/; ${httpOnly ? "HttpOnly; " : ""}SameSite=Strict`;
+        response.headers.append("Set-Cookie", cookieStr);
+      });
+    }
+    return response;
   },
   created<T>(data: T): Response {
     return jsonResponse(data, 201);
@@ -44,8 +58,10 @@ export const res = {
 };
 
 export function handleError(tag: string, error: unknown): Response {
-  if (error instanceof ValidationError) return res.validationError(error.message);
-  if (error instanceof UnauthorizedError) return res.unauthorized(error.message);
+  if (error instanceof ValidationError)
+    return res.validationError(error.message);
+  if (error instanceof UnauthorizedError)
+    return res.unauthorized(error.message);
   if (error instanceof ForbiddenError) return res.forbidden(error.message);
   if (error instanceof NotFoundError) return res.notFound(error.message);
   if (error instanceof ConflictError) return res.conflict(error.message);

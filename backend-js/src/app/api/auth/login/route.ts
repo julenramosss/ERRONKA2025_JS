@@ -7,7 +7,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const dto = validateLoginDto(body);
     const result = await loginService(dto);
-    return res.ok(result);
+    const { refresh_token, ...responseBody } = result;
+    return res.ok(responseBody, [
+      { name: "refresh_token", value: refresh_token, httpOnly: true },
+    ]);
   } catch (error) {
     return handleError("[POST /api/auth/login]", error);
   }

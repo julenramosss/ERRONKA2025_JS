@@ -3,7 +3,9 @@ export const mysql_password = process.env.MYSQL_PASSWORD;
 export const mysql_host = process.env.MYSQL_HOST;
 export const mysql_database = process.env.MYSQL_DATABASE;
 
-export const jwt_secret = process.env.JWT_SECRET ?? "dev-secret-change-me";
+export const jwt_secret =
+  process.env.JWT_SECRET ??
+  "kjhaf7ya(/SFYAOUhf98ya9fya(SYf9a8fY)8sfyf08=A)uf98UF98U)OAIfu98af98u";
 export const jwt_access_expires_in = process.env.JWT_ACCESS_EXPIRES_IN ?? "15m";
 export const jwt_refresh_expires_days = Number(
   process.env.JWT_REFRESH_EXPIRES_DAYS ?? 7
