@@ -4,12 +4,11 @@ import { ResultSetHeader } from "mysql2";
 export async function revokeRefreshToken(
   token: string,
   userId: number
-): Promise<number> {
+): Promise<void> {
   const db = await connect();
-  const [result] = await db.execute<ResultSetHeader>(
+  await db.execute<ResultSetHeader>(
     `UPDATE tokens SET revoked = TRUE
      WHERE token = ? AND type = 'refresh_token' AND user_id = ?`,
     [token, userId]
   );
-  return result.affectedRows;
 }

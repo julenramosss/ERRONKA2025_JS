@@ -8,7 +8,7 @@ export async function createUserService(
   dto: CreateUserDto
 ): Promise<CreateUserResponse> {
   if (await findUserByEmail(dto.email)) {
-    throw new ConflictError("Erabiltzailea dagoeneko existitzen da");
+    throw new ConflictError("A user with this email already exists");
   }
 
   const passwordHash = await encryptPwd(default_user_password);

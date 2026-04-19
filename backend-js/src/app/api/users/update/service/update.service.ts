@@ -11,16 +11,22 @@ export async function updateUserService(
   dto: UpdateUserDto
 ): Promise<UpdateUserResponse> {
   if (!(await existsUser(dto.id))) {
-    throw new NotFoundError("Erabiltzailea ez da aurkitu");
+    throw new NotFoundError("User not found");
   }
 
-  if (dto.email && (await emailTakenByOther(dto.email, dto.id))) {
-    throw new ConflictError("Email hori beste erabiltzaile batek erabiltzen du");
+  if (dto.user.email && (await emailTakenByOther(dto.user.email, dto.id))) {
+    throw new ConflictError("This email is already in use by another user");
   }
 
-  await updateUser(dto.id, { name: dto.name, email: dto.email });
+  await updateUser(dto.id, dto.user);
   const updated = await selectUpdatedUser(dto.id);
-  if (!updated) throw new NotFoundError("Erabiltzailea ez da aurkitu");
+  if (!updated) throw new NotFoundError("User not found");
 
-  return { id: updated.id, name: updated.name, email: updated.email };
+  return {
+    id: updated.id,
+    name: updated.name,
+    email: updated.email,
+    role: updated.role,
+    is_active: Boolean(updated.is_active),
+  };
 }

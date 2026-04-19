@@ -1,13 +1,14 @@
 import { ValidationError } from "@/app/lib/errors";
+import { isString } from "@/app/lib/dto";
 import { RefreshDto } from "../types";
 
 export function validateRefreshDto(body: unknown): RefreshDto {
   if (!body || typeof body !== "object") {
-    throw new ValidationError("Cuerpo de solicitud inválido");
+    throw new ValidationError("Invalid request body");
   }
   const { refresh_token } = body as Record<string, unknown>;
-  if (!refresh_token || typeof refresh_token !== "string") {
-    throw new ValidationError("refresh_token beharrezkoa da");
+  if (!isString(refresh_token)) {
+    throw new ValidationError("refresh_token is required");
   }
-  return { refresh_token };
+  return { refresh_token: refresh_token as string };
 }

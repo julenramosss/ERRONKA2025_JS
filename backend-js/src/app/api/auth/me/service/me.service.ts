@@ -4,7 +4,7 @@ import { MeResponse } from "../types";
 
 export async function meService(userId: number): Promise<MeResponse> {
   const row = await findUserById(userId);
-  if (!row) throw new NotFoundError("Erabiltzailea ez da aurkitu");
+  if (!row) throw new NotFoundError("User not found");
   return {
     id: row.id,
     name: row.name,

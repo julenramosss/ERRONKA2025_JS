@@ -247,7 +247,7 @@ export interface OptimizedRoute {
 export const mapsService = {
   async optimizeRoute(
     origin: { lat: number; lng: number },
-    stops: RouteStop[]
+    stops: RouteStop[],
   ): Promise<OptimizedRoute> {
     // TODO: llamada a https://maps.googleapis.com/maps/api/directions/json con waypoints optimize:true
     console.log("[stub] optimizeRoute", { origin, stopsCount: stops.length });

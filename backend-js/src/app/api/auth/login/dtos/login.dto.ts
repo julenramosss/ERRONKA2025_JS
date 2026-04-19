@@ -1,18 +1,21 @@
 import { ValidationError } from "@/app/lib/errors";
+import { isEmail, isString } from "@/app/lib/dto";
 import { LoginDto } from "../types";
 
 export function validateLoginDto(body: unknown): LoginDto {
   if (!body || typeof body !== "object") {
-    throw new ValidationError("Ezin da eskaera gorputza analizatu");
+    throw new ValidationError("Invalid request body");
   }
 
   const { email, password } = body as Record<string, unknown>;
-  if (!email || typeof email !== "string" || !email.includes("@")) {
-    throw new ValidationError("email ez da baliozkoa");
+  if (!isEmail(email)) {
+    throw new ValidationError(
+      "email is required and must be a valid email address"
+    );
   }
 
-  if (!password || typeof password !== "string") {
-    throw new ValidationError("password beharrezkoa da");
+  if (!isString(password)) {
+    throw new ValidationError("password is required");
   }
-  return { email, password };
+  return { email: email as string, password: password as string };
 }

@@ -1,23 +1,33 @@
 import { ValidationError } from "@/app/lib/errors";
+import { isEmail, isString, isUserRole } from "@/app/lib/dto";
+import { UserRole } from "@/app/types";
 import { CreateUserDto } from "../types";
 
 export function validateCreateUserDto(body: unknown): CreateUserDto {
   if (!body || typeof body !== "object") {
-    throw new ValidationError("Cuerpo de solicitud inválido");
+    throw new ValidationError("Invalid request body");
   }
 
   const { name, email, role } = body as Record<string, unknown>;
 
-  if (!name || typeof name !== "string")
-    throw new ValidationError("name ez dago edo ez da string");
-
-  if (!email || typeof email !== "string" || !email.includes("@"))
-    throw new ValidationError("email ez da baliozko helbide elektronikoa");
-
-  if (role !== "admin" && role !== "distributor")
+  if (!isString(name))
     throw new ValidationError(
-      "role ez da baliozko balioa (admin edo distributor izan behar du)"
+      "name is required and must be a non-empty string"
     );
 
-  return { name, email, role };
+  if (!isEmail(email))
+    throw new ValidationError(
+      "email is required and must be a valid email address"
+    );
+
+  if (!isUserRole(role))
+    throw new ValidationError(
+      "role is required and must be one of: admin, distributor"
+    );
+
+  return {
+    name: name as string,
+    email: email as string,
+    role: role as UserRole,
+  };
 }

@@ -1,4 +1,4 @@
-import { UserRole } from "@/app/lib/jwt";
+import { UserRole } from "@/app/types";
 
 export interface GetUserByIdDto {
   id: number;

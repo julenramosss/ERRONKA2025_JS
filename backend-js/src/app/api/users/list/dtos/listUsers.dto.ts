@@ -1,23 +1,23 @@
 import { ValidationError } from "@/app/lib/errors";
+import { isUserRole } from "@/app/lib/dto";
 import { UserListFilters } from "../types";
+import { UserRole } from "@/app/types";
 
-export function validateListUsersDto(
-  params: URLSearchParams
-): UserListFilters {
+export function validateListUsersDto(params: URLSearchParams): UserListFilters {
   const filters: UserListFilters = {};
 
   const role = params.get("role");
   if (role !== null) {
-    if (role !== "admin" && role !== "distributor") {
-      throw new ValidationError("role ez da baliozkoa");
+    if (!isUserRole(role)) {
+      throw new ValidationError("role must be one of: admin, distributor");
     }
-    filters.role = role;
+    filters.role = role as UserRole;
   }
 
   const isActive = params.get("is_active");
   if (isActive !== null) {
     if (isActive !== "true" && isActive !== "false") {
-      throw new ValidationError("is_active 'true' edo 'false' izan behar du");
+      throw new ValidationError("is_active must be 'true' or 'false'");
     }
     filters.is_active = isActive === "true";
   }

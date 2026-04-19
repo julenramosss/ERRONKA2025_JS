@@ -59,7 +59,6 @@ CREATE TABLE packages (
   tracking_code       VARCHAR(50)     NOT NULL UNIQUE,   -- kode laburra (ej. PAK-20260001)
   recipient_name      VARCHAR(150)    NOT NULL,
   recipient_email     VARCHAR(255)    NOT NULL,
-  recipient_phone     VARCHAR(30)     NULL,
   weight_kg           DECIMAL(6, 3)   NOT NULL,
   description         TEXT            NULL,
   status              ENUM(
@@ -87,14 +86,14 @@ CREATE TABLE packages (
 CREATE TABLE tokens (
   id          INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   token       VARCHAR(512)    NOT NULL UNIQUE,
-  type        ENUM('refresh_token', 'tracking') NOT NULL,
+  type        ENUM('refresh_token', 'tracking_token', 'reset_pwd_token') NOT NULL,
   user_id     INT UNSIGNED    NULL,       -- refresh_token motarako (beteta)
   package_id  INT UNSIGNED    NULL,       -- tracking motarako (beteta)
   expires_at  TIMESTAMP       NOT NULL,
   revoked     BOOLEAN         NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT fk_tokens_user    FOREIGN KEY (user_id)    REFERENCES users (id)    ON DELETE CASCADE,
+  CONSTRAINT fk_tokens_user FOREIGN KEY (user_id)    REFERENCES users (id)    ON DELETE CASCADE,
   CONSTRAINT fk_tokens_package FOREIGN KEY (package_id) REFERENCES packages (id) ON DELETE CASCADE
 );
 

@@ -7,17 +7,22 @@ import { LoginDto, LoginResponse } from "../types";
 import {
   findUserByEmailForAuth,
   insertRefreshToken,
-} from "../repository/login.repository";
+} from "../repository/login.repo";
 
 export async function loginService(dto: LoginDto): Promise<LoginResponse> {
+  // bcrypt hash for "password"
+  const DUMMY_HASH = "$2b$10$CwTycUXWue0Thq9StjUM0uJ8GryuV1i5H2Tt3yqS8FhYg7vDq";
   const user = await findUserByEmailForAuth(dto.email);
-  if (!user) throw new UnauthorizedError("Kredentzialak ez dira zuzenak");
+  if (!user) {
+    await verifyPassword(dto.password, DUMMY_HASH);
+    throw new UnauthorizedError("Invalid credentials");
+  }
 
   const ok = await verifyPassword(dto.password, user.password_hash);
-  if (!ok) throw new UnauthorizedError("Kredentzialak ez dira zuzenak");
+  if (!ok) throw new UnauthorizedError("Invalid credentials");
 
   if (!user.is_active) {
-    throw new ForbiddenError("Erabiltzailea desaktibatuta dago");
+    throw new ForbiddenError("User account is disabled");
   }
 
   const access_token = signAccessToken({

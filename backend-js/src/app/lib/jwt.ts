@@ -1,14 +1,8 @@
 import jwt, { SignOptions } from "jsonwebtoken";
 import { jwt_access_expires_in, jwt_secret } from "@/app/config/envConfig";
 import { UnauthorizedError, ForbiddenError } from "./errors";
-
-export type UserRole = "admin" | "distributor";
-
-export interface AccessTokenPayload {
-  sub: number;
-  email: string;
-  role: UserRole;
-}
+import { USER_ROLES, UserRole } from "@/app/types";
+import { AccessTokenPayload } from "./types";
 
 export function signAccessToken(payload: AccessTokenPayload): string {
   const options: SignOptions = {
@@ -21,7 +15,7 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
   try {
     const decoded = jwt.verify(token, jwt_secret);
     if (typeof decoded === "string") {
-      throw new UnauthorizedError("Token baliogabea");
+      throw new UnauthorizedError("Invalid token");
     }
     const { sub, email, role } = decoded as jwt.JwtPayload & {
       email?: unknown;
@@ -30,24 +24,24 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
     if (
       typeof sub !== "number" ||
       typeof email !== "string" ||
-      (role !== "admin" && role !== "distributor")
+      !Object.values(USER_ROLES).includes(role as UserRole)
     ) {
-      throw new UnauthorizedError("Token baliogabea");
+      throw new UnauthorizedError("Invalid token");
     }
-    return { sub, email, role };
+    return { sub, email, role: role as UserRole };
   } catch (error) {
     if (error instanceof UnauthorizedError) throw error;
-    throw new UnauthorizedError("Token baliogabea edo iraungita");
+    throw new UnauthorizedError("Invalid or expired token");
   }
 }
 
 export function extractBearerToken(req: Request): string {
   const header =
     req.headers.get("authorization") ?? req.headers.get("Authorization");
-  if (!header) throw new UnauthorizedError("Authorization goiburua falta da");
+  if (!header) throw new UnauthorizedError("Authorization header is missing");
   const [scheme, token] = header.split(" ");
   if (scheme !== "Bearer" || !token) {
-    throw new UnauthorizedError("Bearer token formatu okerra");
+    throw new UnauthorizedError("Invalid Bearer token format");
   }
   return token;
 }
@@ -59,7 +53,9 @@ export function requireAuth(
   const token = extractBearerToken(req);
   const payload = verifyAccessToken(token);
   if (allowedRoles && !allowedRoles.includes(payload.role)) {
-    throw new ForbiddenError("Baimenik ez baliabide honetarako");
+    throw new ForbiddenError(
+      "You do not have permission to access this resource"
+    );
   }
   return payload;
 }

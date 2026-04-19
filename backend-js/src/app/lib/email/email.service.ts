@@ -1,38 +1,97 @@
-// TODO: implementar con nodemailer + Resend/SendGrid
+import { resendClient } from "./resend.config";
+import { packageInTransitTemplate } from "./templates/packageInTransit.template";
+import { packageDeliveredTemplate } from "./templates/packageDelivered.template";
+import { packageAssignedTemplate } from "./templates/packageAssigned.template";
+import { packageFailedEmailTemplate } from "./templates/packageFailed.template";
+import { packagePendingTemplate } from "./templates/packagePending.template";
+import { passwordChangeEmailTemplate } from "./templates/passwordChangeEmail.template";
+import {
+  DeliveredEmailParams,
+  FailedEmailParams,
+  InTransitEmailParams,
+  PendingEmailParams,
+  ResetPasswordEmailParams,
+  TrackingEmailParams,
+} from "./types";
 
-export interface TrackingEmailParams {
-  to: string;
-  recipientName: string;
-  trackingCode: string;
-  trackingUrl: string;
-}
-
-export interface InTransitEmailParams {
-  to: string;
-  recipientName: string;
-  distributorName: string;
-  estimatedDelivery: string;
-}
-
-export interface DeliveredEmailParams {
-  to: string;
-  recipientName: string;
-  deliveredAt: string;
-}
+const FROM = "PakAG <no-reply@tolosaerronka.es>";
 
 export const emailService = {
-  async sendTrackingEmail(params: TrackingEmailParams): Promise<void> {
-    // TODO: implementar envío real
-    console.log("[stub] sendTrackingEmail", params);
+  async sendAssignedEmail(params: TrackingEmailParams): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Your package tracking code — PakAG",
+      html: packageAssignedTemplate({
+        recipientName: params.recipientName,
+        trackingUrl: params.trackingUrl,
+      }),
+    });
   },
 
   async sendInTransitEmail(params: InTransitEmailParams): Promise<void> {
-    // TODO: implementar envío real
-    console.log("[stub] sendInTransitEmail", params);
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Your package is in transit — PakAG",
+      html: packageInTransitTemplate({
+        recipientName: params.recipientName,
+        trackingUrl: params.trackingUrl,
+        distributorName: params.distributorName,
+        estimatedDelivery: params.estimatedDelivery,
+      }),
+    });
   },
 
   async sendDeliveredEmail(params: DeliveredEmailParams): Promise<void> {
-    // TODO: implementar envío real
-    console.log("[stub] sendDeliveredEmail", params);
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Your package has been delivered — PakAG",
+      html: packageDeliveredTemplate({
+        recipientName: params.recipientName,
+        trackingUrl: params.trackingUrl,
+        deliveredAt: params.deliveredAt,
+      }),
+    });
+  },
+
+  async sendFailedEmail(params: FailedEmailParams): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Delivery attempt failed — PakAG",
+      html: packageFailedEmailTemplate({
+        recipientName: params.recipientName,
+        failedAt: params.failedAt,
+        reason: params.reason,
+      }),
+    });
+  },
+
+  async sendPendingEmail(params: PendingEmailParams): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "We received your package — PakAG",
+      html: packagePendingTemplate({
+        recipientName: params.recipientName,
+        trackingUrl: params.trackingUrl,
+      }),
+    });
+  },
+
+  async sendResetPasswordEmail(
+    params: ResetPasswordEmailParams
+  ): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Reset your password — PakAG",
+      html: passwordChangeEmailTemplate({
+        recipientName: params.recipientName,
+        changePasswordUrl: params.resetUrl,
+      }),
+    });
   },
 };

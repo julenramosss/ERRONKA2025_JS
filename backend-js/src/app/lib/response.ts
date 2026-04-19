@@ -1,3 +1,4 @@
+import { secure } from "../config/envConfig";
 import {
   ValidationError,
   NotFoundError,
@@ -16,7 +17,8 @@ function jsonResponse(body: unknown, status: number): Response {
 export const res = {
   ok<T>(
     data: T,
-    cookies?: { name: string; value: string; httpOnly?: boolean }[]
+    cookies?: { name: string; value: string; httpOnly?: boolean }[],
+    deleteCookies?: string[]
   ): Response {
     const response = new Response(JSON.stringify(data), {
       status: 200,
@@ -29,6 +31,16 @@ export const res = {
         response.headers.append("Set-Cookie", cookieStr);
       });
     }
+
+    if (deleteCookies) {
+      deleteCookies.forEach((name) => {
+        response.headers.append(
+          "Set-Cookie",
+          `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict ${secure};`
+        );
+      });
+    }
+
     return response;
   },
   created<T>(data: T): Response {

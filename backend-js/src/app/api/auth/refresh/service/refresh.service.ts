@@ -9,15 +9,21 @@ import {
   revokeTokenById,
 } from "../repository/refresh.repository";
 
-export async function refreshService(dto: RefreshDto): Promise<RefreshResponse> {
+export async function refreshService(
+  dto: RefreshDto
+): Promise<RefreshResponse> {
   const row = await findRefreshToken(dto.refresh_token);
-  if (!row) throw new UnauthorizedError("Refresh token baliogabea");
-  if (row.revoked) throw new UnauthorizedError("Refresh token baliogabea");
+  if (!row) throw new UnauthorizedError("Refresh token not found");
+
+  if (row.revoked)
+    throw new UnauthorizedError("Refresh token has been revoked");
+
   if (new Date(row.expires_at).getTime() < Date.now()) {
-    throw new UnauthorizedError("Refresh token iraungita");
+    throw new UnauthorizedError("Refresh token has expired");
   }
+
   if (!row.is_active) {
-    throw new ForbiddenError("Erabiltzailea desaktibatuta dago");
+    throw new ForbiddenError("User account is disabled");
   }
 
   await revokeTokenById(row.id);

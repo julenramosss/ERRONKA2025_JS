@@ -4,7 +4,7 @@ import { UserDetail } from "../types";
 
 export async function getUserByIdService(id: number): Promise<UserDetail> {
   const row = await selectUserById(id);
-  if (!row) throw new NotFoundError("Erabiltzailea ez da aurkitu");
+  if (!row) throw new NotFoundError("User not found");
   return {
     id: row.id,
     name: row.name,

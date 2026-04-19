@@ -1,5 +1,6 @@
 import { connect } from "@/app/config/dbConfig";
 import { ResultSetHeader, RowDataPacket, ExecuteValues } from "mysql2";
+import { UpdatedUserRow, UserInfo } from "../types";
 
 interface IdRow extends RowDataPacket {
   id: number;
@@ -25,33 +26,39 @@ export async function emailTakenByOther(
   return rows.length > 0;
 }
 
-export async function updateUser(
-  id: number,
-  fields: { name?: string; email?: string }
-): Promise<number> {
+export async function updateUser(id: number, fields: UserInfo) {
   const db = await connect();
   const sets: string[] = [];
   const params: ExecuteValues[] = [];
+
   if (fields.name !== undefined) {
     sets.push("name = ?");
     params.push(fields.name);
   }
+
   if (fields.email !== undefined) {
     sets.push("email = ?");
     params.push(fields.email);
   }
+
+  if (fields.role !== undefined) {
+    sets.push("role = ?");
+    params.push(fields.role);
+  }
+
+  if (fields.is_active !== undefined) {
+    sets.push("is_active = ?");
+    params.push(fields.is_active);
+  }
+
   params.push(id);
-  const [result] = await db.execute<ResultSetHeader>(
+
+  if (sets.length === 0) return;
+
+  await db.execute<ResultSetHeader>(
     `UPDATE users SET ${sets.join(", ")} WHERE id = ?`,
     params
   );
-  return result.affectedRows;
-}
-
-export interface UpdatedUserRow extends RowDataPacket {
-  id: number;
-  name: string;
-  email: string;
 }
 
 export async function selectUpdatedUser(
@@ -59,7 +66,7 @@ export async function selectUpdatedUser(
 ): Promise<UpdatedUserRow | null> {
   const db = await connect();
   const [rows] = await db.query<UpdatedUserRow[]>(
-    "SELECT id, name, email FROM users WHERE id = ?",
+    "SELECT id, name, email, role, is_active FROM users WHERE id = ?",
     [id]
   );
   return rows[0] ?? null;
