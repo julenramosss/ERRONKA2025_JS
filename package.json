@@ -2,9 +2,9 @@
   "name": "mi-monorepo",
   "private": true,
   "scripts": {
-    "install": "pnpm --filter backend-js install",
+    "install": "pnpm --filter backend-js install && pnpm --filter frontend-app install",
     "backend:dev": "pnpm --filter backend-js dev",
-    "frontend:dev": "pnpm --filter frontend-js dev"
+    "frontend:dev": "pnpm --filter frontend-app dev"
   },
   "dependencies": {
     "resend": "6.12.0"

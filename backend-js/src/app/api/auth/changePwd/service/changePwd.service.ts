@@ -1,6 +1,7 @@
 import { encryptPwd } from "@/app/lib/hashPasword";
 import { UnauthorizedError } from "@/app/lib/errors";
 import {
+  revokeAllResetTokensForUser,
   updateUserPasswordAndActivate,
   verifyToken,
 } from "../repository/changePwd.repo";
@@ -13,4 +14,6 @@ export async function changePwdService(dto: ChangePwdDto): Promise<void> {
 
   const newHash = await encryptPwd(dto.newPassword);
   await updateUserPasswordAndActivate(userId, newHash);
+
+  await revokeAllResetTokensForUser(userId);
 }
