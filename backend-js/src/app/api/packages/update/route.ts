@@ -9,14 +9,14 @@ export async function PATCH(request: Request) {
     const auth = requireAuth(request, [USER_ROLES.admin]);
     const url = new URL(request.url);
     const body = await request.json();
-    const { id, packageInfo, address_info } = updatePackageDto(
+    const { id, packageInfo, addressInfo } = updatePackageDto(
       url.searchParams.get("id"),
       body
     );
     const updated = await updatePackageService(
       id,
       packageInfo,
-      address_info,
+      addressInfo,
       auth.sub
     );
     return res.ok(updated);

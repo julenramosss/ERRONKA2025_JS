@@ -1,14 +1,14 @@
 import { PackageStatus } from "@/app/types";
 import { listAllLogsRepo } from "../repository/listAllLogs.repo";
-import { ListAllLogsDto, ListAllLogsResponce } from "../types";
+import { ListAllLogsDto, ListAllLogsResult } from "../types";
 
 export async function listAllLogsService(
   filters: ListAllLogsDto
-): Promise<ListAllLogsResponce[]> {
+): Promise<ListAllLogsResult> {
   const { packageId, changedBy, fromDate, toDate, page, limit } = filters;
   const offset = (page - 1) * limit;
-  const params = [];
-  const values = [];
+  const params: string[] = [];
+  const values: unknown[] = [];
 
   if (packageId) {
     params.push(`package_id = ?`);
@@ -27,9 +27,9 @@ export async function listAllLogsService(
     values.push(toDate);
   }
 
-  const rows = await listAllLogsRepo(params, values, offset, limit);
+  const { rows, total } = await listAllLogsRepo(params, values, offset, limit);
 
-  return rows.map((row) => ({
+  const logs = rows.map((row) => ({
     id: row.id,
     packageId: row.package_id,
     changedBy: row.changed_by,
@@ -38,4 +38,6 @@ export async function listAllLogsService(
     notes: row.notes ?? null,
     changedAt: row.changed_at,
   }));
+
+  return { logs, total, page, limit };
 }

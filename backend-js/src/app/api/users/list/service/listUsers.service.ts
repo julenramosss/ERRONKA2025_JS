@@ -1,9 +1,9 @@
 import { selectUsers } from "../repository/listUsers.repository";
-import { UserListFilters, UserListItem } from "../types";
+import { UserListFilters, UserListResult } from "../types";
 
 export async function listUsersService(
   filters: UserListFilters
-): Promise<UserListItem[]> {
+): Promise<UserListResult> {
   const clauses: string[] = [];
   const params: unknown[] = [];
 
@@ -17,8 +17,8 @@ export async function listUsersService(
     params.push(filters.is_active);
   }
 
-  const rows = await selectUsers(clauses, params);
-  return rows.map((row) => ({
+  const { rows, total } = await selectUsers(clauses, params, filters.page, filters.limit);
+  const users = rows.map((row) => ({
     id: row.id,
     name: row.name,
     email: row.email,
@@ -26,4 +26,6 @@ export async function listUsersService(
     is_active: Boolean(row.is_active),
     created_at: row.created_at.toISOString(),
   }));
+
+  return { users, total, page: filters.page, limit: filters.limit };
 }

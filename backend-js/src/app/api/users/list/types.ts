@@ -4,6 +4,8 @@ import { RowDataPacket } from "mysql2";
 export interface UserListFilters {
   role?: UserRole;
   is_active?: boolean;
+  page: number;
+  limit: number;
 }
 
 export interface UserListRow extends RowDataPacket {
@@ -22,4 +24,11 @@ export interface UserListItem {
   role: UserRole;
   is_active: boolean;
   created_at: string;
+}
+
+export interface UserListResult {
+  users: UserListItem[];
+  total: number;
+  page: number;
+  limit: number;
 }

@@ -103,10 +103,10 @@ export async function getTrackingTokenByPackageId(
 ): Promise<string | null> {
   const db = await connect();
   const [rows] = await db.query<RowDataPacket[]>(
-    "SELECT tracking_code FROM packages WHERE id = ?",
+    "SELECT t.token FROM tokens t WHERE t.package_id = ? AND t.type = 'tracking_token' AND t.revoked = FALSE",
     [packageId]
   );
-  return rows[0]?.tracking_code ?? null;
+  return rows[0]?.token ?? null;
 }
 
 export async function getDistributorName(

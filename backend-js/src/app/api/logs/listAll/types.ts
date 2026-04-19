@@ -18,3 +18,10 @@ export interface ListAllLogsResponce {
   notes: string | null;
   changedAt: string;
 }
+
+export interface ListAllLogsResult {
+  logs: ListAllLogsResponce[];
+  total: number;
+  page: number;
+  limit: number;
+}
