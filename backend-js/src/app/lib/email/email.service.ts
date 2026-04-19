@@ -5,7 +5,9 @@ import { packageAssignedTemplate } from "./templates/packageAssigned.template";
 import { packageFailedEmailTemplate } from "./templates/packageFailed.template";
 import { packagePendingTemplate } from "./templates/packagePending.template";
 import { passwordChangeEmailTemplate } from "./templates/passwordChangeEmail.template";
+import { accountActivationTemplate } from "./templates/accountActivation.template";
 import {
+  ActivationEmailParams,
   DeliveredEmailParams,
   FailedEmailParams,
   InTransitEmailParams,
@@ -91,6 +93,18 @@ export const emailService = {
       html: passwordChangeEmailTemplate({
         recipientName: params.recipientName,
         changePasswordUrl: params.resetUrl,
+      }),
+    });
+  },
+
+  async sendActivationEmail(params: ActivationEmailParams): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Activate your PakAG account",
+      html: accountActivationTemplate({
+        recipientName: params.recipientName,
+        activationUrl: params.activationUrl,
       }),
     });
   },

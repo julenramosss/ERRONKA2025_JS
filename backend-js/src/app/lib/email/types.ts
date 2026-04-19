@@ -37,3 +37,9 @@ export interface ResetPasswordEmailParams {
   recipientName: string;
   resetUrl: string;
 }
+
+export interface ActivationEmailParams {
+  to: string;
+  recipientName: string;
+  activationUrl: string;
+}

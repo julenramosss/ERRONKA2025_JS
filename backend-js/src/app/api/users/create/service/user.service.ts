@@ -3,7 +3,7 @@ import { CreateUserDto, CreateUserResponse } from "../types";
 import { ConflictError } from "@/app/lib/errors";
 import { encryptPwd } from "@/app/lib/hashPasword";
 import { default_user_password } from "@/app/config/envConfig";
-import { forgotPasswordService } from "@/app/api/auth/forgotPassword/service/forgotPassword.service";
+import { sendActivationEmailService } from "@/app/api/auth/activateAccount/service/activateAccount.service";
 
 export async function createUserService(
   dto: CreateUserDto
@@ -15,7 +15,7 @@ export async function createUserService(
   const passwordHash = await encryptPwd(default_user_password);
   const result = await insertUser(dto, passwordHash);
 
-  await forgotPasswordService(dto.email);
+  await sendActivationEmailService(dto.email);
 
   return {
     id: result.insertId,

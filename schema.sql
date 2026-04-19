@@ -86,7 +86,7 @@ CREATE TABLE packages (
 CREATE TABLE tokens (
   id          INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   token       VARCHAR(512)    NOT NULL UNIQUE,
-  type        ENUM('refresh_token', 'tracking_token', 'reset_pwd_token') NOT NULL,
+  type        ENUM('refresh_token', 'tracking_token', 'reset_pwd_token', 'activate_account_token') NOT NULL,
   user_id     INT UNSIGNED    NULL,       -- refresh_token motarako (beteta)
   package_id  INT UNSIGNED    NULL,       -- tracking motarako (beteta)
   expires_at  TIMESTAMP       NOT NULL,

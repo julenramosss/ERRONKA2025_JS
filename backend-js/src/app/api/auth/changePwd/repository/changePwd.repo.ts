@@ -7,7 +7,7 @@ export async function verifyEmailToken(
 ): Promise<number | null> {
   const db = await connect();
   const [rows] = await db.query<RowDataPacket[]>(
-    "SELECT users.id FROM users INNER JOIN tokens ON users.id = tokens.user_id WHERE users.email = ? AND tokens.token = ? AND tokens.type = 'reset_pwd_token' AND tokens.revoked = FALSE",
+    `SELECT users.id FROM users INNER JOIN tokens ON users.id = tokens.user_id WHERE users.email = ? AND tokens.token = ? AND tokens.type IN ('reset_pwd_token', 'activate_account_token') AND tokens.revoked = FALSE AND tokens.expires_at > NOW()`,
     [email, token]
   );
 

@@ -18,6 +18,7 @@ export const TOKEN_TYPES = {
   refresh_token: "refresh_token",
   tracking_token: "tracking_token",
   reset_pwd_token: "reset_pwd_token",
+  activate_account_token: "activate_account_token",
 } as const;
 export type TokenType = (typeof TOKEN_TYPES)[keyof typeof TOKEN_TYPES];
 
