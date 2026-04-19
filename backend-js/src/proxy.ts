@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyAccessToken } from "./app/lib/jwt";
 
 export function proxy(request: NextRequest) {
+  console.log(`[Proxy] ${request.method} ${request.url}`);
   const header =
     request.headers.get("authorization") ??
     request.headers.get("Authorization");
