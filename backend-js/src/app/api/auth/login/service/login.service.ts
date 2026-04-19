@@ -11,7 +11,8 @@ import {
 
 export async function loginService(dto: LoginDto): Promise<LoginResponse> {
   // bcrypt hash for "password"
-  const DUMMY_HASH = "$2b$10$CwTycUXWue0Thq9StjUM0uJ8GryuV1i5H2Tt3yqS8FhYg7vDq";
+  const DUMMY_HASH =
+    "$2b$10$j/waxomoVjsEiVu47WVHdu3CJIeGRfRsKOHasolKli6n2JNFjWnVq";
   const user = await findUserByEmailForAuth(dto.email);
   if (!user) {
     await verifyPassword(dto.password, DUMMY_HASH);

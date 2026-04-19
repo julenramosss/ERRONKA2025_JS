@@ -63,37 +63,24 @@ export async function updatePackageService(
       `${addressInfo.street ?? current.street}, ${addressInfo.city ?? current.city}, ${addressInfo.postal_code ?? current.postal_code}`
     );
 
-    const fieldsToUpdate = {
-      ...addressInfo,
-      latitude: addressInfo.latitude !== undefined ? addressInfo.latitude : lat,
-      longitude:
-        addressInfo.longitude !== undefined ? addressInfo.longitude : lng,
-    };
-
-    if (fieldsToUpdate.street !== undefined) {
+    if (addressInfo.street !== undefined) {
       sets.push("street = ?");
-      params.push(fieldsToUpdate.street);
+      params.push(addressInfo.street);
     }
-    if (fieldsToUpdate.city !== undefined) {
+    if (addressInfo.city !== undefined) {
       sets.push("city = ?");
-      params.push(fieldsToUpdate.city);
+      params.push(addressInfo.city);
     }
-    if (fieldsToUpdate.postal_code !== undefined) {
+    if (addressInfo.postal_code !== undefined) {
       sets.push("postal_code = ?");
-      params.push(fieldsToUpdate.postal_code);
+      params.push(addressInfo.postal_code);
     }
-    if (fieldsToUpdate.latitude !== undefined) {
-      sets.push("latitude = ?");
-      params.push(fieldsToUpdate.latitude);
-    }
-    if (fieldsToUpdate.longitude !== undefined) {
-      sets.push("longitude = ?");
-      params.push(fieldsToUpdate.longitude);
-    }
-    if (fieldsToUpdate.country !== undefined) {
+    if (addressInfo.country !== undefined) {
       sets.push("country = ?");
-      params.push(fieldsToUpdate.country);
+      params.push(addressInfo.country);
     }
+    sets.push("latitude = ?", "longitude = ?");
+    params.push(lat, lng);
 
     params.push(current.address_id);
 

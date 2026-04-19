@@ -14,8 +14,6 @@ export interface UpdateAddressDto {
   street?: string;
   city?: string;
   postal_code?: string;
-  latitude?: number;
-  longitude?: number;
   country?: string;
 }
 

@@ -4,6 +4,7 @@ import {
   isPackageValidStatus,
   isString,
 } from "@/app/lib/dto";
+// latitude and longitude are intentionally excluded — computed via geocoding API
 import { ValidationError } from "@/app/lib/errors";
 import {
   UpdateAddressDto,
@@ -94,21 +95,6 @@ export function updatePackageDto(
       if (!isString(a.postal_code))
         throw new ValidationError("postal_code must be a non-empty string");
       address_info.postal_code = a.postal_code;
-    }
-    if (a.latitude === undefined && a.longitude === undefined) {
-      throw new ValidationError(
-        "At least one of latitude or longitude must be provided when updating address coordinates"
-      );
-    }
-    if (a.latitude !== undefined) {
-      if (!isNumber(a.latitude))
-        throw new ValidationError("latitude must be a number");
-      address_info.latitude = a.latitude;
-    }
-    if (a.longitude !== undefined) {
-      if (!isNumber(a.longitude))
-        throw new ValidationError("longitude must be a number");
-      address_info.longitude = a.longitude;
     }
     if (a.country !== undefined) {
       if (!isString(a.country))
