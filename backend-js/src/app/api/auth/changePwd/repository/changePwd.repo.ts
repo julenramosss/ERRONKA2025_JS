@@ -1,17 +1,16 @@
 import { connect } from "@/app/config/dbConfig";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 
-export async function verifyEmailToken(
-  email: string,
+export async function verifyToken(
   token: string
 ): Promise<number | null> {
   const db = await connect();
   const [rows] = await db.query<RowDataPacket[]>(
-    `SELECT users.id FROM users INNER JOIN tokens ON users.id = tokens.user_id WHERE users.email = ? AND tokens.token = ? AND tokens.type IN ('reset_pwd_token', 'activate_account_token') AND tokens.revoked = FALSE AND tokens.expires_at > NOW()`,
-    [email, token]
+    `SELECT user_id FROM tokens WHERE token = ? AND type IN ('reset_pwd_token', 'activate_account_token') AND revoked = FALSE AND expires_at > NOW()`,
+    [token]
   );
 
-  return rows.length > 0 ? (rows[0].id as number) : null;
+  return rows.length > 0 ? (rows[0].user_id as number) : null;
 }
 
 export async function updateUserPasswordAndActivate(

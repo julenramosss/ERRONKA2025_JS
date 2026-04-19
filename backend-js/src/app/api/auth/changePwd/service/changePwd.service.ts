@@ -2,12 +2,12 @@ import { encryptPwd } from "@/app/lib/hashPasword";
 import { UnauthorizedError } from "@/app/lib/errors";
 import {
   updateUserPasswordAndActivate,
-  verifyEmailToken,
+  verifyToken,
 } from "../repository/changePwd.repo";
 import { ChangePwdDto } from "../types";
 
 export async function changePwdService(dto: ChangePwdDto): Promise<void> {
-  const userId = await verifyEmailToken(dto.user_email, dto.reset_pwd_token);
+  const userId = await verifyToken(dto.reset_pwd_token);
 
   if (!userId) throw new UnauthorizedError("Invalid or expired email token");
 
