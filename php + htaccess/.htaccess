@@ -1,0 +1,6 @@
+RewriteEngine On
+# Si el archivo o directorio no existe físicamente...
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+# Pasar todo lo que viene después de la barra como parámetro 'token' a index.php
+RewriteRule ^([^/]+)$ index.php?token=$1 [L,QSA]
