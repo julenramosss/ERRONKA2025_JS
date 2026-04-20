@@ -1,4 +1,4 @@
-const ACCESS_TOKEN_STORAGE_KEY = "pakag.access_token";
+import { ACCESS_TOKEN_STORAGE_KEY } from "../../../config/envConfig";
 
 function getSessionStorage(): Storage | null {
   if (typeof window === "undefined") {

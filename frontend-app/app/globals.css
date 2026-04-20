@@ -7,6 +7,7 @@
   --color-bg-dark: var(--bg-dark);
   --color-bg-surface: var(--bg-surface);
   --color-bg-elevated: var(--bg-elevated);
+  --color-bg-error: var(--st-failed-bg);
 
   /* Accents */
   --color-accent: var(--accent-primary);
@@ -18,6 +19,7 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-disabled: var(--text-disabled);
+  --color-text-error: var(--st-failed-fg);
 
   /* Borders */
   --color-border: var(--border-normal);
@@ -112,12 +114,7 @@ body {
 /* ─── Typography ─────────────────────────────────────────────────────────── */
 
 a {
-  color: var(--accent-light);
   text-decoration: none;
-  transition: color 0.15s ease;
-}
-a:hover {
-  color: var(--accent-primary);
 }
 
 /* ─── Forms ──────────────────────────────────────────────────────────────── */

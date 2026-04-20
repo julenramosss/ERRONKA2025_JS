@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Seguimiento de pedido — pakAG</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-darkest:#0E0B16;--bg-dark:#1A1626;--bg-surface:#231D35;--bg-elevated:#2D2545;
+  --accent-primary:#7C3AED;--accent-hover:#6D28D9;--accent-light:#A78BFA;--accent-subtle:#3D2960;
+  --text-primary:#F5F3FF;--text-secondary:#A89DC4;--text-disabled:#6B5B8A;
+  --border-normal:#3D3358;
+  --st-pending-fg:#F59E0B;--st-pending-bg:#3D2E0A;
+  --st-assigned-fg:#3B82F6;--st-assigned-bg:#0F1F3D;
+  --st-transit-fg:#A78BFA;--st-transit-bg:#2D1F4D;
+  --st-delivered-fg:#10B981;--st-delivered-bg:#0A2E20;
+  --st-failed-fg:#EF4444;--st-failed-bg:#3D0F0F;
+}
+html,body{min-height:100vh;background:var(--bg-dark);color:var(--text-primary);
+  font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{color:var(--accent-light);text-decoration:none}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+@keyframes progressIn{from{width:0}to{width:var(--target)}}
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.fade-up{animation:fadeUp 400ms cubic-bezier(.2,.7,.2,1) both}
+.fade-in{animation:fadeIn 260ms ease-out both}
+.pulse{animation:pulse 1.8s ease-in-out infinite}
+.shimmer{
+  background:linear-gradient(90deg,var(--bg-surface) 0%,var(--bg-elevated) 50%,var(--bg-surface) 100%);
+  background-size:1200px 100%;animation:shimmer 1.6s infinite linear;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ─── tiny svg icon ─── */
+const Ic = ({ d, size=18, stroke=2, fill }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24"
+    fill={fill||'none'} stroke="currentColor" strokeWidth={stroke}
+    strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+);
+const I = {
+  Package:   <><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></>,
+  MapPin:    <><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></>,
+  Clock:     <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+  Check:     <><path d="M20 6 9 17l-5-5"/></>,
+  Truck:     <><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></>,
+  AlertCircle: <><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></>,
+  AlertTri: <><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></>,
+  RefreshCw: <><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></>,
+  Mail:      <><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>,
+  User:      <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+  Copy:      <><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></>,
+  Info:      <><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></>,
+  Phone:     <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.54 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></>,
+  Loader:    <><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></>,
+};
+
+/* ─── status config ─── */
+const STATUS_CONFIG = {
+  pending: {
+    label:'Pendiente de asignación',
+    sublabel:'Tu paquete está registrado en el sistema.',
+    fg:'var(--st-pending-fg)', bg:'var(--st-pending-bg)', glow:'rgba(245,158,11,.25)',
+    step:1, icon: I.Clock, pulse: true,
+  },
+  assigned: {
+    label:'Asignado al repartidor',
+    sublabel:'Un repartidor se encargará de tu paquete hoy.',
+    fg:'var(--st-assigned-fg)', bg:'var(--st-assigned-bg)', glow:'rgba(59,130,246,.25)',
+    step:2, icon: I.User, pulse: false,
+  },
+  in_transit: {
+    label:'En camino',
+    sublabel:'Tu paquete está en ruta hacia la dirección de entrega.',
+    fg:'var(--st-transit-fg)', bg:'var(--st-transit-bg)', glow:'rgba(167,139,250,.3)',
+    step:3, icon: I.Truck, pulse: true,
+  },
+  delivered: {
+    label:'Entregado',
+    sublabel:'Tu paquete ha sido entregado correctamente. ¡Gracias!',
+    fg:'var(--st-delivered-fg)', bg:'var(--st-delivered-bg)', glow:'rgba(16,185,129,.25)',
+    step:4, icon: I.Check, pulse: false,
+  },
+  failed: {
+    label:'Entrega fallida',
+    sublabel:'No fue posible entregar el paquete. Nos pondremos en contacto contigo.',
+    fg:'var(--st-failed-fg)', bg:'var(--st-failed-bg)', glow:'rgba(239,68,68,.25)',
+    step:0, icon: I.AlertCircle, pulse: false,
+  },
+};
+
+const STEPS = ['pending','assigned','in_transit','delivered'];
+
+/* ─── mock API responses for demo ─── */
+const MOCK_RESPONSES = {
+  pending: {
+    tracking_code:'TRK-2024-ABCD1234',
+    recipient_name:'Maria Garcia',
+    status:'pending',
+    estimated_delivery:'2026-04-21',
+    address:{ street:'Calle Mayor 10', city:'Bilbao', postal_code:'48001' },
+    last_update:'2026-04-20T07:30:00.000Z',
+  },
+  assigned: {
+    tracking_code:'TRK-2024-XYZW5678',
+    recipient_name:'Itziar Etxeberria',
+    status:'assigned',
+    estimated_delivery:'2026-04-20',
+    address:{ street:'Kale Nagusia 12', city:'Tolosa', postal_code:'20400' },
+    last_update:'2026-04-20T08:25:00.000Z',
+  },
+  in_transit: {
+    tracking_code:'PKG-261042',
+    recipient_name:'Jon Aranburu',
+    status:'in_transit',
+    estimated_delivery:'2026-04-20',
+    address:{ street:'Aduna bidea 8', city:'Aduna', postal_code:'20159' },
+    last_update:'2026-04-20T09:02:00.000Z',
+  },
+  delivered: {
+    tracking_code:'BLK-261033',
+    recipient_name:'Joseba Iñarra',
+    status:'delivered',
+    estimated_delivery:'2026-04-18',
+    address:{ street:'Errekalde 8', city:'Aduna', postal_code:'20159' },
+    last_update:'2026-04-18T16:15:00.000Z',
+  },
+  failed: {
+    tracking_code:'AGT-261034',
+    recipient_name:'Oihana Perez',
+    status:'failed',
+    estimated_delivery:'2026-04-18',
+    address:{ street:'Iturrialde 3', city:'Zizurkil', postal_code:'20159' },
+    last_update:'2026-04-18T15:03:00.000Z',
+  },
+  not_found: null,
+};
+
+/* ─── helpers ─── */
+const Logo = () => (
+  <div style={{display:'flex',alignItems:'center',gap:10}}>
+    <div style={{width:30,height:30,borderRadius:8,
+      background:'linear-gradient(135deg,#A78BFA 0%,#7C3AED 55%,#4C1D95 100%)',
+      display:'flex',alignItems:'center',justifyContent:'center',
+      boxShadow:'0 4px 14px rgba(124,58,237,.4)'}}>
+      <svg width={17} height={17} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+        <path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
+      </svg>
+    </div>
+    <span style={{fontWeight:700,fontSize:16,letterSpacing:'-.02em'}}>
+      pak<span style={{color:'var(--accent-light)'}}>AG</span>
+    </span>
+  </div>
+);
+
+const Glow = ({ color='#7C3AED' }) => (
+  <div style={{position:'fixed',inset:0,overflow:'hidden',pointerEvents:'none',zIndex:0}}>
+    <div style={{position:'absolute',width:700,height:700,borderRadius:'50%',
+      background:color,top:-200,right:-200,filter:'blur(120px)',opacity:.12}}/>
+    <div style={{position:'absolute',width:500,height:500,borderRadius:'50%',
+      background:'#1A1626',bottom:-150,left:-100,filter:'blur(100px)',opacity:.8}}/>
+  </div>
+);
+
+const formatDate = (iso) => {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+};
+
+const timeAgo = (iso) => {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff/60000);
+  if (mins < 1) return 'hace un momento';
+  if (mins < 60) return `hace ${mins} min`;
+  const hrs = Math.floor(mins/60);
+  if (hrs < 24) return `hace ${hrs}h`;
+  return formatDate(iso).split(',')[0];
+};
+
+const CopyBtn = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button onClick={()=>{navigator.clipboard?.writeText(text);setCopied(true);setTimeout(()=>setCopied(false),1400);}}
+      style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 9px',borderRadius:6,
+        background:'var(--bg-elevated)',border:'1px solid var(--border-normal)',
+        color:'var(--accent-light)',fontSize:12,fontFamily:'monospace',letterSpacing:'.02em',
+        transition:'all 160ms'}}>
+      {text}
+      {copied
+        ? <Ic d={I.Check} size={11} stroke={3}/>
+        : <Ic d={I.Copy} size={11}/>}
+    </button>
+  );
+};
+
+/* ─── Skeleton loader ─── */
+const Skeleton = () => (
+  <div style={{display:'flex',flexDirection:'column',gap:16,maxWidth:640,margin:'0 auto',padding:'32px 20px 60px'}}>
+    {[200,160,300,120].map((w,i)=>(
+      <div key={i} className="shimmer" style={{height:18,borderRadius:6,width:w,maxWidth:'100%'}}/>
+    ))}
+    <div style={{marginTop:8,display:'flex',flexDirection:'column',gap:12}}>
+      {[1,2,3,4].map(j=>(
+        <div key={j} style={{display:'flex',gap:14,alignItems:'center'}}>
+          <div className="shimmer" style={{width:36,height:36,borderRadius:'50%',flexShrink:0}}/>
+          <div style={{flex:1,display:'flex',flexDirection:'column',gap:6}}>
+            <div className="shimmer" style={{height:13,borderRadius:5,width:'60%'}}/>
+            <div className="shimmer" style={{height:11,borderRadius:5,width:'40%'}}/>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ─── Progress stepper ─── */
+const Stepper = ({ status }) => {
+  const cfg = STATUS_CONFIG[status];
+  const currentStep = cfg?.step || 0;
+  if (status === 'failed') {
+    return (
+      <div style={{
+        padding:'14px 18px',borderRadius:10,
+        background:'var(--st-failed-bg)',border:'1px solid rgba(239,68,68,.2)',
+        display:'flex',alignItems:'center',gap:10,
+        color:'var(--st-failed-fg)',fontSize:13,fontWeight:500,
+      }}>
+        <Ic d={I.AlertTri} size={16}/>
+        Entrega no completada. Contactaremos contigo para reprogramar.
+      </div>
+    );
+  }
+  return (
+    <div style={{position:'relative',padding:'4px 0'}}>
+      {/* connector line */}
+      <div style={{position:'absolute',top:18,left:18,right:18,height:2,
+        background:'var(--border-normal)',zIndex:0}}/>
+      <div style={{position:'absolute',top:18,left:18,height:2,zIndex:1,
+        background:'linear-gradient(90deg,var(--accent-primary),var(--accent-light))',
+        width:`${Math.max(0,(currentStep-1)/3*100)}%`,
+        transition:'width 600ms cubic-bezier(.2,.7,.2,1)',
+      }}/>
+      <div style={{
+        display:'grid',gridTemplateColumns:'repeat(4,1fr)',
+        position:'relative',zIndex:2,
+      }}>
+        {STEPS.map((s, idx) => {
+          const stepNum = idx + 1;
+          const done    = stepNum < currentStep;
+          const active  = stepNum === currentStep;
+          const future  = stepNum > currentStep;
+          const c       = STATUS_CONFIG[s];
+          return (
+            <div key={s} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+              <div style={{
+                width:36,height:36,borderRadius:'50%',
+                background: done ? 'var(--st-delivered-bg)' : active ? c.bg : 'var(--bg-surface)',
+                border:`2px solid ${done ? 'var(--st-delivered-fg)' : active ? c.fg : 'var(--border-normal)'}`,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                color: done ? 'var(--st-delivered-fg)' : active ? c.fg : 'var(--text-disabled)',
+                boxShadow: active ? `0 0 0 4px ${c.glow}, 0 0 20px ${c.glow}` : 'none',
+                transition:'all 300ms',
+              }} className={active && c.pulse ? 'pulse' : ''}>
+                {done
+                  ? <Ic d={I.Check} size={16} stroke={2.5}/>
+                  : <Ic d={c.icon} size={16}/>}
+              </div>
+              <div style={{
+                fontSize:10,fontWeight:600,textAlign:'center',lineHeight:1.3,
+                color: done ? 'var(--st-delivered-fg)' : active ? c.fg : 'var(--text-disabled)',
+                letterSpacing:'.02em',
+              }}>
+                {s==='pending' ? 'Registrado' : s==='assigned' ? 'Asignado' : s==='in_transit' ? 'En camino' : 'Entregado'}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+/* ─── Main tracking card ─── */
+const TrackingCard = ({ data, onRefresh, loading }) => {
+  const cfg = STATUS_CONFIG[data.status] || STATUS_CONFIG.pending;
+  const isToday = data.estimated_delivery === new Date().toISOString().slice(0,10);
+  const isPast  = data.estimated_delivery < new Date().toISOString().slice(0,10);
+
+  return (
+    <div className="fade-up" style={{display:'flex',flexDirection:'column',gap:20}}>
+
+      {/* Status hero */}
+      <div style={{
+        borderRadius:16,padding:24,
+        background:`linear-gradient(135deg, ${cfg.bg} 0%, var(--bg-surface) 100%)`,
+        border:`1px solid ${cfg.fg}33`,
+        boxShadow:`0 0 60px ${cfg.glow}`,
+        position:'relative',overflow:'hidden',
+      }}>
+        {/* bg glow circle */}
+        <div style={{position:'absolute',top:-40,right:-40,width:200,height:200,
+          borderRadius:'50%',background:cfg.fg,filter:'blur(60px)',opacity:.12,pointerEvents:'none'}}/>
+
+        <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+          <div style={{display:'flex',alignItems:'center',gap:14}}>
+            <div style={{
+              width:56,height:56,borderRadius:14,
+              background:cfg.bg,border:`1.5px solid ${cfg.fg}55`,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              color:cfg.fg,flexShrink:0,
+              boxShadow:`0 0 24px ${cfg.glow}`,
+            }} className={cfg.pulse ? 'pulse' : ''}>
+              <Ic d={cfg.icon} size={26}/>
+            </div>
+            <div>
+              <div style={{fontSize:11,fontWeight:600,color:cfg.fg,
+                letterSpacing:'.06em',textTransform:'uppercase',marginBottom:4}}>
+                Estado del paquete
+              </div>
+              <div style={{fontSize:22,fontWeight:700,letterSpacing:'-.02em',color:'var(--text-primary)'}}>
+                {cfg.label}
+              </div>
+              <div style={{fontSize:13,color:'var(--text-secondary)',marginTop:3}}>
+                {cfg.sublabel}
+              </div>
+            </div>
+          </div>
+          <button onClick={onRefresh} disabled={loading}
+            style={{
+              display:'flex',alignItems:'center',gap:6,padding:'8px 14px',
+              borderRadius:8,background:'rgba(255,255,255,.06)',border:'1px solid var(--border-normal)',
+              color:'var(--text-secondary)',fontSize:12,fontWeight:500,
+              opacity: loading ? .5 : 1,
+            }}>
+            <Ic d={I.RefreshCw} size={13} stroke={loading?2:2}
+              style={loading?{animation:'spin .9s linear infinite'}:{}}/>
+            Actualizar
+          </button>
+        </div>
+
+        {/* ETA banner */}
+        {data.status !== 'failed' && (
+          <div style={{
+            marginTop:20,padding:'12px 16px',borderRadius:10,
+            background:'rgba(255,255,255,.04)',border:'1px solid var(--border-normal)',
+            display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,flexWrap:'wrap',
+          }}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <Ic d={I.Clock} size={15} style={{color:'var(--accent-light)'}}/>
+              <span style={{fontSize:12,color:'var(--text-secondary)'}}>
+                {data.status==='delivered' ? 'Entregado el' : 'Entrega estimada'}
+              </span>
+              <span style={{
+                fontSize:13,fontWeight:600,
+                color: data.status==='delivered' ? 'var(--st-delivered-fg)'
+                     : isToday ? 'var(--accent-light)' : isPast ? 'var(--st-failed-fg)' : 'var(--text-primary)',
+              }}>
+                {isToday && data.status!=='delivered' ? 'Hoy, ' : ''}
+                {formatDate(data.estimated_delivery)}
+              </span>
+              {isToday && data.status!=='delivered' && (
+                <span style={{
+                  padding:'1px 8px',borderRadius:9999,fontSize:10,fontWeight:700,
+                  background:'var(--accent-subtle)',color:'var(--accent-light)',
+                  border:'1px solid var(--accent-primary)',letterSpacing:'.04em',
+                }}>HOY</span>
+              )}
+            </div>
+            <div style={{fontSize:11,color:'var(--text-disabled)'}}>
+              Última actualización: {timeAgo(data.last_update)}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Stepper */}
+      <div style={{
+        background:'var(--bg-surface)',border:'1px solid var(--border-normal)',
+        borderRadius:14,padding:24,
+      }}>
+        <div style={{fontSize:13,fontWeight:600,marginBottom:18,color:'var(--text-secondary)',
+          textTransform:'uppercase',letterSpacing:'.06em',fontSize:10}}>
+          Estado del envío
+        </div>
+        <Stepper status={data.status}/>
+      </div>
+
+      {/* Info grid */}
+      <div style={{
+        display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:14,
+      }}>
+        {/* Recipient */}
+        <InfoCard icon={I.User} title="Destinatario">
+          <div style={{fontSize:15,fontWeight:600}}>{data.recipient_name}</div>
+        </InfoCard>
+
+        {/* Address */}
+        <InfoCard icon={I.MapPin} title="Dirección de entrega">
+          <div style={{fontSize:14,fontWeight:600,marginBottom:2}}>{data.address.street}</div>
+          <div style={{fontSize:12,color:'var(--text-secondary)'}}>
+            {data.address.postal_code} {data.address.city}
+          </div>
+        </InfoCard>
+
+        {/* Tracking code */}
+        <InfoCard icon={I.Package} title="Código de seguimiento">
+          <CopyBtn text={data.tracking_code}/>
+        </InfoCard>
+
+        {/* Last update */}
+        <InfoCard icon={I.Clock} title="Última actualización">
+          <div style={{fontSize:14,fontWeight:600}}>{timeAgo(data.last_update)}</div>
+          <div style={{fontSize:11,color:'var(--text-disabled)',marginTop:2}}>
+            {new Date(data.last_update).toLocaleString('es-ES',{
+              day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'
+            })}
+          </div>
+        </InfoCard>
+      </div>
+
+      {/* Failed specific CTA */}
+      {data.status === 'failed' && (
+        <div style={{
+          background:'var(--st-failed-bg)',border:'1px solid rgba(239,68,68,.2)',
+          borderRadius:14,padding:22,
+          display:'flex',alignItems:'flex-start',gap:14,flexWrap:'wrap',
+        }}>
+          <div style={{
+            width:44,height:44,borderRadius:11,flexShrink:0,
+            background:'rgba(239,68,68,.1)',
+            display:'flex',alignItems:'center',justifyContent:'center',color:'var(--st-failed-fg)',
+          }}>
+            <Ic d={I.Phone} size={20}/>
+          </div>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:14,fontWeight:600,marginBottom:4}}>¿Qué ha pasado?</div>
+            <div style={{fontSize:13,color:'var(--text-secondary)',lineHeight:1.5}}>
+              No pudimos completar la entrega. Contacta con nuestro equipo para reprogramar o indicar un punto de recogida alternativo.
+            </div>
+          </div>
+          <a href="mailto:soporte@pakag.com" style={{
+            display:'inline-flex',alignItems:'center',gap:6,
+            padding:'10px 16px',borderRadius:8,
+            background:'var(--st-failed-fg)',color:'white',
+            fontWeight:600,fontSize:13,
+          }}>
+            <Ic d={I.Mail} size={14}/> Contactar
+          </a>
+        </div>
+      )}
+
+      {/* Delivered success banner */}
+      {data.status === 'delivered' && (
+        <div style={{
+          background:'var(--st-delivered-bg)',border:'1px solid rgba(16,185,129,.2)',
+          borderRadius:14,padding:20,
+          display:'flex',alignItems:'center',gap:12,
+        }}>
+          <div style={{
+            width:42,height:42,borderRadius:10,flexShrink:0,
+            background:'rgba(16,185,129,.15)',
+            display:'flex',alignItems:'center',justifyContent:'center',color:'var(--st-delivered-fg)',
+          }}>
+            <Ic d={I.Check} size={20} stroke={2.5}/>
+          </div>
+          <div>
+            <div style={{fontSize:14,fontWeight:600,color:'var(--st-delivered-fg)',marginBottom:2}}>
+              Paquete entregado correctamente
+            </div>
+            <div style={{fontSize:12,color:'var(--text-secondary)'}}>
+              Gracias por confiar en pakAG. ¡Hasta la próxima!
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const InfoCard = ({ icon, title, children }) => (
+  <div style={{
+    background:'var(--bg-surface)',border:'1px solid var(--border-normal)',
+    borderRadius:12,padding:16,
+  }}>
+    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10,
+      fontSize:10,fontWeight:600,color:'var(--text-disabled)',
+      textTransform:'uppercase',letterSpacing:'.06em'}}>
+      <Ic d={icon} size={12}/>{title}
+    </div>
+    {children}
+  </div>
+);
+
+/* ─── Not found ─── */
+const NotFound = ({ onRetry }) => (
+  <div className="fade-up" style={{textAlign:'center',padding:'32px 20px'}}>
+    <div style={{
+      width:72,height:72,margin:'0 auto 18px',borderRadius:18,
+      background:'var(--bg-elevated)',border:'1px solid var(--border-normal)',
+      display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text-secondary)',
+    }}>
+      <Ic d={I.AlertCircle} size={34}/>
+    </div>
+    <h2 style={{fontSize:20,fontWeight:700,marginBottom:8}}>Token no encontrado</h2>
+    <p style={{color:'var(--text-secondary)',fontSize:13,marginBottom:22,lineHeight:1.5,maxWidth:340,margin:'0 auto 22px'}}>
+      El enlace de seguimiento no es válido o ha caducado. Comprueba el email que recibiste o contacta con el remitente.
+    </p>
+    <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
+      <button onClick={onRetry} style={{
+        padding:'10px 18px',borderRadius:8,background:'var(--bg-elevated)',
+        border:'1px solid var(--border-normal)',color:'var(--text-primary)',
+        fontWeight:600,fontSize:13,display:'inline-flex',alignItems:'center',gap:6,
+      }}>
+        <Ic d={I.RefreshCw} size={14}/> Reintentar
+      </button>
+      <a href="mailto:soporte@pakag.com" style={{
+        padding:'10px 18px',borderRadius:8,background:'var(--accent-primary)',
+        color:'white',fontWeight:600,fontSize:13,
+        display:'inline-flex',alignItems:'center',gap:6,
+      }}>
+        <Ic d={I.Mail} size={14}/> Soporte
+      </a>
+    </div>
+  </div>
+);
+
+/* ─── SERVER ERROR ─── */
+const ServerError = ({ onRetry }) => (
+  <div className="fade-up" style={{textAlign:'center',padding:'32px 20px'}}>
+    <div style={{
+      width:72,height:72,margin:'0 auto 18px',borderRadius:18,
+      background:'var(--st-failed-bg)',border:'1px solid rgba(239,68,68,.2)',
+      display:'flex',alignItems:'center',justifyContent:'center',color:'var(--st-failed-fg)',
+    }}>
+      <Ic d={I.AlertTri} size={34}/>
+    </div>
+    <h2 style={{fontSize:20,fontWeight:700,marginBottom:8}}>Error del servidor</h2>
+    <p style={{color:'var(--text-secondary)',fontSize:13,marginBottom:22,lineHeight:1.5,maxWidth:320,margin:'0 auto 22px'}}>
+      Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo en unos momentos.
+    </p>
+    <button onClick={onRetry} style={{
+      padding:'10px 18px',borderRadius:8,background:'var(--accent-primary)',
+      color:'white',fontWeight:600,fontSize:13,
+      display:'inline-flex',alignItems:'center',gap:6,
+    }}>
+      <Ic d={I.RefreshCw} size={14}/> Reintentar
+    </button>
+  </div>
+);
+
+/* ─── Main App ─── */
+const TrackingPage = () => {
+  /* Extract trackingToken from URL: /track/:token  or ?token=xxx */
+  const pathParts = window.location.pathname.split('/');
+  const urlToken  = pathParts[pathParts.length - 1] || new URLSearchParams(window.location.search).get('token') || '';
+
+  /* Demo state switcher — reads ?demo=status */
+  const demoParam = new URLSearchParams(window.location.search).get('demo') || 'in_transit';
+  const [demoStatus, setDemoStatus] = useState(demoParam);
+
+  const [loadState, setLoadState] = useState('loading'); // loading | success | not_found | error
+  const [data, setData]           = useState(null);
+  const [retries, setRetries]     = useState(0);
+
+  const fetchTracking = async () => {
+    setLoadState('loading');
+    await new Promise(r => setTimeout(r, 900)); // simulated latency
+
+    // In production this would be:
+    // const res = await fetch(`/api/tracking/${trackingToken}`);
+    // const json = await res.json();
+    const mock = MOCK_RESPONSES[demoStatus];
+    if (demoStatus === 'not_found') { setLoadState('not_found'); return; }
+    if (demoStatus === 'error')     { setLoadState('error');     return; }
+    if (!mock)                      { setLoadState('not_found'); return; }
+    setData(mock);
+    setLoadState('success');
+  };
+
+  useEffect(() => { fetchTracking(); }, [demoStatus, retries]);
+
+  const statusGlowColor = data ? STATUS_CONFIG[data.status]?.fg : '#7C3AED';
+
+  return (
+    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',
+      background:'var(--bg-dark)',position:'relative'}}>
+      <Glow color={statusGlowColor}/>
+
+      {/* Header */}
+      <header style={{
+        padding:'16px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',
+        borderBottom:'1px solid var(--border-normal)',
+        background:'rgba(26,22,38,.85)',backdropFilter:'blur(16px)',
+        position:'sticky',top:0,zIndex:20,
+      }}>
+        <Logo/>
+        <div style={{fontSize:12,color:'var(--text-secondary)',display:'flex',alignItems:'center',gap:6}}>
+          <Ic d={I.Info} size={13}/>
+          Seguimiento de paquete
+        </div>
+      </header>
+
+      <main style={{flex:1,maxWidth:680,width:'100%',margin:'0 auto',
+        padding:'32px 20px 80px',position:'relative',zIndex:1}}>
+
+        {/* Demo switcher bar */}
+        <div style={{
+          marginBottom:28,padding:4,
+          background:'rgba(35,29,53,.8)',backdropFilter:'blur(8px)',
+          border:'1px solid var(--border-normal)',borderRadius:12,
+          display:'flex',gap:2,flexWrap:'wrap',
+        }}>
+          {[
+            ['pending','Pendiente'],
+            ['assigned','Asignado'],
+            ['in_transit','En camino'],
+            ['delivered','Entregado'],
+            ['failed','Fallido'],
+            ['not_found','No encontrado'],
+            ['error','Error servidor'],
+          ].map(([s,l])=>(
+            <button key={s} onClick={()=>setDemoStatus(s)} style={{
+              flex:1,minWidth:80,padding:'6px 10px',borderRadius:8,fontSize:11,fontWeight:600,
+              background: demoStatus===s ? 'var(--accent-subtle)' : 'transparent',
+              color: demoStatus===s ? 'var(--accent-light)' : 'var(--text-disabled)',
+              transition:'all 160ms',whiteSpace:'nowrap',textAlign:'center',
+            }}>{l}</button>
+          ))}
+        </div>
+
+        {loadState === 'loading'   && <Skeleton/>}
+        {loadState === 'not_found' && <NotFound onRetry={()=>setRetries(r=>r+1)}/>}
+        {loadState === 'error'     && <ServerError onRetry={()=>setRetries(r=>r+1)}/>}
+        {loadState === 'success' && data && (
+          <TrackingCard data={data} loading={false} onRefresh={()=>setRetries(r=>r+1)}/>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer style={{
+        textAlign:'center',padding:'20px 16px',
+        borderTop:'1px solid var(--border-normal)',
+        fontSize:11,color:'var(--text-disabled)',
+        background:'var(--bg-surface)',
+      }}>
+        pakAG © 2026 · Sistema de gestión de reparto ·{' '}
+        <a href="mailto:soporte@pakag.com">soporte@pakag.com</a>
+      </footer>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<TrackingPage/>);
+</script>
+</body>
+</html>

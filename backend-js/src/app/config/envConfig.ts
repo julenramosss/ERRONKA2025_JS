@@ -7,6 +7,8 @@ export const resend_api_key = process.env.RESEND_API_KEY;
 
 export const directions_api_key = process.env.GOOGLE_DIRECTIONS_API_KEY!;
 
+export const is_dev = process.env.NODE_ENV !== "production";
+
 export const jwt_secret =
   process.env.JWT_SECRET ??
   "kjhaf7ya(/SFYAOUhf98ya9fya(SYf9a8fY)8sfyf08=A)uf98UF98U)OAIfu98af98u";

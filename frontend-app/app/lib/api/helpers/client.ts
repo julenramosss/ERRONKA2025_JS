@@ -12,7 +12,7 @@ import {
   AUTH_REFRESH_PATH,
   JSON_HEADERS,
   TRACKING_PATH_PREFIX,
-} from "../../envConfig";
+} from "../../../config/envConfig";
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;

@@ -3,10 +3,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { login } from "../../lib/api/auth-api";
 import { setAccessToken } from "../../lib/api/helpers/auth-token";
-import { authKeys } from "../../query/keys/auth.keys";
+import { AppError } from "../../types/api/common.types";
+import { LoginRequest, LoginResponse } from "../../types/api/auth.types";
 import { meQueryOptions } from "../../query/options/auth.options";
-import type { LoginRequest, LoginResponse } from "../../types/api/auth.types";
-import type { AppError } from "../../types/api/common.types";
+import { authKeys } from "../../query/keys/auth.keys";
 
 export function useLogin() {
   const queryClient = useQueryClient();

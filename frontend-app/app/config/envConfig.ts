@@ -6,3 +6,5 @@ export const JSON_HEADERS = {
 export const AUTH_REFRESH_PATH = "/auth/refresh";
 export const AUTH_LOGIN_PATH = "/auth/login";
 export const TRACKING_PATH_PREFIX = "/tracking/";
+
+export const ACCESS_TOKEN_STORAGE_KEY = "pakag.access_token";

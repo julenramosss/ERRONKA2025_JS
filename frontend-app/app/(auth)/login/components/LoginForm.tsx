@@ -1,11 +1,22 @@
+"use client";
 import { Icons } from "../../../components/icons";
+import { useLoginForm } from "../hooks/useLoginForm";
+import { ErrorPanel } from "./ErrorPanel";
 
 export function LoginForm() {
+  const { onFormSubmit, isError, error, isPending } = useLoginForm();
   return (
-    <form className="flex flex-col gap-4">
+    <form
+      onSubmit={(e) => {
+        onFormSubmit(e);
+      }}
+      className="flex flex-col gap-4"
+    >
       <div>
         <span className="text-text-secondary">Email</span>
-        <div className="bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors">
+        <div
+          className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? "border-red-500" : ""}`}
+        >
           <Icons.Mail size={20} className="text-text-secondary" />
           <input
             type="email"
@@ -19,7 +30,9 @@ export function LoginForm() {
       </div>
       <div>
         <span className="text-text-secondary">Password</span>
-        <div className="bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors">
+        <div
+          className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? "border-red-500" : ""}`}
+        >
           <Icons.Lock size={20} className="text-text-secondary" />
           <input
             type="password"
@@ -31,6 +44,7 @@ export function LoginForm() {
           />
         </div>
       </div>
+      {isError && error && <ErrorPanel message={error.message} />}
       <div className="flex flex-col items-end justify-center gap-5">
         <button className="text-xs md:text-base text-accent-light font-semibold">
           Zure pasahitza ahaztu duzu?
@@ -39,7 +53,7 @@ export function LoginForm() {
           type="submit"
           className="w-full flex items-center justify-center bg-accent text-white text-lg rounded-lg py-3 font-semibold gap-2 cursor-pointer hover:bg-accent-hover transition-colors shadow-[0_4px_24px_rgba(124,58,237,0.55)]"
         >
-          Sesioa hasi
+          {isPending ? "Sesioa hasten..." : "Sesioa hasi"}
           <Icons.ArrowRight size={16} className="inline ml-2" />
         </button>
       </div>
