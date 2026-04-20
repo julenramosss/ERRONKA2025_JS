@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { AppError } from "../../types/api/common.types";
+import type { AppError } from "../../../types/api/common.types";
 import { isApiErrorResponse } from "./response-helpers";
 
 export function isAppError(error: unknown): error is AppError {

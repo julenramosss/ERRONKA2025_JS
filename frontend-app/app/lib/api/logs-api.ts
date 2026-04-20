@@ -2,8 +2,8 @@ import type {
   PackageLogsRequest,
   PackageLogsResponse,
 } from "../../types/api/log.types";
-import { apiClient } from "./client";
-import { omitUndefinedParams } from "./response-helpers";
+import { apiClient } from "./helpers/client";
+import { omitUndefinedParams } from "./helpers/response-helpers";
 
 export async function getPackageLogs({
   packageId,
@@ -18,7 +18,7 @@ export async function getPackageLogs({
         page,
         limit,
       }),
-    },
+    }
   );
 
   return response.data;

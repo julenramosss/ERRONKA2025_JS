@@ -5,17 +5,17 @@ import type {
   UpdateRouteStatusRequest,
   UpdateRouteStatusResponse,
 } from "../../types/api/route.types";
-import { apiClient } from "./client";
-import { omitUndefinedParams } from "./response-helpers";
+import { apiClient } from "./helpers/client";
+import { omitUndefinedParams } from "./helpers/response-helpers";
 
 export async function getMyDailyRoute(
-  date?: string,
+  date?: string
 ): Promise<GetMyDailyRouteResponse> {
   const response = await apiClient.get<GetMyDailyRouteResponse>(
     "/routes/getMyDaily",
     {
       params: omitUndefinedParams({ date }),
-    },
+    }
   );
 
   return response.data;
@@ -23,22 +23,22 @@ export async function getMyDailyRoute(
 
 export async function updateRouteStatus(
   routeId: number,
-  payload: UpdateRouteStatusRequest,
+  payload: UpdateRouteStatusRequest
 ): Promise<UpdateRouteStatusResponse> {
   const response = await apiClient.patch<UpdateRouteStatusResponse>(
     `/routes/updateStatus/${routeId}`,
-    payload,
+    payload
   );
 
   return response.data;
 }
 
 export async function updateArrival(
-  payload: UpdateArrivalRequest,
+  payload: UpdateArrivalRequest
 ): Promise<UpdateArrivalResponse> {
   const response = await apiClient.patch<UpdateArrivalResponse>(
     "/stops/updateArrival",
-    payload,
+    payload
   );
 
   return response.data;

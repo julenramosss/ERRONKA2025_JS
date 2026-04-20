@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { login } from "../../lib/api/auth-api";
-import { setAccessToken } from "../../lib/api/auth-token";
+import { setAccessToken } from "../../lib/api/helpers/auth-token";
 import { authKeys } from "../../query/keys/auth.keys";
 import { meQueryOptions } from "../../query/options/auth.options";
 import type { LoginRequest, LoginResponse } from "../../types/api/auth.types";

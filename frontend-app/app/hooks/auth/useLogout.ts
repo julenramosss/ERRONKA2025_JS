@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { logout } from "../../lib/api/auth-api";
-import { clearAccessToken } from "../../lib/api/auth-token";
+import { clearAccessToken } from "../../lib/api/helpers/auth-token";
 import { authKeys } from "../../query/keys/auth.keys";
 import { logsKeys } from "../../query/keys/logs.keys";
 import { packagesKeys } from "../../query/keys/packages.keys";

@@ -3,18 +3,16 @@ import axios, {
   type AxiosError,
   type InternalAxiosRequestConfig,
 } from "axios";
-import type { RefreshResponse } from "../../types/api/auth.types";
+import type { RefreshResponse } from "../../../types/api/auth.types";
 import { clearAccessToken, getAccessToken, setAccessToken } from "./auth-token";
 import { toAppError } from "./errors";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const JSON_HEADERS = {
-  Accept: "application/json",
-  "Content-Type": "application/json",
-};
-const AUTH_REFRESH_PATH = "/auth/refresh";
-const AUTH_LOGIN_PATH = "/auth/login";
-const TRACKING_PATH_PREFIX = "/tracking/";
+import {
+  API_BASE_URL,
+  AUTH_LOGIN_PATH,
+  AUTH_REFRESH_PATH,
+  JSON_HEADERS,
+  TRACKING_PATH_PREFIX,
+} from "../../envConfig";
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -22,7 +20,7 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
 
 function applyAuthorizationHeader(
   config: InternalAxiosRequestConfig,
-  accessToken: string,
+  accessToken: string
 ): void {
   const headers = AxiosHeaders.from(config.headers);
   headers.set("Authorization", `Bearer ${accessToken}`);
@@ -109,5 +107,5 @@ apiClient.interceptors.response.use(
       clearAccessToken();
       return Promise.reject(toAppError(refreshError));
     }
-  },
+  }
 );

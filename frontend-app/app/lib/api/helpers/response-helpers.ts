@@ -1,10 +1,10 @@
-import type { ApiErrorResponse } from "../../types/api/common.types";
+import type { ApiErrorResponse } from "../../../types/api/common.types";
 
 export function omitUndefinedParams(
-  params: Record<string, string | number | boolean | undefined>,
+  params: Record<string, string | number | boolean | undefined>
 ): Record<string, string | number | boolean> {
   return Object.fromEntries(
-    Object.entries(params).filter(([, value]) => value !== undefined),
+    Object.entries(params).filter(([, value]) => value !== undefined)
   ) as Record<string, string | number | boolean>;
 }
 

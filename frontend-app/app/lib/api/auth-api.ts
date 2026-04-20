@@ -5,7 +5,7 @@ import type {
   MeResponse,
   RefreshResponse,
 } from "../../types/api/auth.types";
-import { apiClient } from "./client";
+import { apiClient } from "./helpers/client";
 
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
   const response = await apiClient.post<LoginResponse>("/auth/login", payload);
