@@ -73,8 +73,8 @@ async function refreshAccessToken(): Promise<string> {
   return refreshPromise;
 }
 
-apiClient.interceptors.request.use((config) => {
-  const accessToken = getAccessToken();
+apiClient.interceptors.request.use(async (config) => {
+  const accessToken = await getAccessToken();
 
   if (accessToken && !shouldSkipAuthRefresh(config.url)) {
     applyAuthorizationHeader(config, accessToken);

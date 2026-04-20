@@ -53,7 +53,7 @@ export function LoginForm() {
           type="submit"
           className="w-full flex items-center justify-center bg-accent text-white text-lg rounded-lg py-3 font-semibold gap-2 cursor-pointer hover:bg-accent-hover transition-colors shadow-[0_4px_24px_rgba(124,58,237,0.55)]"
         >
-          {isPending ? "Sesioa hasten..." : "Sesioa hasi"}
+          {isPending ? "Saioa hasten..." : "Saioa hasi"}
           <Icons.ArrowRight size={16} className="inline ml-2" />
         </button>
       </div>

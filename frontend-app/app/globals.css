@@ -8,6 +8,7 @@
   --color-bg-surface: var(--bg-surface);
   --color-bg-elevated: var(--bg-elevated);
   --color-bg-error: var(--st-failed-bg);
+  --color-bg-admin: var(--admin-bg);
 
   /* Accents */
   --color-accent: var(--accent-primary);
@@ -20,10 +21,12 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-disabled: var(--text-disabled);
   --color-text-error: var(--st-failed-fg);
+  --color-text-admin: var(--admin-fg);
 
   /* Borders */
   --color-border: var(--border-normal);
   --color-border-focus: var(--border-focus);
+  --color-border-admin: var(--admin-border);
 
   /* Status */
   --color-st-pending: var(--st-pending-fg);
@@ -82,6 +85,7 @@
   /* Admin accent */
   --admin-fg: #fbbf24;
   --admin-bg: #3d2e0a;
+  --admin-border: #fbbf24;
 
   /* Radius */
   --r-sm: 6px;
@@ -115,6 +119,9 @@ body {
 
 a {
   text-decoration: none;
+}
+button {
+  cursor: pointer;
 }
 
 /* ─── Forms ──────────────────────────────────────────────────────────────── */

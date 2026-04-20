@@ -1,43 +1,38 @@
 import { ACCESS_TOKEN_STORAGE_KEY } from "../../../config/envConfig";
 
-function getSessionStorage(): Storage | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
+// Access token lifetime in seconds — must match JWT expiry on the backend
+const COOKIE_MAX_AGE = 15 * 60; // 15 minutes
 
-  try {
-    return window.sessionStorage;
-  } catch {
-    return null;
-  }
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+}
+
+function setCookie(name: string, value: string, maxAge: number): void {
+  if (typeof document === "undefined") return;
+  const secure =
+    typeof location !== "undefined" && location.protocol === "https:"
+      ? "; Secure"
+      : "";
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Strict${secure}`;
+}
+
+function deleteCookie(name: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Strict`;
 }
 
 export function getAccessToken(): string | null {
-  const storage = getSessionStorage();
-
-  if (!storage) {
-    return null;
-  }
-
-  return storage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+  return getCookie(ACCESS_TOKEN_STORAGE_KEY);
 }
 
 export function setAccessToken(accessToken: string): void {
-  const storage = getSessionStorage();
-
-  if (!storage) {
-    return;
-  }
-
-  storage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+  setCookie(ACCESS_TOKEN_STORAGE_KEY, accessToken, COOKIE_MAX_AGE);
 }
 
 export function clearAccessToken(): void {
-  const storage = getSessionStorage();
-
-  if (!storage) {
-    return;
-  }
-
-  storage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+  deleteCookie(ACCESS_TOKEN_STORAGE_KEY);
 }

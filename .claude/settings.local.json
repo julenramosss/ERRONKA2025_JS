@@ -1,8 +1,5 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(pnpm install *)",
-      "Bash(GOOGLE_DIRECTIONS_API_KEY=\"AIzaSyAomqK9T8KKDbyqJGbQKbqdm_QcE23_sEc\" npx ts-node --project tsconfig.test.json src/app/lib/maps/__tests__/optimizeRoute.test.ts)"
-    ]
+    "allow": ["Bash(pnpm install *)"]
   }
 }

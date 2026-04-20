@@ -3,7 +3,8 @@ import { getPackageLogs } from "../../lib/api/logs-api";
 import { logsKeys } from "../keys/logs.keys";
 import type { PackageLogsRequest } from "../../types/api/log.types";
 
-const PACKAGE_LOGS_STALE_TIME = 5 * 60 * 1000;
+const STALE_TIME = 10 * 60 * 1000;
+const GC_TIME = 15 * 60 * 1000;
 
 export function packageLogsQueryOptions({
   packageId,
@@ -13,6 +14,7 @@ export function packageLogsQueryOptions({
   return queryOptions({
     queryKey: logsKeys.list(packageId, page, limit),
     queryFn: () => getPackageLogs({ packageId, page, limit }),
-    staleTime: PACKAGE_LOGS_STALE_TIME,
+    staleTime: STALE_TIME,
+    gcTime: GC_TIME,
   });
 }

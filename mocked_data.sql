@@ -20,11 +20,11 @@ BEGIN;
 -- 1. USERS
 -- ================================================================
 INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) VALUES
-  (1, 'Mikel Etxeberria', 'mikel@pakag.eus',  '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO', 'admin',       true,  NOW() - INTERVAL 6 MONTH),
-  (2, 'Ander Zubizarreta','ander@pakag.eus',  '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO', 'distributor', true,  NOW() - INTERVAL 4 MONTH),
-  (3, 'Ainhoa Larrañaga', 'ainhoa@pakag.eus', '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO', 'distributor', true,  NOW() - INTERVAL 3 MONTH),
-  (4, 'Gorka Mendizabal', 'gorka@pakag.eus',  '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO', 'distributor', true,  NOW() - INTERVAL 2 MONTH),
-  (5, 'Leire Arruti',     'leire@pakag.eus',  '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO', 'distributor', false, NOW() - INTERVAL 5 MONTH);
+  (1, 'Julen Ramos Tolosa', 'julenramostolosa@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'admin',       true,  NOW() - INTERVAL 6 MONTH),
+  (2, 'Alejandro Ariza Aguilar','alejandroarizaaguilar@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', true,  NOW() - INTERVAL 4 MONTH),
+  (3, 'Sergio Rocha Tolosaldea', 'sergiorochatolosaldea@gmail.com', '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', true,  NOW() - INTERVAL 3 MONTH),
+  (4, 'Julen Ramos Arruti', 'jramosarruti@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', true,  NOW() - INTERVAL 2 MONTH),
+  (5, 'Penelope Garcia',     'penelopeg@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', false, NOW() - INTERVAL 5 MONTH);
 
 
 -- ================================================================
@@ -187,7 +187,7 @@ COMMIT;
 --
 --   node -e "require('bcrypt').hash('Test1234!', 10).then(console.log)"
 --
--- Emaitza kopiatu eta $2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO ordeztu behean.
+-- Emaitza kopiatu eta $2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC ordeztu behean.
 -- ================================================================
 
 BEGIN;
@@ -217,9 +217,9 @@ INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) 
   -- Admin
   (
     'a0000000-0000-0000-0000-000000000001',
-    'Mikel Etxeberria',
-    'mikel@pakag.eus',
-    '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO',
+    'Julen Ramos Tolosa',
+    'julenramostolosa@gmail.com',
+    '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC',
     'admin',
     true,
     NOW() - INTERVAL '6 months'
@@ -228,27 +228,27 @@ INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) 
   -- Banatzaileak (aktiboak)
   (
     'a0000000-0000-0000-0000-000000000002',
-    'Ander Zubizarreta',
-    'ander@pakag.eus',
-    '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO',
+    'Alejandro Ariza Aguilar',
+    'alejandroarizaaguilar@gmail.com',
+    '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC',
     'distributor',
     true,
     NOW() - INTERVAL '4 months'
   ),
   (
     'a0000000-0000-0000-0000-000000000003',
-    'Ainhoa Larrañaga',
-    'ainhoa@pakag.eus',
-    '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO',
+    'Julen Ramos Arruti',
+    'jramosarruti@gmail.com',
+    '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC',
     'distributor',
     true,
     NOW() - INTERVAL '3 months'
   ),
   (
     'a0000000-0000-0000-0000-000000000004',
-    'Gorka Mendizabal',
-    'gorka@pakag.eus',
-    '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO',
+    'Sergio Rocha Tolosaldea',
+    'sergiotolosaldea@gmail.com',
+    '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC',
     'distributor',
     true,
     NOW() - INTERVAL '2 months'
@@ -257,9 +257,9 @@ INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) 
   -- Banatzaile desgaitua (disable/enable testetzeko)
   (
     'a0000000-0000-0000-0000-000000000005',
-    'Leire Arruti',
-    'leire@pakag.eus',
-    '$2b$10$cKFeOWg4NkNtJRGoPwp5Lehbn1kOB291Z9d903LX7YjgBzK0oDxwO',
+    'Penelope Garcia',
+    'penelopeg@gmail.com',
+    '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC',
     'distributor',
     false,
     NOW() - INTERVAL '5 months'

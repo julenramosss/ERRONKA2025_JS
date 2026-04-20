@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="w-screen min-h-screen">
+      <body className="w-screen min-h-screen overflow-x-hidden">
         <AppProviders>
           <RouteGuard>{children}</RouteGuard>
         </AppProviders>

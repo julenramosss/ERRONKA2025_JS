@@ -23,19 +23,23 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
-    const token = getAccessToken();
+    const checkToken = async () => {
+      const token = await getAccessToken();
 
-    // Si estás en login y tienes token válido → redirigir a /
-    if (isPublicRoute && token && isTokenValid(token)) {
-      router.replace("/");
-      return;
-    }
+      // Si estás en login y tienes token válido → redirigir a /
+      if (isPublicRoute && token && isTokenValid(token)) {
+        router.replace("/");
+        return;
+      }
 
-    // Si estás en ruta protegida sin token → redirigir a login
-    if (!isPublicRoute && (!token || !isTokenValid(token))) {
-      sessionStorage.setItem("redirect_after_login", pathname);
-      router.replace("/login");
-    }
+      // Si estás en ruta protegida sin token → redirigir a login
+      if (!isPublicRoute && (!token || !isTokenValid(token))) {
+        sessionStorage.setItem("redirect_after_login", pathname);
+        router.replace("/login");
+      }
+    };
+
+    checkToken();
   }, [pathname, router, isPublicRoute]);
 
   return <>{children}</>;

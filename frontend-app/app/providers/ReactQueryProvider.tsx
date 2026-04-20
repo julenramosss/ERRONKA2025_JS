@@ -29,8 +29,9 @@ function createQueryClientConfig(): QueryClientConfig {
 
           return true;
         },
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
         refetchOnReconnect: true,
+        gcTime: 10 * 60 * 1000, // keep cache 10 min after component unmounts
       },
       mutations: {
         retry: false,

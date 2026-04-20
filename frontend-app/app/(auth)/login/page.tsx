@@ -27,9 +27,7 @@ export default function LoginPage() {
               <h2 className="text-text-secondary text-md font-semibold mb-2">
                 · ONGI ETORRI
               </h2>
-              <h1 className="text-white font-bold text-3xl mb-4">
-                Sesioa hasi
-              </h1>
+              <h1 className="text-white font-bold text-3xl mb-4">Saioa hasi</h1>
               <p className="text-text-secondary">
                 Paketeriak jarraitzeko eta kudeatzeko plataforma. Sartu zure
                 kontura eta hasi paketeak kudeatzen!

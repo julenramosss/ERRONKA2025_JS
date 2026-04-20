@@ -7,6 +7,7 @@
     "frontend:dev": "pnpm --filter frontend-app dev -p 3000"
   },
   "dependencies": {
+    "boneyard-js": "1.7.7",
     "resend": "6.12.0"
   }
 }
