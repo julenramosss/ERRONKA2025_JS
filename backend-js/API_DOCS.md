@@ -249,7 +249,7 @@
 
 ### PATCH /api/auth/changePwd
 
-**Description:** Sets a new password for a user using a password-reset token (received by email). Also activates the account if it was inactive. Revokes all existing reset tokens for the user after success.
+**Description:** Dual-mode endpoint. When called with only `reset_pwd_token`, validates the token and returns whether it is valid (useful for showing a 404 page on the frontend if the token is invalid or expired). When called with both `reset_pwd_token` and `new_password`, sets the new password, activates the account if inactive, and revokes all existing reset tokens for the user.
 
 **Authentication:** None required. Authenticated via the `reset_pwd_token` field.
 
@@ -257,12 +257,20 @@
 
 **Request Parameters:**
 
-| Location    | Name              | Type   | Required | Description                                    |
-| ----------- | ----------------- | ------ | -------- | ---------------------------------------------- |
-| Body (JSON) | `new_password`    | string | ✅       | New password, minimum 6 characters             |
-| Body (JSON) | `reset_pwd_token` | string | ✅       | One-time token from the reset/activation email |
+| Location    | Name              | Type   | Required | Description                                                               |
+| ----------- | ----------------- | ------ | -------- | ------------------------------------------------------------------------- |
+| Body (JSON) | `reset_pwd_token` | string | ✅       | One-time token from the reset/activation email                            |
+| Body (JSON) | `new_password`    | string | ❌       | New password, minimum 6 characters. If omitted, only validates the token. |
 
-**Request Body Example:**
+**Request Body Example (token check only):**
+
+```json
+{
+  "reset_pwd_token": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+
+**Request Body Example (change password):**
 
 ```json
 {
@@ -275,9 +283,18 @@
 
 | Status | Description      | Body                                             |
 | ------ | ---------------- | ------------------------------------------------ |
+| 200    | Token check      | `{ "valid": true \| false }`                     |
 | 200    | Password changed | `{ "message": "Password changed successfully" }` |
 
-**Response Body Example (200):**
+**Response Body Example (200 — token check):**
+
+```json
+{
+  "valid": true
+}
+```
+
+**Response Body Example (200 — password changed):**
 
 ```json
 {
@@ -287,14 +304,15 @@
 
 **Errors:**
 
-| Status | Message                                                        | When does it happen                   |
-| ------ | -------------------------------------------------------------- | ------------------------------------- |
-| 400    | `"new_password is required and must be at least 6 characters"` | Missing or too-short password         |
-| 400    | `"reset_pwd_token is required"`                                | Missing token                         |
-| 401    | `"Invalid or expired email token"`                             | Token not found in DB or already used |
-| 500    | `"Internal server error"`                                      | Unhandled exception                   |
+| Status | Message                                        | When does it happen                   |
+| ------ | ---------------------------------------------- | ------------------------------------- |
+| 400    | `"reset_pwd_token is required"`                | Missing token                         |
+| 400    | `"new_password must be at least 6 characters"` | Too-short password                    |
+| 401    | `"Invalid or expired email token"`             | Token not found in DB or already used |
+| 500    | `"Internal server error"`                      | Unhandled exception                   |
 
-**Side Effects:** Hashes and saves the new password. Sets `is_active = true`. Revokes all reset tokens for the user.
+**Side Effects (token check):** None.  
+**Side Effects (password change):** Hashes and saves the new password. Sets `is_active = true`. Revokes all reset tokens for the user.
 
 ---
 

@@ -1,4 +1,4 @@
-import { Icons } from "@/app/components/icons";
+import { Icons } from "../../../components/icons";
 
 export function LoginForm() {
   return (

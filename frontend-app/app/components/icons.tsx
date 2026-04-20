@@ -1,5 +1,17 @@
+import type { ReactElement, SVGProps } from "react";
+
+type SvgIconProps = Omit<SVGProps<SVGSVGElement>, "children" | "d" | "stroke"> & {
+  size?: number;
+  stroke?: number;
+  fill?: string;
+};
+
+interface IconProps extends SvgIconProps {
+  d: ReactElement;
+}
+
 // Minimal Lucide-style icons, stroke-based
-const Icon = ({ d, size = 18, stroke = 2, fill, ...rest }) => (
+const Icon = ({ d, size = 18, stroke = 2, fill, ...rest }: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -15,7 +27,7 @@ const Icon = ({ d, size = 18, stroke = 2, fill, ...rest }) => (
   </svg>
 );
 
-export const Icons = {
+export const Icons: Record<string, (props: SvgIconProps) => ReactElement> = {
   Package: (p) => (
     <Icon
       {...p}

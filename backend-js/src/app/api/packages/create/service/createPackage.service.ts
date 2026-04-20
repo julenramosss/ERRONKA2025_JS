@@ -20,7 +20,7 @@ export async function createPackageService(
   address_info: CreateAddressInfoDto
 ): Promise<CreatedPackageResult> {
   const { lat, lng } = await mapsService.geocodeAddress(
-    `${address_info.street}, ${address_info.city}, ${address_info.postal_code}`
+    `${address_info.street}, ${address_info.city}, ${address_info.postal_code}` // => "123 Main St, Anytown, 12345"
   );
 
   const address_info_with_coords = {

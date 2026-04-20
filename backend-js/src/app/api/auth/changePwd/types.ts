@@ -1,4 +1,4 @@
 export interface ChangePwdDto {
-  newPassword: string;
+  newPassword?: string;
   reset_pwd_token: string;
 }

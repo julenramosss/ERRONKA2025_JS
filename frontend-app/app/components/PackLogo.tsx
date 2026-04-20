@@ -1,4 +1,9 @@
-export const PakLogo = ({ size = 28, showText = true }) => (
+interface PakLogoProps {
+  size?: number;
+  showText?: boolean;
+}
+
+export const PakLogo = ({ size = 28, showText = true }: PakLogoProps) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
     <div
       style={{

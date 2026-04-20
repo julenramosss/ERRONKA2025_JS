@@ -1,6 +1,9 @@
 RewriteEngine On
-# Si el archivo o directorio no existe físicamente...
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-# Pasar todo lo que viene después de la barra como parámetro 'token' a index.php
-RewriteRule ^([^/]+)$ index.php?token=$1 [L,QSA]
+
+# Sirve archivos y carpetas existentes tal cual.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Permite acceder como /TOKEN y lo traduce a index.php?token=TOKEN
+RewriteRule ^([^/]+)/?$ index.php?token=$1 [L,QSA]
