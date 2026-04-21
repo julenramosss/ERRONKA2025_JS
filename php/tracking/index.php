@@ -13,16 +13,16 @@ function track_package(string $baseUrl, string $trackingToken, int $timeout): ar
     $response = api_get_json($url, $timeout);
 
     if (!empty($response['error'])) {
-        return ['success' => false, 'message' => 'Error de conexión: ' . $response['error']];
+        return ['success' => false, 'message' => 'Konexio-errorea: ' . $response['error']];
     }
 
     $status = (int) ($response['status'] ?? 0);
     $data = $response['data'] ?? [];
 
     if ($status === 200) return ['success' => true, 'data' => $data];
-    if ($status === 404) return ['success' => false, 'message' => 'Token de rastreo inválido o expirado.'];
+    if ($status === 404) return ['success' => false, 'message' => 'Jarraipen-tokena baliogabea edo iraungita dago.'];
 
-    return ['success' => false, 'message' => $data['message'] ?? 'Error al buscar paquete (Error ' . $status . ').'];
+    return ['success' => false, 'message' => $data['message'] ?? 'Errorea paketea bilatzean (Errorea ' . $status . ').'];
 }
 
 $scene = 'search';
@@ -33,7 +33,7 @@ $trackingToken = trim((string) ($_GET['token'] ?? ''));
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $trackingToken = trim((string) ($_POST['tracking_token'] ?? ''));
     if (empty($trackingToken)) {
-        $errors[] = 'Por favor ingresa tu token de rastreo.';
+        $errors[] = 'Mesedez, sartu zure jarraipen-tokena.';
     } else {
         $result = track_package($config['base_url'], $trackingToken, $config['request_timeout_seconds']);
         if ($result['success']) { $scene = 'tracking'; $packageData = $result['data']; }
@@ -48,22 +48,22 @@ if ($trackingToken !== '' && $scene === 'search') {
 }
 
 $statusMap = [
-    'pending'          => ['label' => 'Pendiente',        'icon' => '📋', 'class' => 'pending'],
-    'processing'       => ['label' => 'Procesando',       'icon' => '⚙️', 'class' => 'pending'],
-    'in_warehouse'     => ['label' => 'En almacén',       'icon' => '🏢', 'class' => 'pending'],
-    'in_transit'       => ['label' => 'En tránsito',      'icon' => '🚚', 'class' => 'pending'],
-    'out_for_delivery' => ['label' => 'Salida a reparto', 'icon' => '📦', 'class' => 'pending'],
-    'in_delivery'      => ['label' => 'En reparto',       'icon' => '📦', 'class' => 'pending'],
-    'delivered'        => ['label' => 'Entregado',        'icon' => '✓',  'class' => 'delivered'],
-    'failed'           => ['label' => 'Entrega fallida',  'icon' => '✗',  'class' => 'failed'],
-    'returned'         => ['label' => 'Devuelto',         'icon' => '↩️', 'class' => 'failed'],
+    'pending'          => ['label' => 'Zain',              'icon' => '📋', 'class' => 'pending'],
+    'processing'       => ['label' => 'Prozesatzen',       'icon' => '⚙️', 'class' => 'pending'],
+    'in_warehouse'     => ['label' => 'Biltegian',         'icon' => '🏢', 'class' => 'pending'],
+    'in_transit'       => ['label' => 'Garraioan',         'icon' => '🚚', 'class' => 'pending'],
+    'out_for_delivery' => ['label' => 'Banaketara irten',  'icon' => '📦', 'class' => 'pending'],
+    'in_delivery'      => ['label' => 'Banatzen',          'icon' => '📦', 'class' => 'pending'],
+    'delivered'        => ['label' => 'Entregatua',        'icon' => '✓',  'class' => 'delivered'],
+    'failed'           => ['label' => 'Entrega huts egin', 'icon' => '✗',  'class' => 'failed'],
+    'returned'         => ['label' => 'Itzulita',          'icon' => '↩️', 'class' => 'failed'],
 ];
 ?><!doctype html>
-<html lang="es">
+<html lang="eu">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Rastrear Paquete — pakAG</title>
+  <title>Paketea jarraitu — pakAG</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
@@ -95,9 +95,9 @@ $statusMap = [
       <?php if ($scene === 'search'): ?>
 
         <div class="form-header">
-          <p class="form-eyebrow">· RASTREO DE PAQUETES</p>
-          <h1 class="form-title">Localiza tu envío</h1>
-          <p class="form-desc">Ingresa el código de rastreo para ver el estado y ubicación en tiempo real.</p>
+          <p class="form-eyebrow">· PAKETEAK JARRAITU</p>
+          <h1 class="form-title">Zure bidalketa kokatu</h1>
+          <p class="form-desc">Sartu jarraipen-kodea egoera eta kokapena denbora errealean ikusteko.</p>
         </div>
 
         <?php foreach ($errors as $error): ?>
@@ -112,18 +112,18 @@ $statusMap = [
         <form method="post" novalidate>
           <div class="fields">
             <div>
-              <label class="field-label">Token de rastreo</label>
+              <label class="field-label">Jarraipen-tokena</label>
               <div class="input-wrap">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <input name="tracking_token" type="text" placeholder="Pega el token del email de confirmación" autofocus autocomplete="off" value="<?php echo h($trackingToken); ?>"/>
+                <input name="tracking_token" type="text" placeholder="Itsatsi tokena baieztatze-emailetik" autofocus autocomplete="off" value="<?php echo h($trackingToken); ?>"/>
               </div>
             </div>
           </div>
 
           <button type="submit" class="btn-primary">
-            Rastrear paquete
+            Paketea jarraitu
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
             </svg>
@@ -131,8 +131,8 @@ $statusMap = [
         </form>
 
         <div class="hint">
-          Revisa el email de confirmación del pedido<br>
-          <span style="margin-top:4px;display:block">Te enviamos un link con tu token de rastreo único</span>
+          Begiratu eskaeraren baieztatze-emaila<br>
+          <span style="margin-top:4px;display:block">Zure jarraipen-token bakarrarekin esteka bat bidali dizugu</span>
         </div>
 
       <?php elseif ($scene === 'tracking' && $packageData): ?>
@@ -142,8 +142,8 @@ $statusMap = [
         ?>
 
         <div class="form-header">
-          <p class="form-eyebrow">· ESTADO DEL ENVÍO</p>
-          <h1 class="form-title" style="font-size:22px"><?php echo h($packageData['tracking_code'] ?? 'Tu paquete'); ?></h1>
+          <p class="form-eyebrow">· BIDALKETA EGOERA</p>
+          <h1 class="form-title" style="font-size:22px"><?php echo h($packageData['tracking_code'] ?? 'Zure paketea'); ?></h1>
         </div>
 
         <div class="tracking-header">
@@ -155,14 +155,14 @@ $statusMap = [
 
         <?php if (!empty($packageData['recipient_name'])): ?>
           <div class="pkg-info">
-            <div class="pkg-info-label">Destinatario</div>
+            <div class="pkg-info-label">Hartzailea</div>
             <div class="pkg-info-value" style="font-weight:500"><?php echo h($packageData['recipient_name']); ?></div>
           </div>
         <?php endif; ?>
 
         <?php if (!empty($packageData['address'])): ?>
           <div class="pkg-info">
-            <div class="pkg-info-label">Dirección de entrega</div>
+            <div class="pkg-info-label">Entrega helbidea</div>
             <div class="pkg-info-value">
               <?php echo h($packageData['address']['street'] ?? ''); ?>
               <?php if (!empty($packageData['address']['city'])): ?><br><?php echo h($packageData['address']['city']); ?><?php endif; ?>
@@ -173,21 +173,21 @@ $statusMap = [
 
         <?php if (!empty($packageData['estimated_delivery'])): ?>
           <div class="pkg-info">
-            <div class="pkg-info-label">Entrega estimada</div>
+            <div class="pkg-info-label">Entrega estimatua</div>
             <div class="pkg-info-value"><?php echo h($packageData['estimated_delivery']); ?></div>
           </div>
         <?php endif; ?>
 
         <?php if (!empty($packageData['last_update'])): ?>
           <div class="pkg-info">
-            <div class="pkg-info-label">Última actualización</div>
+            <div class="pkg-info-label">Azken eguneratzea</div>
             <div class="pkg-info-value" style="font-size:12px;color:var(--text-disabled)"><?php echo h($packageData['last_update']); ?></div>
           </div>
         <?php endif; ?>
 
         <div class="tracking-footer">
           <form method="post">
-            <button type="submit" class="btn-secondary">Buscar otro paquete</button>
+            <button type="submit" class="btn-secondary">Beste pakete bat bilatu</button>
           </form>
         </div>
 
@@ -223,13 +223,13 @@ $statusMap = [
     <div class="float-card fc-1">
       <div class="fc-meta">
         <span class="fc-code">PKG-261042</span>
-        <span class="transit-badge"><span class="transit-dot"></span> En tránsito</span>
+        <span class="transit-badge"><span class="transit-dot"></span> Garraioan</span>
       </div>
       <div class="fc-name">Itziar Etxeberria</div>
       <div class="fc-addr">Kale Nagusia 12, Tolosa</div>
       <div class="fc-sep"></div>
       <div class="fc-bottom">
-        <span>Parada #3</span>
+        <span>Geldialdia #3</span>
         <span>ETA 10:20</span>
       </div>
     </div>
@@ -243,12 +243,12 @@ $statusMap = [
           </svg>
         </div>
         <div>
-          <div class="fc-route-label">Ruta de hoy</div>
-          <div class="fc-route-title">8 paradas · 24 km</div>
+          <div class="fc-route-label">Gaurko ibilbidea</div>
+          <div class="fc-route-title">8 geldialdia · 24 km</div>
         </div>
       </div>
       <div class="progress-track"><div class="progress-bar"></div></div>
-      <div class="fc-progress-label"><strong>5 de 8</strong> completadas</div>
+      <div class="fc-progress-label"><strong>8tik 5</strong> osatuta</div>
     </div>
 
     <!-- Card 3: Fake map -->
@@ -268,8 +268,8 @@ $statusMap = [
 
     <!-- Headline -->
     <div class="panel-headline">
-      <h2>Cada paquete,<br><span>en su lugar.</span></h2>
-      <p>Centro de operaciones para la flota de reparto — ruta, estado y trazabilidad en una sola pantalla.</p>
+      <h2>Pakete bakoitza,<br><span>bere lekuan.</span></h2>
+      <p>Adunako banaketa-flotarako operazio-zentroa — ibilbidea, egoera eta trazabilitatea pantaila bakarrean.</p>
     </div>
   </div>
 
