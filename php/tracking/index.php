@@ -13,30 +13,16 @@ function track_package(string $baseUrl, string $trackingToken, int $timeout): ar
     $response = api_get_json($url, $timeout);
 
     if (!empty($response['error'])) {
-        return [
-            'success' => false,
-            'message' => 'Error de conexión: ' . $response['error'],
-        ];
+        return ['success' => false, 'message' => 'Error de conexión: ' . $response['error']];
     }
 
     $status = (int) ($response['status'] ?? 0);
     $data = $response['data'] ?? [];
 
-    if ($status === 200) {
-        return ['success' => true, 'data' => $data];
-    }
+    if ($status === 200) return ['success' => true, 'data' => $data];
+    if ($status === 404) return ['success' => false, 'message' => 'Token de rastreo inválido o expirado.'];
 
-    if ($status === 404) {
-        return [
-            'success' => false,
-            'message' => 'Token de rastreo inválido o expirado.',
-        ];
-    }
-
-    return [
-        'success' => false,
-        'message' => $data['message'] ?? 'Error al buscar paquete (Error ' . $status . ').',
-    ];
+    return ['success' => false, 'message' => $data['message'] ?? 'Error al buscar paquete (Error ' . $status . ').'];
 }
 
 $scene = 'search';
@@ -46,165 +32,247 @@ $trackingToken = trim((string) ($_GET['token'] ?? ''));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $trackingToken = trim((string) ($_POST['tracking_token'] ?? ''));
-
     if (empty($trackingToken)) {
         $errors[] = 'Por favor ingresa tu token de rastreo.';
     } else {
         $result = track_package($config['base_url'], $trackingToken, $config['request_timeout_seconds']);
-        if ($result['success']) {
-            $scene = 'tracking';
-            $packageData = $result['data'];
-        } else {
-            $errors[] = $result['message'];
-        }
+        if ($result['success']) { $scene = 'tracking'; $packageData = $result['data']; }
+        else { $errors[] = $result['message']; }
     }
 }
 
-// Si hay token en URL, hacer búsqueda automática
 if ($trackingToken !== '' && $scene === 'search') {
     $result = track_package($config['base_url'], $trackingToken, $config['request_timeout_seconds']);
-    if ($result['success']) {
-        $scene = 'tracking';
-        $packageData = $result['data'];
-    } else {
-        $errors[] = $result['message'];
-    }
+    if ($result['success']) { $scene = 'tracking'; $packageData = $result['data']; }
+    else { $errors[] = $result['message']; }
 }
 
-// Estados para mapeo de colores
 $statusMap = [
-    'pending' => ['label' => 'Pendiente', 'icon' => '📋', 'class' => 'pending'],
-    'processing' => ['label' => 'Procesando', 'icon' => '⚙️', 'class' => 'pending'],
-    'in_warehouse' => ['label' => 'En almacén', 'icon' => '🏢', 'class' => 'pending'],
-    'in_transit' => ['label' => 'En tránsito', 'icon' => '🚚', 'class' => 'pending'],
+    'pending'          => ['label' => 'Pendiente',        'icon' => '📋', 'class' => 'pending'],
+    'processing'       => ['label' => 'Procesando',       'icon' => '⚙️', 'class' => 'pending'],
+    'in_warehouse'     => ['label' => 'En almacén',       'icon' => '🏢', 'class' => 'pending'],
+    'in_transit'       => ['label' => 'En tránsito',      'icon' => '🚚', 'class' => 'pending'],
     'out_for_delivery' => ['label' => 'Salida a reparto', 'icon' => '📦', 'class' => 'pending'],
-    'in_delivery' => ['label' => 'En reparto', 'icon' => '📦', 'class' => 'pending'],
-    'delivered' => ['label' => 'Entregado', 'icon' => '✓', 'class' => 'delivered'],
-    'failed' => ['label' => 'Entrega fallida', 'icon' => '✗', 'class' => 'failed'],
-    'returned' => ['label' => 'Devuelto', 'icon' => '↩️', 'class' => 'failed'],
+    'in_delivery'      => ['label' => 'En reparto',       'icon' => '📦', 'class' => 'pending'],
+    'delivered'        => ['label' => 'Entregado',        'icon' => '✓',  'class' => 'delivered'],
+    'failed'           => ['label' => 'Entrega fallida',  'icon' => '✗',  'class' => 'failed'],
+    'returned'         => ['label' => 'Devuelto',         'icon' => '↩️', 'class' => 'failed'],
 ];
-
 ?><!doctype html>
 <html lang="es">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Rastrear Paquete — pakAG</title>
-    <link rel="stylesheet" href="assets/css/styles.css"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Rastrear Paquete — pakAG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/css/styles.css"/>
 </head>
 <body>
-<div class="glow"></div>
-<div class="page-wrap">
-    <div class="logo-wrap">
-        <div class="logo">
-            <div class="logo-badge">
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-                    <path d="m3.3 7 8.7 5 8.7-5"/>
-                    <path d="M12 22V12"/>
-                </svg>
-            </div>
-            <div class="logo-text">pak<span>AG</span></div>
+<div class="layout">
+
+  <!-- ── LEFT PANEL ─────────────────────────────────── -->
+  <div class="left-panel">
+    <div class="ambient-glow"></div>
+
+    <!-- Logo -->
+    <div class="panel-logo">
+      <div class="logo">
+        <div class="logo-badge">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+            <path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
+          </svg>
         </div>
+        <div class="logo-text">pak<span>AG</span></div>
+      </div>
     </div>
 
-    <?php if ($scene === 'search'): ?>
-        <div class="card fade-up">
-            <div class="hero">
-                <h1>Rastrear tu paquete</h1>
-                <p>Ingresa el código para ver el estado y ubicación.</p>
-            </div>
+    <!-- Form area -->
+    <div class="panel-content fade-up">
 
-            <?php foreach ($errors as $error): ?>
-                <div class="alert fade-in">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <?php echo h($error); ?>
-                </div>
-            <?php endforeach; ?>
+      <?php if ($scene === 'search'): ?>
 
-            <form method="post" novalidate>
-                <div class="field">
-                    <label class="field-label">Token de rastreo</label>
-                    <input name="tracking_token" type="text" placeholder="Copia el token del email de confirmación" required autofocus style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-normal); border-radius:8px; color:white;">
-                </div>
-                <button type="submit" class="primary-btn" style="width:100%; margin-top:25px; cursor:pointer;">
-                    Rastrear paquete
-                </button>
-            </form>
-
-            <div class="token-hint" style="margin-top:30px;">
-                <p>Revisa el email de confirmación del pedido</p>
-                <p style="font-size:12px; color:var(--text-disabled); margin-top:8px;">Te enviamos un link con tu token de rastreo único</p>
-            </div>
+        <div class="form-header">
+          <p class="form-eyebrow">· RASTREO DE PAQUETES</p>
+          <h1 class="form-title">Localiza tu envío</h1>
+          <p class="form-desc">Ingresa el código de rastreo para ver el estado y ubicación en tiempo real.</p>
         </div>
 
-    <?php elseif ($scene === 'tracking' && $packageData): ?>
-        <div class="card tracking-card fade-up">
-            <div class="tracking-header">
-                <div>
-                    <h2 style="margin-bottom:4px;"><?php echo h($packageData['tracking_code'] ?? 'Paquete'); ?></h2>
-                    <p style="color:var(--text-secondary); font-size:13px;">
-                        <?php 
-                        $status = $packageData['status'] ?? 'unknown';
-                        $statusInfo = $statusMap[$status] ?? ['label' => 'Estado desconocido', 'icon' => '?', 'class' => 'pending'];
-                        echo h($statusInfo['label']);
-                        ?>
-                    </p>
-                </div>
-                <div style="text-align:right;">
-                    <div style="font-size:28px; margin-bottom:8px;">
-                        <?php echo $statusInfo['icon']; ?>
-                    </div>
-                </div>
+        <?php foreach ($errors as $error): ?>
+          <div class="alert">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <?php echo h($error); ?>
+          </div>
+        <?php endforeach; ?>
+
+        <form method="post" novalidate>
+          <div class="fields">
+            <div>
+              <label class="field-label">Token de rastreo</label>
+              <div class="input-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input name="tracking_token" type="text" placeholder="Pega el token del email de confirmación" autofocus autocomplete="off" value="<?php echo h($trackingToken); ?>"/>
+              </div>
             </div>
+          </div>
 
-            <?php if (!empty($packageData['recipient_name'])): ?>
-                <div class="package-info">
-                    <h3 style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">Destinatario</h3>
-                    <p style="font-weight:500;"><?php echo h($packageData['recipient_name']); ?></p>
-                </div>
-            <?php endif; ?>
+          <button type="submit" class="btn-primary">
+            Rastrear paquete
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+            </svg>
+          </button>
+        </form>
 
-            <?php if (!empty($packageData['address'])): ?>
-                <div class="package-info">
-                    <h3 style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">Dirección de entrega</h3>
-                    <p>
-                        <?php echo h($packageData['address']['street'] ?? ''); ?>
-                        <?php if (!empty($packageData['address']['city'])): ?><br><?php echo h($packageData['address']['city']); ?>, <?php endif; ?>
-                        <?php if (!empty($packageData['address']['postal_code'])): ?><?php echo h($packageData['address']['postal_code']); ?><?php endif; ?>
-                    </p>
-                </div>
-            <?php endif; ?>
-
-            <?php if (!empty($packageData['estimated_delivery'])): ?>
-                <div class="package-info">
-                    <h3 style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">Entrega estimada</h3>
-                    <p><?php echo h($packageData['estimated_delivery']); ?></p>
-                </div>
-            <?php endif; ?>
-
-            <?php if (!empty($packageData['last_update'])): ?>
-                <div class="package-info">
-                    <h3 style="font-size:12px; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;">Última actualización</h3>
-                    <p style="font-size:12px; color:var(--text-disabled);"><?php echo h($packageData['last_update']); ?></p>
-                </div>
-            <?php endif; ?>
-
-            <div class="tracking-footer">
-                <form method="post" style="margin-bottom:0;">
-                    <button type="submit" class="secondary-btn" style="margin-bottom:0;">
-                        Buscar otro paquete
-                    </button>
-                </form>
-            </div>
+        <div class="hint">
+          Revisa el email de confirmación del pedido<br>
+          <span style="margin-top:4px;display:block">Te enviamos un link con tu token de rastreo único</span>
         </div>
-    <?php endif; ?>
 
-    <div class="footer">pakAG © 2026</div>
+      <?php elseif ($scene === 'tracking' && $packageData): ?>
+        <?php
+          $status = $packageData['status'] ?? 'unknown';
+          $statusInfo = $statusMap[$status] ?? ['label' => 'Estado desconocido', 'icon' => '?', 'class' => 'pending'];
+        ?>
+
+        <div class="form-header">
+          <p class="form-eyebrow">· ESTADO DEL ENVÍO</p>
+          <h1 class="form-title" style="font-size:22px"><?php echo h($packageData['tracking_code'] ?? 'Tu paquete'); ?></h1>
+        </div>
+
+        <div class="tracking-header">
+          <div>
+            <div class="status-label"><?php echo h($statusInfo['label']); ?></div>
+          </div>
+          <div class="status-icon"><?php echo $statusInfo['icon']; ?></div>
+        </div>
+
+        <?php if (!empty($packageData['recipient_name'])): ?>
+          <div class="pkg-info">
+            <div class="pkg-info-label">Destinatario</div>
+            <div class="pkg-info-value" style="font-weight:500"><?php echo h($packageData['recipient_name']); ?></div>
+          </div>
+        <?php endif; ?>
+
+        <?php if (!empty($packageData['address'])): ?>
+          <div class="pkg-info">
+            <div class="pkg-info-label">Dirección de entrega</div>
+            <div class="pkg-info-value">
+              <?php echo h($packageData['address']['street'] ?? ''); ?>
+              <?php if (!empty($packageData['address']['city'])): ?><br><?php echo h($packageData['address']['city']); ?><?php endif; ?>
+              <?php if (!empty($packageData['address']['postal_code'])): ?>, <?php echo h($packageData['address']['postal_code']); ?><?php endif; ?>
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <?php if (!empty($packageData['estimated_delivery'])): ?>
+          <div class="pkg-info">
+            <div class="pkg-info-label">Entrega estimada</div>
+            <div class="pkg-info-value"><?php echo h($packageData['estimated_delivery']); ?></div>
+          </div>
+        <?php endif; ?>
+
+        <?php if (!empty($packageData['last_update'])): ?>
+          <div class="pkg-info">
+            <div class="pkg-info-label">Última actualización</div>
+            <div class="pkg-info-value" style="font-size:12px;color:var(--text-disabled)"><?php echo h($packageData['last_update']); ?></div>
+          </div>
+        <?php endif; ?>
+
+        <div class="tracking-footer">
+          <form method="post">
+            <button type="submit" class="btn-secondary">Buscar otro paquete</button>
+          </form>
+        </div>
+
+      <?php endif; ?>
+    </div>
+
+    <p class="panel-footer">pakAG © 2026 — v2.4.1</p>
+  </div>
+
+  <!-- ── RIGHT PANEL ────────────────────────────────── -->
+  <div class="right-panel">
+
+    <!-- Subtle grid -->
+    <svg class="map-grid" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
+      <?php for($i=0;$i<20;$i++): ?>
+        <line x1="0" y1="<?php echo $i*60; ?>" x2="100%" y2="<?php echo $i*60; ?>" stroke="var(--border-normal)" stroke-width="1"/>
+      <?php endfor; ?>
+      <?php for($i=0;$i<20;$i++): ?>
+        <line x1="<?php echo $i*80; ?>" y1="0" x2="<?php echo $i*80; ?>" y2="100%" stroke="var(--border-normal)" stroke-width="1"/>
+      <?php endfor; ?>
+    </svg>
+
+    <!-- Route line + dots -->
+    <svg class="map-route" style="position:absolute;inset:0;width:100%;height:100%;opacity:.4" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="120,280 240,160 360,240 480,120" stroke="var(--accent-primary)" stroke-width="2" fill="none" stroke-dasharray="6 4"/>
+      <circle cx="120" cy="280" r="6" fill="var(--st-delivered-fg)"/>
+      <circle cx="240" cy="160" r="6" fill="var(--st-delivered-fg)"/>
+      <circle cx="360" cy="240" r="8" fill="var(--accent-light)"/>
+      <circle cx="480" cy="120" r="6" fill="var(--st-assigned-fg)"/>
+    </svg>
+
+    <!-- Card 1: Package in transit -->
+    <div class="float-card fc-1">
+      <div class="fc-meta">
+        <span class="fc-code">PKG-261042</span>
+        <span class="transit-badge"><span class="transit-dot"></span> En tránsito</span>
+      </div>
+      <div class="fc-name">Itziar Etxeberria</div>
+      <div class="fc-addr">Kale Nagusia 12, Tolosa</div>
+      <div class="fc-sep"></div>
+      <div class="fc-bottom">
+        <span>Parada #3</span>
+        <span>ETA 10:20</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Route progress -->
+    <div class="float-card fc-2">
+      <div class="fc-route-head">
+        <div class="fc-truck-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="fc-route-label">Ruta de hoy</div>
+          <div class="fc-route-title">8 paradas · 24 km</div>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-bar"></div></div>
+      <div class="fc-progress-label"><strong>5 de 8</strong> completadas</div>
+    </div>
+
+    <!-- Card 3: Fake map -->
+    <div class="float-card fc-3" style="padding:0">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="background:var(--bg-darkest)">
+        <?php for($i=0;$i<6;$i++): ?>
+          <line x1="0" y1="<?php echo $i*34; ?>" x2="320" y2="<?php echo $i*34; ?>" stroke="var(--border-normal)" stroke-width="1" opacity=".4"/>
+          <line x1="<?php echo $i*64; ?>" y1="0" x2="<?php echo $i*64; ?>" y2="170" stroke="var(--border-normal)" stroke-width="1" opacity=".4"/>
+        <?php endfor; ?>
+        <polyline points="60,140 140,80 220,120 300,60" stroke="var(--accent-primary)" stroke-width="2" fill="none" stroke-dasharray="5 3"/>
+        <circle cx="60" cy="140" r="5" fill="var(--st-delivered-fg)"/>
+        <circle cx="140" cy="80" r="5" fill="var(--st-delivered-fg)"/>
+        <circle cx="220" cy="120" r="7" fill="var(--accent-light)"/>
+        <circle cx="300" cy="60" r="5" fill="var(--st-assigned-fg)"/>
+      </svg>
+    </div>
+
+    <!-- Headline -->
+    <div class="panel-headline">
+      <h2>Cada paquete,<br><span>en su lugar.</span></h2>
+      <p>Centro de operaciones para la flota de reparto — ruta, estado y trazabilidad en una sola pantalla.</p>
+    </div>
+  </div>
+
 </div>
 </body>
 </html>
