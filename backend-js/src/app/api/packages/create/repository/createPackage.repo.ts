@@ -38,7 +38,7 @@ export async function createPackage(
     estimated_delivery = null,
   } = packageInfo;
 
-  const tracking_code = `PKG-${randomUUID().toUpperCase()}${id}`;
+  const tracking_code = `PKG-${randomUUID().split("-").slice(0, 3).join("").toUpperCase()}${id}`;
 
   const [result] = await db.query<ResultSetHeader>(
     "INSERT INTO packages (tracking_code, recipient_name, recipient_email, assigned_to, created_by, status, weight_kg, description, estimated_delivery, address_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",

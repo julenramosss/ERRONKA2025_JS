@@ -9,3 +9,5 @@ export const AUTH_FORGOT_PASSWORD_PATH = "/auth/forgot-password";
 export const TRACKING_PATH_PREFIX = "/tracking/";
 
 export const ACCESS_TOKEN_STORAGE_KEY = "pakag.access_token";
+
+export const HERE_API_KEY = process.env.NEXT_PUBLIC_HERE_API_KEY;

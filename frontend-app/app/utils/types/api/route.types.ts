@@ -10,6 +10,7 @@ export type UpdatableRouteStatus = Extract<
 export interface RouteSummary {
   id: number;
   route_date: ApiDateString;
+  status: RouteStatus;
 }
 
 export interface RouteStopPackageAddress {

@@ -1,21 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useForgotPassword } from "../../../hooks/auth/useForgotPassword";
 
 export function useForgotPasswordModal(onClose: () => void) {
   const { isSuccess, isPending, error, isError, mutateAsync } =
     useForgotPassword();
   const emailRef = useRef<HTMLInputElement>(null);
-  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     if (!isSuccess) return;
-    setShowToast(true);
-    const timer = setTimeout(() => {
-      setShowToast(false);
-      onClose();
-    }, 4000);
+    const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
-  }, [isSuccess]);
+  }, [isSuccess, onClose]);
 
   async function onClickForgotPassword() {
     const email = emailRef.current?.value;
@@ -30,7 +25,7 @@ export function useForgotPasswordModal(onClose: () => void) {
 
   return {
     emailRef,
-    showToast,
+    showToast: isSuccess,
     isPending,
     isError,
     error,

@@ -4,6 +4,7 @@ import { RowDataPacket } from "mysql2/promise";
 interface RouteHeaderRow extends RowDataPacket {
   id: number;
   route_date: string;
+  status: string;
 }
 
 interface StopDetailRow extends RowDataPacket {
@@ -22,13 +23,23 @@ interface StopDetailRow extends RowDataPacket {
 
 export async function findRouteWithStops(
   userId: number,
-  date: string
+  date: string,
+  allowFutureFallback: boolean
 ): Promise<{ route: RouteHeaderRow; stops: StopDetailRow[] } | null> {
   const db = await connect();
-  const [routeRows] = await db.query<RouteHeaderRow[]>(
-    "SELECT id, route_date FROM routes WHERE user_id = ? AND route_date = ?",
-    [userId, date]
-  );
+  const [routeRows] = allowFutureFallback
+    ? await db.query<RouteHeaderRow[]>(
+        `SELECT id, route_date, status
+         FROM routes
+         WHERE user_id = ? AND route_date >= ?
+         ORDER BY route_date ASC
+         LIMIT 1`,
+        [userId, date]
+      )
+    : await db.query<RouteHeaderRow[]>(
+        "SELECT id, route_date, status FROM routes WHERE user_id = ? AND route_date = ?",
+        [userId, date]
+      );
 
   if (!routeRows[0]) return null;
 

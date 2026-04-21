@@ -1,5 +1,5 @@
 export interface GetMyDailyRouteResult {
-  route: { id: number; route_date: string };
+  route: { id: number; route_date: string; status: string };
   stops: Array<{
     id: number;
     stop_order: number;

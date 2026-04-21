@@ -1,7 +1,8 @@
 import { PackageStatus } from "@/app/types";
 
 export interface UpdateStatusDto {
-  package_id: number;
+  package_id?: number;
+  package_ids?: number[];
   new_status: PackageStatus;
 }
 
@@ -25,4 +26,11 @@ export interface PackageWithAddress {
   latitude: number;
   longitude: number;
   country: string;
+}
+
+export interface StatusLogEntry {
+  packageId: number;
+  oldStatus: PackageStatus;
+  newStatus: PackageStatus;
+  changedBy: number;
 }

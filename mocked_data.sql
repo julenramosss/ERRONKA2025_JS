@@ -1,16 +1,15 @@
 -- ================================================================
--- pakAG - Proba Datuak (Seed Script)
+-- pakAG - Development seed data
 -- ================================================================
 --
--- GARAPEN INGURUNEAN BAKARRIK - ez erabili produkzioan.
+-- Run only in development.
+-- All users share this password: Test1234!
+-- All package recipient emails are set to: julenramostolosa@gmail.com
 --
--- Pasahitza erabiltzaile guztientzat: Test1234!
--- Hash-a:
---   $2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC
---
--- Datak CURRENT_DATE / NOW() erabilita kalkulatzen dira, seed-a
--- edozein egunetan exekutatuta ere atzo, gaur, bihar eta etziko
--- datuak edukitzeko.
+-- The seed uses CURRENT_DATE and NOW(), so every run creates:
+--   - packages and routes for today
+--   - completed/failed history across previous days
+--   - planned routes for tomorrow
 -- ================================================================
 
 USE erronka;
@@ -27,406 +26,335 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 START TRANSACTION;
 
+SET @password_hash = '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC';
+SET @customer_email = 'julenramostolosa@gmail.com';
+SET @admin_id = 1;
+SET @alejandro_id = 2;
+SET @julen_arruti_id = 3;
+SET @sergio_id = 4;
 
 -- ================================================================
 -- 1. USERS
--- Ez aldatu: erabiltzaileak bere horretan mantentzen dira.
--- User 5 inaktibo dago eta ez dauka paketerik ez ibilbiderik.
 -- ================================================================
 INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) VALUES
-  (1, 'Julen Ramos Tolosa',        'julenramostolosa@gmail.com',        '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'admin',       TRUE,  NOW() - INTERVAL 6 MONTH),
-  (2, 'Alejandro Ariza Aguilar',   'alejandroarizaaguilar@gmail.com',   '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', TRUE,  NOW() - INTERVAL 4 MONTH),
-  (3, 'Sergio Rocha Tolosaldea',   'sergiotolosaldea@gmail.com',        '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', TRUE,  NOW() - INTERVAL 3 MONTH),
-  (4, 'Julen Ramos Arruti',        'jramosarruti@gmail.com',            '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', TRUE,  NOW() - INTERVAL 2 MONTH),
-  (5, 'Penelope Garcia',           'penelopeg@gmail.com',               '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', FALSE, NOW() - INTERVAL 5 MONTH);
-
+  (@admin_id,        'Julen Ramos Tolosa',       'julenramostolosa@gmail.com',       @password_hash, 'admin',       TRUE,  NOW() - INTERVAL 6 MONTH),
+  (@alejandro_id,    'Alejandro Ariza Aguilar',  'alejandroarizaaguilar@gmail.com',  @password_hash, 'distributor', TRUE,  NOW() - INTERVAL 4 MONTH),
+  (@julen_arruti_id, 'Julen Ramos Arruti',       'jramosarruti@gmail.com',           @password_hash, 'distributor', TRUE,  NOW() - INTERVAL 3 MONTH),
+  (@sergio_id,       'Sergio Rocha Tolosaldea',  'sergiotolosaldea@gmail.com',       @password_hash, 'distributor', TRUE,  NOW() - INTERVAL 2 MONTH),
+  (5,                'Penelope Garcia',          'penelopeg@gmail.com',              @password_hash, 'distributor', FALSE, NOW() - INTERVAL 5 MONTH);
 
 -- ================================================================
 -- 2. ADDRESSES
--- Gipuzkoa inguruko helbide errealistak eta koordenatu koherenteak.
 -- ================================================================
-INSERT INTO addresses (id, street, city, postal_code, country, latitude, longitude, created_at) VALUES
-  (1,  'Kale Nagusia 12',           'Donostia-San Sebastian', '20001', 'Espana', 43.3183000, -1.9812000, CURRENT_DATE - INTERVAL 12 DAY + INTERVAL 8 HOUR),
-  (2,  'Avenida de la Libertad 45', 'Donostia-San Sebastian', '20004', 'Espana', 43.3225000, -1.9793000, CURRENT_DATE - INTERVAL 12 DAY + INTERVAL 8 HOUR),
-  (3,  'Paseo de la Concha 8',      'Donostia-San Sebastian', '20007', 'Espana', 43.3178000, -1.9956000, CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 8 HOUR),
-  (4,  'Calle Urbieta 23',          'Donostia-San Sebastian', '20006', 'Espana', 43.3199000, -1.9843000, CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 8 HOUR),
-  (5,  'Etxe Zuri Kalea 7',         'Hernani',                '20120', 'Espana', 43.2698000, -1.9759000, CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 8 HOUR),
-  (6,  'San Juan Plaza 3',          'Errenteria',             '20100', 'Espana', 43.3126000, -1.8988000, CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 8 HOUR),
-  (7,  'Portuetxe Bidea 15',        'Donostia-San Sebastian', '20018', 'Espana', 43.2934000, -1.9658000, CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 8 HOUR),
-  (8,  'Miraconcha Kalea 4',        'Donostia-San Sebastian', '20007', 'Espana', 43.3156000, -2.0012000, CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 8 HOUR),
-  (9,  'Alkiza Bidea 22',           'Usurbil',                '20170', 'Espana', 43.2718000, -2.0245000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (10, 'San Martin Kalea 11',       'Tolosa',                 '20400', 'Espana', 43.1342000, -2.0765000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (11, 'Txara Kalea 33',            'Andoain',                '20140', 'Espana', 43.2261000, -2.0034000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (12, 'Irun Kalea 56',             'Irun',                   '20301', 'Espana', 43.3390000, -1.7890000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (13, 'Secundino Esnaola Kalea 14','Donostia-San Sebastian', '20001', 'Espana', 43.3230000, -1.9755000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (14, 'Zarautz Kalea 27',          'Donostia-San Sebastian', '20018', 'Espana', 43.3045000, -2.0151000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (15, 'Nafarroa Hiribidea 64',     'Beasain',                '20200', 'Espana', 43.0505000, -2.2001000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (16, 'Kale Nagusia 41',           'Ordizia',                '20240', 'Espana', 43.0542000, -2.1780000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (17, 'San Frantzisko Kalea 18',   'Tolosa',                 '20400', 'Espana', 43.1369000, -2.0739000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (18, 'Elkano Kalea 9',            'Zarautz',                '20800', 'Espana', 43.2840000, -2.1705000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (19, 'Hondarribia Kalea 2',       'Irun',                   '20301', 'Espana', 43.3402000, -1.7904000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (20, 'Biteri Kalea 31',           'Errenteria',             '20100', 'Espana', 43.3138000, -1.9026000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (21, 'Zubieta Kalea 19',          'Lasarte-Oria',           '20160', 'Espana', 43.2677000, -2.0214000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (22, 'Kale Nagusia 5',            'Oiartzun',               '20180', 'Espana', 43.2991000, -1.8605000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (23, 'San Pedro Kalea 6',         'Pasaia',                 '20110', 'Espana', 43.3253000, -1.9237000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (24, 'Legazpi Kalea 12',          'Azpeitia',               '20730', 'Espana', 43.1824000, -2.2664000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (25, 'Urdaneta Kalea 18',         'Azkoitia',               '20720', 'Espana', 43.1779000, -2.3117000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (26, 'Bidebarrieta Kalea 21',     'Eibar',                  '20600', 'Espana', 43.1846000, -2.4734000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (27, 'San Andres Kalea 7',        'Arrasate',               '20500', 'Espana', 43.0644000, -2.4898000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (28, 'Zumalakarregi Kalea 4',     'Bergara',                '20570', 'Espana', 43.1176000, -2.4138000, CURRENT_DATE + INTERVAL 6 HOUR),
-  (29, 'Aita Larramendi Kalea 8',   'Andoain',                '20140', 'Espana', 43.2197000, -2.0195000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (30, 'Geltoki Kalea 10',          'Urnieta',                '20130', 'Espana', 43.2474000, -1.9916000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (31, 'Lugaritz Pasealekua 24',    'Donostia-San Sebastian', '20018', 'Espana', 43.3068000, -2.0056000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (32, 'Garibai Kalea 3',           'Donostia-San Sebastian', '20004', 'Espana', 43.3214000, -1.9810000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (33, 'San Inazio Kalea 22',       'Hernani',                '20120', 'Espana', 43.2671000, -1.9782000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (34, 'Poligono Belartza 2',       'Donostia-San Sebastian', '20018', 'Espana', 43.2870000, -2.0104000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (35, 'Araba Etorbidea 36',        'Zarautz',                '20800', 'Espana', 43.2818000, -2.1688000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (36, 'San Roke Kalea 15',         'Deba',                   '20820', 'Espana', 43.2959000, -2.3542000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (37, 'Erdiko Kalea 28',           'Elgoibar',               '20870', 'Espana', 43.2166000, -2.4133000, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (38, 'Arragueta Kalea 11',        'Eibar',                  '20600', 'Espana', 43.1840000, -2.4708000, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (39, 'San Migel Kalea 19',        'Onati',                  '20560', 'Espana', 43.0327000, -2.4110000, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (40, 'Barrenkale 4',              'Bergara',                '20570', 'Espana', 43.1168000, -2.4149000, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (41, 'Gipuzkoa Plaza 1',          'Donostia-San Sebastian', '20004', 'Espana', 43.3211000, -1.9817000, CURRENT_DATE + INTERVAL 10 HOUR),
-  (42, 'Martutene Pasealekua 89',   'Donostia-San Sebastian', '20014', 'Espana', 43.2929000, -1.9542000, CURRENT_DATE + INTERVAL 10 HOUR),
-  (43, 'Kale Berria 17',            'Hernani',                '20120', 'Espana', 43.2665000, -1.9747000, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 9 HOUR),
-  (44, 'Kale Zaharra 6',            'Tolosa',                 '20400', 'Espana', 43.1377000, -2.0781000, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 16 HOUR + INTERVAL 30 MINUTE);
-
+INSERT INTO addresses (id, street, city, postal_code, country, latitude, longitude) VALUES
+  (1,  'Kale Nagusia 12',          'Donostia-San Sebastian', '20001', 'Espana', 43.3183000, -1.9812000),
+  (2,  'Avenida Libertad 45',      'Donostia-San Sebastian', '20004', 'Espana', 43.3225000, -1.9793000),
+  (3,  'Paseo de la Concha 8',     'Donostia-San Sebastian', '20007', 'Espana', 43.3178000, -1.9956000),
+  (4,  'Calle Urbieta 23',         'Donostia-San Sebastian', '20006', 'Espana', 43.3199000, -1.9843000),
+  (5,  'San Martin Kalea 11',      'Donostia-San Sebastian', '20005', 'Espana', 43.3171000, -1.9819000),
+  (6,  'Zurriola Hiribidea 17',    'Donostia-San Sebastian', '20002', 'Espana', 43.3248000, -1.9733000),
+  (7,  'Portuetxe Bidea 15',       'Donostia-San Sebastian', '20018', 'Espana', 43.2934000, -1.9658000),
+  (8,  'Miraconcha Kalea 4',       'Donostia-San Sebastian', '20007', 'Espana', 43.3156000, -2.0012000),
+  (9,  'San Juan Plaza 3',         'Errenteria',             '20100', 'Espana', 43.3126000, -1.8988000),
+  (10, 'Biteri Kalea 22',          'Errenteria',             '20100', 'Espana', 43.3139000, -1.9025000),
+  (11, 'Euskadi Hiribidea 6',      'Pasaia',                 '20110', 'Espana', 43.3241000, -1.9204000),
+  (12, 'Doneztebe Plaza 2',        'Lezo',                   '20100', 'Espana', 43.3212000, -1.8999000),
+  (13, 'Mendelu Kalea 9',          'Hondarribia',            '20280', 'Espana', 43.3567000, -1.7937000),
+  (14, 'Colon Ibilbidea 31',       'Irun',                   '20302', 'Espana', 43.3382000, -1.7899000),
+  (15, 'Elizalde Auzoa 4',         'Oiartzun',               '20180', 'Espana', 43.2996000, -1.8587000),
+  (16, 'Etxe Zuri Kalea 7',        'Hernani',                '20120', 'Espana', 43.2698000, -1.9759000),
+  (17, 'Urbieta Kalea 40',         'Hernani',                '20120', 'Espana', 43.2669000, -1.9781000),
+  (18, 'Nagusia Kalea 18',         'Lasarte-Oria',           '20160', 'Espana', 43.2671000, -2.0201000),
+  (19, 'Kale Berria 6',            'Usurbil',                '20170', 'Espana', 43.2718000, -2.0245000),
+  (20, 'Txara Kalea 33',           'Andoain',                '20140', 'Espana', 43.2261000, -2.0034000),
+  (21, 'San Martin Kalea 11',      'Tolosa',                 '20400', 'Espana', 43.1342000, -2.0765000),
+  (22, 'Larramendi Kalea 5',       'Tolosa',                 '20400', 'Espana', 43.1371000, -2.0742000),
+  (23, 'Kale Nagusia 3',           'Beasain',                '20200', 'Espana', 43.0495000, -2.2002000),
+  (24, 'Gudarien Etorbidea 28',    'Zarautz',                '20800', 'Espana', 43.2846000, -2.1699000),
+  (25, 'Elkano Kalea 14',          'Getaria',                '20808', 'Espana', 43.3049000, -2.2043000),
+  (26, 'San Roke Kalea 21',        'Azpeitia',               '20730', 'Espana', 43.1829000, -2.2667000),
+  (27, 'Erdikale 12',              'Azkoitia',               '20720', 'Espana', 43.1777000, -2.3111000),
+  (28, 'Zubiaurre Kalea 7',        'Eibar',                  '20600', 'Espana', 43.1844000, -2.4716000),
+  (29, 'San Andres Pasealekua 10', 'Arrasate',               '20500', 'Espana', 43.0640000, -2.4891000),
+  (30, 'Bidebarrieta 22',          'Bergara',                '20570', 'Espana', 43.1189000, -2.4134000),
+  (31, 'Lersundi Kalea 2',         'Bilbao',                 '48009', 'Espana', 43.2668000, -2.9334000),
+  (32, 'Gran Via 30',              'Bilbao',                 '48009', 'Espana', 43.2630000, -2.9349000),
+  (33, 'Florida Kalea 18',         'Vitoria-Gasteiz',        '01005', 'Espana', 42.8422000, -2.6749000),
+  (34, 'Sancho el Sabio 9',        'Vitoria-Gasteiz',        '01008', 'Espana', 42.8443000, -2.6835000),
+  (35, 'Estafeta Kalea 41',        'Pamplona',               '31001', 'Espana', 42.8169000, -1.6423000),
+  (36, 'Iturrama Kalea 15',        'Pamplona',               '31007', 'Espana', 42.8089000, -1.6585000),
+  (37, 'Atotxaerreka Bidea 3',     'Donostia-San Sebastian', '20018', 'Espana', 43.3002000, -1.9822000),
+  (38, 'Boulevard Zumardia 25',    'Donostia-San Sebastian', '20003', 'Espana', 43.3215000, -1.9869000),
+  (39, 'Paseo Francia 2',          'Donostia-San Sebastian', '20012', 'Espana', 43.3193000, -1.9769000),
+  (40, 'Aiete Pasealekua 34',      'Donostia-San Sebastian', '20009', 'Espana', 43.3017000, -1.9945000),
+  (41, 'Matia Kalea 55',           'Donostia-San Sebastian', '20008', 'Espana', 43.3122000, -2.0101000),
+  (42, 'Aldakonea Kalea 14',       'Donostia-San Sebastian', '20012', 'Espana', 43.3179000, -1.9710000),
+  (43, 'Zabaleta Kalea 11',        'Donostia-San Sebastian', '20002', 'Espana', 43.3242000, -1.9722000),
+  (44, 'Nafarroa Hiribidea 52',    'Donostia-San Sebastian', '20013', 'Espana', 43.3151000, -1.9585000),
+  (45, 'Txominenea Pasealekua 6',  'Donostia-San Sebastian', '20014', 'Espana', 43.3063000, -1.9612000);
 
 -- ================================================================
--- 3. PACKAGES
--- Statusak: pending, assigned, in_transit, delivered, failed.
--- Erabiltzaile aktiboak soilik: 2, 3 eta 4.
+-- 3. PACKAGES SOURCE DATA
+-- ================================================================
+DROP TEMPORARY TABLE IF EXISTS seed_packages;
+
+CREATE TEMPORARY TABLE seed_packages (
+  id INT UNSIGNED NOT NULL PRIMARY KEY,
+  tracking_code VARCHAR(50) NOT NULL,
+  recipient_name VARCHAR(150) NOT NULL,
+  weight_kg DECIMAL(6, 3) NOT NULL,
+  description TEXT NULL,
+  status VARCHAR(20) NOT NULL,
+  estimated_delivery DATE NULL,
+  address_id INT UNSIGNED NOT NULL,
+  assigned_to INT UNSIGNED NULL,
+  pending_at DATETIME NOT NULL,
+  assigned_at DATETIME NULL,
+  transit_at DATETIME NULL,
+  final_at DATETIME NULL
+);
+
+INSERT INTO seed_packages
+  (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
+VALUES
+  (1,  'PAK-DEV-0001', 'Jon Arrizabalaga',    1.250, 'Libros y documentacion',                    'delivered',  CURRENT_DATE - INTERVAL 13 DAY, 1,  @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 14 DAY, '08:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 14 DAY, '08:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '08:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '09:10:00')),
+  (2,  'PAK-DEV-0002', 'Miren Irazusta',      3.400, 'Caja pequena de hogar',                     'delivered',  CURRENT_DATE - INTERVAL 13 DAY, 2,  @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 14 DAY, '08:12:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 14 DAY, '08:50:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '08:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '09:42:00')),
+  (3,  'PAK-DEV-0003', 'Itziar Goikoetxea',   0.850, 'Sobre acolchado con accesorios',            'delivered',  CURRENT_DATE - INTERVAL 12 DAY, 3,  @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '10:00:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '11:10:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '08:30:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '10:05:00')),
+  (4,  'PAK-DEV-0004', 'Xabier Beloki',       2.100, 'Material fotografico fragil',                'failed',     CURRENT_DATE - INTERVAL 12 DAY, 4,  @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '10:10:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '11:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '08:35:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '11:30:00')),
+  (5,  'PAK-DEV-0005', 'Amaia Olano',         5.000, 'Reposicion de tienda local',                 'delivered',  CURRENT_DATE - INTERVAL 11 DAY, 9,  @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '07:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '08:15:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '08:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '09:25:00')),
+  (6,  'PAK-DEV-0006', 'Josu Zabala',         1.800, 'Documentacion bancaria',                     'delivered',  CURRENT_DATE - INTERVAL 11 DAY, 10, @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '07:55:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '08:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '08:10:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '10:20:00')),
+  (7,  'PAK-DEV-0007', 'Nerea Eizaguirre',    0.600, 'Recambio pequeno',                           'failed',     CURRENT_DATE - INTERVAL 10 DAY, 16, @julen_arruti_id, TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '09:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '10:00:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '08:40:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '09:45:00')),
+  (8,  'PAK-DEV-0008', 'Peru Txurruka',       4.200, 'Producto electronico asegurado',             'delivered',  CURRENT_DATE - INTERVAL 10 DAY, 17, @julen_arruti_id, TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '09:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '10:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '08:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '10:35:00')),
+  (9,  'PAK-DEV-0009', 'Ane Murua',           2.750, 'Muestras comerciales',                       'delivered',  CURRENT_DATE - INTERVAL 7 DAY,  5,  @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 8 DAY,  '08:00:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 8 DAY,  '08:40:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY,  '08:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY,  '09:50:00')),
+  (10, 'PAK-DEV-0010', 'Ibai Lekuona',        1.100, 'Pedido de farmacia',                         'failed',     CURRENT_DATE - INTERVAL 7 DAY,  6,  @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 8 DAY,  '08:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 8 DAY,  '08:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY,  '08:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY,  '10:40:00')),
+  (11, 'PAK-DEV-0011', 'Saioa Aranburu',      3.300, 'Textil y devolucion parcial',                'delivered',  CURRENT_DATE - INTERVAL 5 DAY,  11, @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 6 DAY,  '09:00:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 6 DAY,  '09:35:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY,  '08:15:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY,  '11:10:00')),
+  (12, 'PAK-DEV-0012', 'Unai Galdos',         0.900, 'Sobre urgente',                              'failed',     CURRENT_DATE - INTERVAL 5 DAY,  12, @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 6 DAY,  '09:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 6 DAY,  '09:40:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY,  '08:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY,  '12:30:00')),
+
+  (13, 'PAK-DEV-0013', 'Maialen Irizar',      1.450, 'Caja de repuestos',                          'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  13, @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:10:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:35:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:15:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '09:35:00')),
+  (14, 'PAK-DEV-0014', 'Eneko Lasa',          2.250, 'Herramientas pequenas',                      'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  14, @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:40:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '10:18:00')),
+  (15, 'PAK-DEV-0015', 'Lide Otegi',          0.720, 'Documentos firmables',                       'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  15, @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '11:05:00')),
+  (16, 'PAK-DEV-0016', 'Iker Alberdi',        6.300, 'Caja grande con material deportivo',         'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  18, @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:30:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:00:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:40:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '09:55:00')),
+  (17, 'PAK-DEV-0017', 'June Etxeberria',     1.950, 'Cosmetica bien protegida',                   'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  19, @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:35:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '11:42:00')),
+  (18, 'PAK-DEV-0018', 'Markel Arrieta',      4.800, 'Piezas de impresora',                        'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  20, @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:40:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:10:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:50:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '14:20:00')),
+  (19, 'PAK-DEV-0019', 'Naia Mendia',         2.050, 'Entrega contra firma',                       'failed',     CURRENT_DATE - INTERVAL 1 DAY,  7,  @alejandro_id,    TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:15:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:55:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '12:12:00')),
+  (20, 'PAK-DEV-0020', 'Aritz Soto',          0.980, 'Producto refrigerado no critico',            'failed',     CURRENT_DATE - INTERVAL 1 DAY,  21, @sergio_id,       TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:50:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '09:00:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '15:35:00')),
+
+  (21, 'PAK-DEV-0021', 'Leire Agirre',        1.200, 'Pedido online pequeno',                      'delivered',  CURRENT_DATE,                   38, @alejandro_id,    NOW() - INTERVAL 480 MINUTE, NOW() - INTERVAL 450 MINUTE, NOW() - INTERVAL 390 MINUTE, NOW() - INTERVAL 240 MINUTE),
+  (22, 'PAK-DEV-0022', 'Gorka Zabala',        2.700, 'Caja de componentes',                        'delivered',  CURRENT_DATE,                   39, @alejandro_id,    NOW() - INTERVAL 470 MINUTE, NOW() - INTERVAL 440 MINUTE, NOW() - INTERVAL 380 MINUTE, NOW() - INTERVAL 200 MINUTE),
+  (23, 'PAK-DEV-0023', 'Irati Urrutia',       0.650, 'Sobre certificado',                          'failed',     CURRENT_DATE,                   40, @sergio_id,       NOW() - INTERVAL 460 MINUTE, NOW() - INTERVAL 430 MINUTE, NOW() - INTERVAL 360 MINUTE, NOW() - INTERVAL 170 MINUTE),
+  (24, 'PAK-DEV-0024', 'Oier Garmendia',      3.950, 'Regalo embalado',                            'delivered',  CURRENT_DATE,                   41, @julen_arruti_id, NOW() - INTERVAL 450 MINUTE, NOW() - INTERVAL 420 MINUTE, NOW() - INTERVAL 350 MINUTE, NOW() - INTERVAL 130 MINUTE),
+  (25, 'PAK-DEV-0025', 'Uxue Sarasola',       5.500, 'Material oficina',                           'in_transit', CURRENT_DATE,                   9,  @alejandro_id,    NOW() - INTERVAL 500 MINUTE, NOW() - INTERVAL 470 MINUTE, NOW() - INTERVAL 330 MINUTE, NULL),
+  (26, 'PAK-DEV-0026', 'Benat Arregi',        1.750, 'Bolsa acolchada',                            'in_transit', CURRENT_DATE,                   10, @alejandro_id,    NOW() - INTERVAL 495 MINUTE, NOW() - INTERVAL 465 MINUTE, NOW() - INTERVAL 320 MINUTE, NULL),
+  (27, 'PAK-DEV-0027', 'Naroa Zabarte',       2.050, 'Pedido de libreria',                         'in_transit', CURRENT_DATE,                   5,  @sergio_id,       NOW() - INTERVAL 490 MINUTE, NOW() - INTERVAL 460 MINUTE, NOW() - INTERVAL 300 MINUTE, NULL),
+  (28, 'PAK-DEV-0028', 'Eider Larrinaga',     7.200, 'Caja pesada con menaje',                     'in_transit', CURRENT_DATE,                   6,  @sergio_id,       NOW() - INTERVAL 485 MINUTE, NOW() - INTERVAL 455 MINUTE, NOW() - INTERVAL 290 MINUTE, NULL),
+  (29, 'PAK-DEV-0029', 'Asier Gorostiaga',    0.540, 'Tarjeta SIM y contrato',                     'in_transit', CURRENT_DATE,                   42, @julen_arruti_id, NOW() - INTERVAL 480 MINUTE, NOW() - INTERVAL 450 MINUTE, NOW() - INTERVAL 275 MINUTE, NULL),
+  (30, 'PAK-DEV-0030', 'Maddalen Egana',      2.880, 'Pack de muestras',                           'in_transit', CURRENT_DATE,                   43, @julen_arruti_id, NOW() - INTERVAL 475 MINUTE, NOW() - INTERVAL 445 MINUTE, NOW() - INTERVAL 260 MINUTE, NULL),
+  (31, 'PAK-DEV-0031', 'Xuban Iriarte',       1.330, 'Ropa plegada',                               'assigned',   CURRENT_DATE,                   44, @alejandro_id,    NOW() - INTERVAL 160 MINUTE, NOW() - INTERVAL 140 MINUTE, NULL, NULL),
+  (32, 'PAK-DEV-0032', 'Alaia Rezola',        4.120, 'Paquete mediano de ferreteria',              'assigned',   CURRENT_DATE,                   45, @alejandro_id,    NOW() - INTERVAL 150 MINUTE, NOW() - INTERVAL 130 MINUTE, NULL, NULL),
+  (33, 'PAK-DEV-0033', 'Hodei Aizpuru',       0.790, 'Documentos de gestoria',                     'assigned',   CURRENT_DATE,                   18, @sergio_id,       NOW() - INTERVAL 145 MINUTE, NOW() - INTERVAL 120 MINUTE, NULL, NULL),
+  (34, 'PAK-DEV-0034', 'Mikel Galarraga',     3.010, 'Pedido de marketplace',                      'assigned',   CURRENT_DATE,                   19, @julen_arruti_id, NOW() - INTERVAL 140 MINUTE, NOW() - INTERVAL 115 MINUTE, NULL, NULL),
+  (35, 'PAK-DEV-0035', 'Garazi Elosegi',      1.670, 'Producto de electronica pequena',            'assigned',   CURRENT_DATE,                   20, @julen_arruti_id, NOW() - INTERVAL 135 MINUTE, NOW() - INTERVAL 110 MINUTE, NULL, NULL),
+  (36, 'PAK-DEV-0036', 'Ander Uranga',        2.440, 'Caja de recambios',                          'assigned',   CURRENT_DATE,                   22, @sergio_id,       NOW() - INTERVAL 130 MINUTE, NOW() - INTERVAL 105 MINUTE, NULL, NULL),
+  (37, 'PAK-DEV-0037', 'Laia Berasategi',     0.990, 'Alta nueva pendiente de asignar',            'pending',    CURRENT_DATE + INTERVAL 1 DAY, 23, NULL,             NOW() - INTERVAL 90 MINUTE,  NULL, NULL, NULL),
+  (38, 'PAK-DEV-0038', 'Inigo Esnaola',       3.640, 'Paquete voluminoso pendiente',               'pending',    CURRENT_DATE + INTERVAL 1 DAY, 24, NULL,             NOW() - INTERVAL 80 MINUTE,  NULL, NULL, NULL),
+  (39, 'PAK-DEV-0039', 'Ainhoa Zubia',        1.420, 'Reposicion pendiente',                       'pending',    CURRENT_DATE + INTERVAL 1 DAY, 25, NULL,             NOW() - INTERVAL 70 MINUTE,  NULL, NULL, NULL),
+  (40, 'PAK-DEV-0040', 'Estitxu Mendizabal',  6.850, 'Equipo pesado pendiente de ruta',            'pending',    CURRENT_DATE + INTERVAL 1 DAY, 26, NULL,             NOW() - INTERVAL 60 MINUTE,  NULL, NULL, NULL),
+  (41, 'PAK-DEV-0041', 'Julen Lete',          2.190, 'Caja con etiqueta revisada',                 'pending',    CURRENT_DATE + INTERVAL 1 DAY, 27, NULL,             NOW() - INTERVAL 50 MINUTE,  NULL, NULL, NULL),
+  (42, 'PAK-DEV-0042', 'Naiara Odriozola',    0.480, 'Sobre ordinario pendiente',                  'pending',    CURRENT_DATE + INTERVAL 1 DAY, 28, NULL,             NOW() - INTERVAL 40 MINUTE,  NULL, NULL, NULL),
+  (43, 'PAK-DEV-0043', 'Olatz Muguruza',      5.900, 'Ruta de manana: industria',                  'assigned',   CURRENT_DATE + INTERVAL 1 DAY, 29, @alejandro_id,    NOW() - INTERVAL 35 MINUTE,  NOW() - INTERVAL 30 MINUTE, NULL, NULL),
+  (44, 'PAK-DEV-0044', 'Koldo Azkarate',      2.560, 'Ruta de manana: comercio',                   'assigned',   CURRENT_DATE + INTERVAL 1 DAY, 30, @sergio_id,       NOW() - INTERVAL 34 MINUTE,  NOW() - INTERVAL 29 MINUTE, NULL, NULL),
+  (45, 'PAK-DEV-0045', 'Nerea Amilibia',      4.340, 'Ruta de manana: entrega urbana',             'assigned',   CURRENT_DATE + INTERVAL 1 DAY, 31, @julen_arruti_id, NOW() - INTERVAL 33 MINUTE,  NOW() - INTERVAL 28 MINUTE, NULL, NULL);
+
+-- ================================================================
+-- 4. PACKAGES
 -- ================================================================
 INSERT INTO packages (
-  id, tracking_code, recipient_name, recipient_email, weight_kg, description,
-  status, estimated_delivery, address_id, assigned_to, created_by, created_at, updated_at
-) VALUES
-  (1,  'PAK-20260001', 'Jon Arrizabalaga',  'julenramostolosa@gmail.com',  1.200, 'Liburu sorta txikia',               'delivered',  CURRENT_DATE - INTERVAL 10 DAY, 1,  2,    1, CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR,                        CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 10 HOUR + INTERVAL 25 MINUTE),
-  (2,  'PAK-20260002', 'Miren Irazusta',    'julenramostolosa@gmail.com',    3.500, 'Etxeko tresna elektronikoa',        'delivered',  CURRENT_DATE - INTERVAL 10 DAY, 2,  2,    1, CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR + INTERVAL 15 MINUTE,   CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 11 HOUR + INTERVAL 5 MINUTE),
-  (3,  'PAK-20260003', 'Itziar Goikoetxea', 'julenramostolosa@gmail.com',        0.800, 'Dokumentazio konfidentziala',        'delivered',  CURRENT_DATE - INTERVAL 8 DAY,  3,  3,    1, CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR,                         CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 9 HOUR + INTERVAL 45 MINUTE),
-  (4,  'PAK-20260004', 'Xabier Beloki',     'julenramostolosa@gmail.com',   2.100, 'Kirol materiala',                    'delivered',  CURRENT_DATE - INTERVAL 8 DAY,  4,  3,    1, CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR + INTERVAL 10 MINUTE,    CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 10 HOUR + INTERVAL 30 MINUTE),
-  (5,  'PAK-20260005', 'Amaia Olano',       'julenramostolosa@gmail.com',       5.000, 'Sukaldeko pieza hauskorra',          'failed',     CURRENT_DATE - INTERVAL 6 DAY,  5,  2,    1, CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR,                         CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 11 HOUR + INTERVAL 40 MINUTE),
-  (6,  'PAK-20260006', 'Josu Zabala',       'julenramostolosa@gmail.com',       1.800, 'Arropa paketea',                     'delivered',  CURRENT_DATE - INTERVAL 6 DAY,  6,  2,    1, CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE,     CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 12 HOUR + INTERVAL 15 MINUTE),
-  (7,  'PAK-20260007', 'Nerea Eizaguirre',  'julenramostolosa@gmail.com',  0.600, 'Telefono osagarriak',                'delivered',  CURRENT_DATE - INTERVAL 4 DAY,  7,  4,    1, CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE,    CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 10 HOUR),
-  (8,  'PAK-20260008', 'Peru Txurruka',     'julenramostolosa@gmail.com',     4.200, 'Bulegoko materiala',                 'delivered',  CURRENT_DATE - INTERVAL 4 DAY,  8,  4,    1, CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 8 HOUR + INTERVAL 20 MINUTE,    CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 10 HOUR + INTERVAL 45 MINUTE),
-  (9,  'PAK-20260009', 'Ane Murua',         'julenramostolosa@gmail.com',         2.700, 'Oinetako kutxa',                     'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  9,  2,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 10 MINUTE,    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 35 MINUTE),
-  (10, 'PAK-20260010', 'Ibai Lekuona',      'julenramostolosa@gmail.com',    1.100, 'Mediku dokumentazioa',               'failed',     CURRENT_DATE - INTERVAL 1 DAY,  10, 2,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 20 MINUTE,    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 10 HOUR + INTERVAL 20 MINUTE),
-  (11, 'PAK-20260011', 'Saioa Aranburu',    'julenramostolosa@gmail.com',    3.300, 'Erosketa online handia',             'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  11, 2,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE,    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 11 HOUR + INTERVAL 45 MINUTE),
-  (12, 'PAK-20260012', 'Unai Galdos',       'julenramostolosa@gmail.com',       0.900, 'Sinadura behar duen gutuna',         'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  12, 3,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 5 MINUTE,     CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 25 MINUTE),
-  (13, 'PAK-20260013', 'Lur Etxaniz',       'julenramostolosa@gmail.com',       2.450, 'Elektronika ordezkoak',              'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  13, 3,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE,    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 10 HOUR + INTERVAL 5 MINUTE),
-  (14, 'PAK-20260014', 'Markel Agirre',     'julenramostolosa@gmail.com',     6.400, 'Inprimagailu tonerra',               'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  14, 3,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE,    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 11 HOUR + INTERVAL 15 MINUTE),
-  (15, 'PAK-20260015', 'June Alberdi',      'julenramostolosa@gmail.com',      1.750, 'Lagin komertzialak',                 'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  15, 4,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR,                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 20 MINUTE),
-  (16, 'PAK-20260016', 'Oier Aranberri',    'julenramostolosa@gmail.com',    2.300, 'Tresna mekaniko txikiak',            'failed',     CURRENT_DATE - INTERVAL 1 DAY,  16, 4,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE,    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 10 HOUR + INTERVAL 40 MINUTE),
-  (17, 'PAK-20260017', 'Leire Soroa',       'julenramostolosa@gmail.com',       0.950, 'Farmazia produktuak',                'delivered',  CURRENT_DATE - INTERVAL 1 DAY,  17, 4,    1, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 40 MINUTE,    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 12 HOUR),
-  (18, 'PAK-20260018', 'Maddi Egana',       'julenramostolosa@gmail.com',       1.600, 'Dokumentuak eta fakturak',           'delivered',  CURRENT_DATE,                   18, 2,    1, CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 35 MINUTE,                   CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 8 MINUTE),
-  (19, 'PAK-20260019', 'Iker Olazabal',     'julenramostolosa@gmail.com',     4.850, 'Ordenagailu eramangarriaren kargagailua', 'in_transit', CURRENT_DATE,              19, 2,    1, CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 40 MINUTE,                   CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 25 MINUTE),
-  (20, 'PAK-20260020', 'Ainhoa Sarasketa',  'julenramostolosa@gmail.com',  2.050, 'Arropa eta osagarriak',              'assigned',   CURRENT_DATE,                   20, 2,    1, CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 5 MINUTE,                    CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 20 MINUTE),
-  (21, 'PAK-20260021', 'Gaizka Iraola',     'julenramostolosa@gmail.com',     7.100, 'Biltegiko ordezko pieza',            'assigned',   CURRENT_DATE,                   21, 2,    1, CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 25 MINUTE,                   CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 40 MINUTE),
-  (22, 'PAK-20260022', 'Nahia Etxeberria',  'julenramostolosa@gmail.com',  1.250, 'Lore dendarako hornidura',           'delivered',  CURRENT_DATE,                   22, 3,    1, CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 50 MINUTE,                   CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 38 MINUTE),
-  (23, 'PAK-20260023', 'Asier Lizarralde',  'julenramostolosa@gmail.com',  3.750, 'Kristalezko osagarria',              'failed',     CURRENT_DATE,                   23, 3,    1, CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 10 MINUTE,                   CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 15 MINUTE),
-  (24, 'PAK-20260024', 'Maialen Urkia',     'julenramostolosa@gmail.com',     0.700, 'Dokumentazio arina',                 'in_transit', CURRENT_DATE,                   24, 3,    1, CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 35 MINUTE,                   CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 50 MINUTE),
-  (25, 'PAK-20260025', 'Eneko Aldalur',     'julenramostolosa@gmail.com',     5.250, 'Kirol ekipamendua',                  'assigned',   CURRENT_DATE,                   25, 3,    1, CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 55 MINUTE,                   CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (26, 'PAK-20260026', 'Garazi Otegi',      'julenramostolosa@gmail.com',      2.900, 'Tailerreko materiala',               'in_transit', CURRENT_DATE,                   26, 4,    1, CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 45 MINUTE,                   CURRENT_DATE + INTERVAL 9 HOUR),
-  (27, 'PAK-20260027', 'Benat Azkarate',    'julenramostolosa@gmail.com',    1.050, 'Gutun ziurtatua',                    'assigned',   CURRENT_DATE,                   27, 4,    1, CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 5 MINUTE,                    CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (28, 'PAK-20260028', 'Irati Mendia',      'julenramostolosa@gmail.com',      6.800, 'Altzari pieza txikia',               'assigned',   CURRENT_DATE,                   28, 4,    1, CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 25 MINUTE,                   CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (29, 'PAK-20260029', 'Olatz Arrieta',     'julenramostolosa@gmail.com',     1.900, 'Bihar entregatzeko dokumentuak',     'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   29, 2,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR,                        CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE),
-  (30, 'PAK-20260030', 'Aitor Lasa',        'julenramostolosa@gmail.com',        3.400, 'Biltegiko eskaera',                  'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   30, 2,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 10 MINUTE,   CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 30 MINUTE),
-  (31, 'PAK-20260031', 'Maitane Rueda',     'julenramostolosa@gmail.com',     0.650, 'Gutun premiazkoa',                   'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   31, 2,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 20 MINUTE,   CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 40 MINUTE),
-  (32, 'PAK-20260032', 'Inigo Arregi',      'julenramostolosa@gmail.com',      2.200, 'Denda eskaera txikia',               'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   32, 3,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 5 MINUTE,    CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (33, 'PAK-20260033', 'Uxue Plazaola',     'julenramostolosa@gmail.com',     8.000, 'Produktu industrial arina',          'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   33, 3,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE,   CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (34, 'PAK-20260034', 'Koldo Araneta',     'julenramostolosa@gmail.com',     1.350, 'Dokumentu fiskalak',                 'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   34, 3,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE,   CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (35, 'PAK-20260035', 'Alaia Urrutia',     'julenramostolosa@gmail.com',     4.100, 'Jatetxerako hornidura',              'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   35, 4,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 10 MINUTE,   CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 30 MINUTE),
-  (36, 'PAK-20260036', 'Ekain Pagola',      'julenramostolosa@gmail.com',      2.750, 'Tresna elektriko txikia',            'assigned',   CURRENT_DATE + INTERVAL 1 DAY,   36, 4,    1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE,   CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (37, 'PAK-20260037', 'Naroa Garmendia',   'julenramostolosa@gmail.com',   1.450, 'Etziko lehen bidalketa',             'assigned',   CURRENT_DATE + INTERVAL 2 DAY,   37, 2,    1, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR,                        CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 20 MINUTE),
-  (38, 'PAK-20260038', 'Benat Zumeta',      'julenramostolosa@gmail.com',      3.950, 'Etziko bigarren bidalketa',          'assigned',   CURRENT_DATE + INTERVAL 2 DAY,   38, 2,    1, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE,   CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (39, 'PAK-20260039', 'Haizea Otamendi',   'julenramostolosa@gmail.com',   2.600, 'Tailerreko ordezkoak',               'assigned',   CURRENT_DATE + INTERVAL 2 DAY,   39, 3,    1, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 5 MINUTE,    CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (40, 'PAK-20260040', 'Ander Bikuna',      'julenramostolosa@gmail.com',      5.500, 'Merkataritza eskaera',               'assigned',   CURRENT_DATE + INTERVAL 2 DAY,   40, 3,    1, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE,   CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (41, 'PAK-20260041', 'Nora Berasategi',   'julenramostolosa@gmail.com',   0.500, 'Esleitu gabeko dokumentua',          'pending',    CURRENT_DATE + INTERVAL 2 DAY,   41, NULL, 1, CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 10 MINUTE,                  CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 10 MINUTE),
-  (42, 'PAK-20260042', 'Aritz Segurola',    'julenramostolosa@gmail.com',    9.200, 'Bolumen handiko paketea',            'pending',    CURRENT_DATE + INTERVAL 3 DAY,   42, NULL, 1, CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 20 MINUTE,                  CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 20 MINUTE),
-  (43, 'PAK-20260043', 'Irune Azpiazu',     'julenramostolosa@gmail.com',     1.150, 'Biharko esleitu gabekoa',            'pending',    CURRENT_DATE + INTERVAL 3 DAY,   43, NULL, 1, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 45 MINUTE,    CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 45 MINUTE),
-  (44, 'PAK-20260044', 'Mikel Lizaso',      'julenramostolosa@gmail.com',      2.850, 'Atzeratutako paketea',               'pending',    CURRENT_DATE + INTERVAL 1 DAY,   44, NULL, 1, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 16 HOUR + INTERVAL 30 MINUTE,  CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 16 HOUR + INTERVAL 30 MINUTE);
-
+  id,
+  tracking_code,
+  recipient_name,
+  recipient_email,
+  weight_kg,
+  description,
+  status,
+  estimated_delivery,
+  address_id,
+  assigned_to,
+  created_by,
+  created_at,
+  updated_at
+)
+SELECT
+  id,
+  tracking_code,
+  recipient_name,
+  @customer_email,
+  weight_kg,
+  description,
+  status,
+  estimated_delivery,
+  address_id,
+  assigned_to,
+  @admin_id,
+  pending_at,
+  COALESCE(final_at, transit_at, assigned_at, pending_at)
+FROM seed_packages;
 
 -- ================================================================
--- 4. TOKENS (tracking)
+-- 5. TOKENS
 -- ================================================================
-INSERT INTO tokens (id, type, token, user_id, package_id, expires_at, revoked, created_at) VALUES
-  (1,  'tracking_token', 'trk-7f3a9b2c1d4e5f6a7b8c9d0e1f2a3b4c', NULL, 1,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR),
-  (2,  'tracking_token', 'trk-pak-20260002-2d4e6f8a0b2c4d6e8f0a', NULL, 2,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR),
-  (3,  'tracking_token', 'trk-pak-20260003-9a1b3c5d7e9f1a3b5c7d', NULL, 3,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR),
-  (4,  'tracking_token', 'trk-pak-20260004-4b6c8d0e2f4a6b8c0d2e', NULL, 4,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR),
-  (5,  'tracking_token', 'trk-pak-20260005-1c3d5e7f9a1b3c5d7e9f', NULL, 5,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR),
-  (6,  'tracking_token', 'trk-pak-20260006-8e0f2a4b6c8d0e2f4a6b', NULL, 6,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR),
-  (7,  'tracking_token', 'trk-pak-20260007-5f7a9b1c3d5e7f9a1b3c', NULL, 7,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 8 HOUR),
-  (8,  'tracking_token', 'trk-pak-20260008-2a4b6c8d0e2f4a6b8c0d', NULL, 8,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 8 HOUR),
-  (9,  'tracking_token', 'trk-pak-20260009-9b1c3d5e7f9a1b3c5d7e', NULL, 9,  CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (10, 'tracking_token', 'trk-pak-20260010-6c8d0e2f4a6b8c0d2e4f', NULL, 10, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (11, 'tracking_token', 'trk-pak-20260011-3d5e7f9a1b3c5d7e9f1a', NULL, 11, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (12, 'tracking_token', 'trk-pak-20260012-0e2f4a6b8c0d2e4f6a8b', NULL, 12, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (13, 'tracking_token', 'trk-pak-20260013-a13b13c13d13e13f13',   NULL, 13, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (14, 'tracking_token', 'trk-pak-20260014-a14b14c14d14e14f14',   NULL, 14, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (15, 'tracking_token', 'trk-pak-20260015-a15b15c15d15e15f15',   NULL, 15, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (16, 'tracking_token', 'trk-pak-20260016-a16b16c16d16e16f16',   NULL, 16, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (17, 'tracking_token', 'trk-pak-20260017-a17b17c17d17e17f17',   NULL, 17, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (18, 'tracking_token', 'trk-pak-20260018-a18b18c18d18e18f18',   NULL, 18, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 6 HOUR),
-  (19, 'tracking_token', 'trk-pak-20260019-a19b19c19d19e19f19',   NULL, 19, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 6 HOUR),
-  (20, 'tracking_token', 'trk-pak-20260020-a20b20c20d20e20f20',   NULL, 20, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 7 HOUR),
-  (21, 'tracking_token', 'trk-pak-20260021-a21b21c21d21e21f21',   NULL, 21, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 7 HOUR),
-  (22, 'tracking_token', 'trk-pak-20260022-a22b22c22d22e22f22',   NULL, 22, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 6 HOUR),
-  (23, 'tracking_token', 'trk-pak-20260023-a23b23c23d23e23f23',   NULL, 23, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 7 HOUR),
-  (24, 'tracking_token', 'trk-pak-20260024-a24b24c24d24e24f24',   NULL, 24, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 7 HOUR),
-  (25, 'tracking_token', 'trk-pak-20260025-a25b25c25d25e25f25',   NULL, 25, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 7 HOUR),
-  (26, 'tracking_token', 'trk-pak-20260026-a26b26c26d26e26f26',   NULL, 26, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 6 HOUR),
-  (27, 'tracking_token', 'trk-pak-20260027-a27b27c27d27e27f27',   NULL, 27, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 7 HOUR),
-  (28, 'tracking_token', 'trk-pak-20260028-a28b28c28d28e28f28',   NULL, 28, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 7 HOUR),
-  (29, 'tracking_token', 'trk-pak-20260029-a29b29c29d29e29f29',   NULL, 29, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (30, 'tracking_token', 'trk-pak-20260030-a30b30c30d30e30f30',   NULL, 30, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (31, 'tracking_token', 'trk-pak-20260031-a31b31c31d31e31f31',   NULL, 31, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (32, 'tracking_token', 'trk-pak-20260032-a32b32c32d32e32f32',   NULL, 32, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (33, 'tracking_token', 'trk-pak-20260033-a33b33c33d33e33f33',   NULL, 33, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (34, 'tracking_token', 'trk-pak-20260034-a34b34c34d34e34f34',   NULL, 34, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (35, 'tracking_token', 'trk-pak-20260035-a35b35c35d35e35f35',   NULL, 35, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (36, 'tracking_token', 'trk-pak-20260036-a36b36c36d36e36f36',   NULL, 36, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (37, 'tracking_token', 'trk-pak-20260037-a37b37c37d37e37f37',   NULL, 37, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (38, 'tracking_token', 'trk-pak-20260038-a38b38c38d38e38f38',   NULL, 38, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (39, 'tracking_token', 'trk-pak-20260039-a39b39c39d39e39f39',   NULL, 39, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (40, 'tracking_token', 'trk-pak-20260040-a40b40c40d40e40f40',   NULL, 40, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (41, 'tracking_token', 'trk-pak-20260041-a41b41c41d41e41f41',   NULL, 41, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 10 HOUR),
-  (42, 'tracking_token', 'trk-pak-20260042-a42b42c42d42e42f42',   NULL, 42, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 10 HOUR),
-  (43, 'tracking_token', 'trk-pak-20260043-a43b43c43d43e43f43',   NULL, 43, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 9 HOUR),
-  (44, 'tracking_token', 'trk-pak-20260044-a44b44c44d44e44f44',   NULL, 44, CURRENT_DATE + INTERVAL 45 DAY + INTERVAL 23 HOUR, FALSE, CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 16 HOUR);
-
+INSERT INTO tokens (id, token, type, user_id, package_id, expires_at, revoked, created_at)
+SELECT
+  id,
+  CONCAT('trk-dev-', LPAD(id, 4, '0'), '-', LEFT(SHA2(CONCAT('pakag-dev-token-', id), 256), 24)),
+  'tracking_token',
+  NULL,
+  id,
+  COALESCE(final_at, transit_at, assigned_at, pending_at) + INTERVAL 30 DAY,
+  FALSE,
+  pending_at
+FROM seed_packages;
 
 -- ================================================================
--- 5. PACKAGE STATUS LOGS
--- Historial osoa edo gutxienez azken egoera logikoa pakete bakoitzeko.
+-- 6. PACKAGE STATUS LOGS
 -- ================================================================
-INSERT INTO package_status_logs (package_id, old_status, new_status, changed_by, notes, changed_at) VALUES
-  (1,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR),
-  (1,  'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (1,  'assigned',   'in_transit', 2, 'Recogido en almacen',                    CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 8 HOUR + INTERVAL 40 MINUTE),
-  (1,  'in_transit', 'delivered',  2, 'Entregado con firma',                    CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 10 HOUR + INTERVAL 25 MINUTE),
-  (2,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR + INTERVAL 15 MINUTE),
-  (2,  'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE - INTERVAL 11 DAY + INTERVAL 8 HOUR + INTERVAL 35 MINUTE),
-  (2,  'assigned',   'in_transit', 2, 'Recogido en almacen',                    CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 8 HOUR + INTERVAL 45 MINUTE),
-  (2,  'in_transit', 'delivered',  2, 'Entregado en recepcion',                 CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 11 HOUR + INTERVAL 5 MINUTE),
-  (3,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR),
-  (3,  'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (3,  'assigned',   'in_transit', 3, 'Ruta iniciada',                          CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 8 HOUR + INTERVAL 35 MINUTE),
-  (3,  'in_transit', 'delivered',  3, 'Entregado correctamente',                CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 9 HOUR + INTERVAL 45 MINUTE),
-  (4,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR + INTERVAL 10 MINUTE),
-  (4,  'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE - INTERVAL 9 DAY + INTERVAL 8 HOUR + INTERVAL 30 MINUTE),
-  (4,  'assigned',   'in_transit', 3, 'Ruta iniciada',                          CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 8 HOUR + INTERVAL 40 MINUTE),
-  (4,  'in_transit', 'delivered',  3, 'Entregado en tienda',                    CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 10 HOUR + INTERVAL 30 MINUTE),
-  (5,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR),
-  (5,  'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (5,  'assigned',   'in_transit', 2, 'Ruta iniciada',                          CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 9 HOUR),
-  (5,  'in_transit', 'failed',     2, 'Ausente en domicilio',                   CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 11 HOUR + INTERVAL 40 MINUTE),
-  (6,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (6,  'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE - INTERVAL 7 DAY + INTERVAL 8 HOUR + INTERVAL 25 MINUTE),
-  (6,  'assigned',   'in_transit', 2, 'Ruta iniciada',                          CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 9 HOUR + INTERVAL 5 MINUTE),
-  (6,  'in_transit', 'delivered',  2, 'Entregado al titular',                   CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 12 HOUR + INTERVAL 15 MINUTE),
-  (7,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE),
-  (7,  'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 8 HOUR + INTERVAL 10 MINUTE),
-  (7,  'assigned',   'in_transit', 4, 'Ruta iniciada',                          CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 8 HOUR + INTERVAL 50 MINUTE),
-  (7,  'in_transit', 'delivered',  4, 'Entregado con codigo de entrega',        CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 10 HOUR),
-  (8,  NULL,         'pending',    1, 'Paquete creado',                         CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (8,  'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE - INTERVAL 5 DAY + INTERVAL 8 HOUR + INTERVAL 40 MINUTE),
-  (8,  'assigned',   'in_transit', 4, 'Ruta iniciada',                          CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 8 HOUR + INTERVAL 55 MINUTE),
-  (8,  'in_transit', 'delivered',  4, 'Entregado en porteria',                  CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 10 HOUR + INTERVAL 45 MINUTE),
-  (9,  NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 10 MINUTE),
-  (9,  'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (9,  'assigned',   'in_transit', 2, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 45 MINUTE),
-  (9,  'in_transit', 'delivered',  2, 'Entregado ayer',                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 35 MINUTE),
-  (10, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 20 MINUTE),
-  (10, 'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (10, 'assigned',   'in_transit', 2, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 50 MINUTE),
-  (10, 'in_transit', 'failed',     2, 'Direccion cerrada por horario',          CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 10 HOUR + INTERVAL 20 MINUTE),
-  (11, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (11, 'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 40 MINUTE),
-  (11, 'assigned',   'in_transit', 2, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 55 MINUTE),
-  (11, 'in_transit', 'delivered',  2, 'Entregado ayer',                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 11 HOUR + INTERVAL 45 MINUTE),
-  (12, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 5 MINUTE),
-  (12, 'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 20 MINUTE),
-  (12, 'assigned',   'in_transit', 3, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 40 MINUTE),
-  (12, 'in_transit', 'delivered',  3, 'Entregado ayer',                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 25 MINUTE),
-  (13, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE),
-  (13, 'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 30 MINUTE),
-  (13, 'assigned',   'in_transit', 3, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 45 MINUTE),
-  (13, 'in_transit', 'delivered',  3, 'Entregado ayer',                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 10 HOUR + INTERVAL 5 MINUTE),
-  (14, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (14, 'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR),
-  (14, 'assigned',   'in_transit', 3, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 50 MINUTE),
-  (14, 'in_transit', 'delivered',  3, 'Entregado ayer',                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 11 HOUR + INTERVAL 15 MINUTE),
-  (15, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (15, 'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE),
-  (15, 'assigned',   'in_transit', 4, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 35 MINUTE),
-  (15, 'in_transit', 'delivered',  4, 'Entregado ayer',                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 20 MINUTE),
-  (16, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (16, 'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE),
-  (16, 'assigned',   'in_transit', 4, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 40 MINUTE),
-  (16, 'in_transit', 'failed',     4, 'No habia acceso al portal',              CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 10 HOUR + INTERVAL 40 MINUTE),
-  (17, NULL,         'pending',    1, 'Paquete creado ayer',                    CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 40 MINUTE),
-  (17, 'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (17, 'assigned',   'in_transit', 4, 'Ruta de ayer iniciada',                  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 45 MINUTE),
-  (17, 'in_transit', 'delivered',  4, 'Entregado ayer',                         CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 12 HOUR),
-  (18, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 35 MINUTE),
-  (18, 'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 50 MINUTE),
-  (18, 'assigned',   'in_transit', 2, 'Ruta de hoy iniciada',                   CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 35 MINUTE),
-  (18, 'in_transit', 'delivered',  2, 'Primera parada entregada',               CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 8 MINUTE),
-  (19, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 40 MINUTE),
-  (19, 'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 55 MINUTE),
-  (19, 'assigned',   'in_transit', 2, 'En reparto ahora',                       CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 25 MINUTE),
-  (20, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 5 MINUTE),
-  (20, 'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 20 MINUTE),
-  (21, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (21, 'pending',    'assigned',   1, 'Asignado a Alejandro',                   CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 40 MINUTE),
-  (22, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 50 MINUTE),
-  (22, 'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 5 MINUTE),
-  (22, 'assigned',   'in_transit', 3, 'Ruta de hoy iniciada',                   CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 45 MINUTE),
-  (22, 'in_transit', 'delivered',  3, 'Entregado hoy',                          CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 38 MINUTE),
-  (23, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 10 MINUTE),
-  (23, 'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (23, 'assigned',   'in_transit', 3, 'Ruta de hoy iniciada',                   CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 50 MINUTE),
-  (23, 'in_transit', 'failed',     3, 'Cliente solicita reprogramar',           CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 15 MINUTE),
-  (24, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (24, 'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 50 MINUTE),
-  (24, 'assigned',   'in_transit', 3, 'En reparto ahora',                       CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 50 MINUTE),
-  (25, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (25, 'pending',    'assigned',   1, 'Asignado a Sergio',                      CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (26, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 6 HOUR + INTERVAL 45 MINUTE),
-  (26, 'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE + INTERVAL 7 HOUR),
-  (26, 'assigned',   'in_transit', 4, 'Ruta de hoy iniciada',                   CURRENT_DATE + INTERVAL 9 HOUR),
-  (27, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 5 MINUTE),
-  (27, 'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (28, NULL,         'pending',    1, 'Paquete creado hoy',                     CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (28, 'pending',    'assigned',   1, 'Asignado a Julen Arruti',                CURRENT_DATE + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (29, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR),
-  (29, 'pending',    'assigned',   1, 'Asignado a Alejandro para manana',       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE),
-  (30, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 10 MINUTE),
-  (30, 'pending',    'assigned',   1, 'Asignado a Alejandro para manana',       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 30 MINUTE),
-  (31, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 20 MINUTE),
-  (31, 'pending',    'assigned',   1, 'Asignado a Alejandro para manana',       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 40 MINUTE),
-  (32, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 5 MINUTE),
-  (32, 'pending',    'assigned',   1, 'Asignado a Sergio para manana',          CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (33, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE),
-  (33, 'pending',    'assigned',   1, 'Asignado a Sergio para manana',          CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (34, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (34, 'pending',    'assigned',   1, 'Asignado a Sergio para manana',          CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (35, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 10 MINUTE),
-  (35, 'pending',    'assigned',   1, 'Asignado a Julen Arruti para manana',    CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 30 MINUTE),
-  (36, NULL,         'pending',    1, 'Paquete creado para manana',             CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (36, 'pending',    'assigned',   1, 'Asignado a Julen Arruti para manana',    CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (37, NULL,         'pending',    1, 'Paquete creado para pasado manana',      CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR),
-  (37, 'pending',    'assigned',   1, 'Asignado a Alejandro para pasado manana',CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 20 MINUTE),
-  (38, NULL,         'pending',    1, 'Paquete creado para pasado manana',      CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 15 MINUTE),
-  (38, 'pending',    'assigned',   1, 'Asignado a Alejandro para pasado manana',CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 35 MINUTE),
-  (39, NULL,         'pending',    1, 'Paquete creado para pasado manana',      CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 5 MINUTE),
-  (39, 'pending',    'assigned',   1, 'Asignado a Sergio para pasado manana',   CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (40, NULL,         'pending',    1, 'Paquete creado para pasado manana',      CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 25 MINUTE),
-  (40, 'pending',    'assigned',   1, 'Asignado a Sergio para pasado manana',   CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (41, NULL,         'pending',    1, 'Pendiente de asignacion',                CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 10 MINUTE),
-  (42, NULL,         'pending',    1, 'Pendiente de asignacion',                CURRENT_DATE + INTERVAL 10 HOUR + INTERVAL 20 MINUTE),
-  (43, NULL,         'pending',    1, 'Pendiente de asignacion futura',         CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 9 HOUR + INTERVAL 45 MINUTE),
-  (44, NULL,         'pending',    1, 'Pendiente atrasado para reasignar',      CURRENT_DATE - INTERVAL 2 DAY + INTERVAL 16 HOUR + INTERVAL 30 MINUTE);
+INSERT INTO package_status_logs (package_id, old_status, new_status, changed_by, notes, changed_at)
+SELECT id, NULL, 'pending', @admin_id, 'Paquete creado en entorno de desarrollo', pending_at
+FROM seed_packages;
 
+INSERT INTO package_status_logs (package_id, old_status, new_status, changed_by, notes, changed_at)
+SELECT
+  sp.id,
+  'pending',
+  'assigned',
+  @admin_id,
+  CONCAT('Asignado a ', u.name, ' para reparto de ', DATE_FORMAT(sp.estimated_delivery, '%Y-%m-%d')),
+  sp.assigned_at
+FROM seed_packages sp
+JOIN users u ON u.id = sp.assigned_to
+WHERE sp.assigned_at IS NOT NULL;
+
+INSERT INTO package_status_logs (package_id, old_status, new_status, changed_by, notes, changed_at)
+SELECT
+  id,
+  'assigned',
+  'in_transit',
+  assigned_to,
+  'Recogido en almacen y cargado en ruta',
+  transit_at
+FROM seed_packages
+WHERE transit_at IS NOT NULL;
+
+INSERT INTO package_status_logs (package_id, old_status, new_status, changed_by, notes, changed_at)
+SELECT
+  id,
+  'in_transit',
+  status,
+  assigned_to,
+  CASE
+    WHEN status = 'delivered' THEN 'Entregado correctamente. Confirmacion registrada.'
+    WHEN status = 'failed' THEN 'Entrega fallida. No disponible o incidencia en direccion.'
+  END,
+  final_at
+FROM seed_packages
+WHERE final_at IS NOT NULL;
 
 -- ================================================================
--- 6. ROUTES
--- Ibilbideak atzo, gaur, bihar eta etzi. User 5 ez da erabiltzen.
+-- 7. ROUTES
 -- ================================================================
 INSERT INTO routes (id, user_id, route_date, status, created_at, updated_at) VALUES
-  (1,  2, CURRENT_DATE - INTERVAL 10 DAY, 'completed',   CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE, CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 11 HOUR + INTERVAL 15 MINUTE),
-  (2,  3, CURRENT_DATE - INTERVAL 8 DAY,  'completed',   CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE,  CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 10 HOUR + INTERVAL 45 MINUTE),
-  (3,  2, CURRENT_DATE - INTERVAL 6 DAY,  'completed',   CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE,  CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 12 HOUR + INTERVAL 20 MINUTE),
-  (4,  4, CURRENT_DATE - INTERVAL 4 DAY,  'completed',   CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE,  CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 10 HOUR + INTERVAL 50 MINUTE),
-  (5,  2, CURRENT_DATE - INTERVAL 1 DAY,  'completed',   CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE,  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 12 HOUR),
-  (6,  3, CURRENT_DATE - INTERVAL 1 DAY,  'completed',   CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE,  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 11 HOUR + INTERVAL 30 MINUTE),
-  (7,  4, CURRENT_DATE - INTERVAL 1 DAY,  'completed',   CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE,  CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 12 HOUR + INTERVAL 10 MINUTE),
-  (8,  2, CURRENT_DATE,                   'in_progress', CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 15 MINUTE,                 CURRENT_DATE + INTERVAL 9 HOUR + INTERVAL 30 MINUTE),
-  (9,  3, CURRENT_DATE,                   'in_progress', CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 20 MINUTE,                 CURRENT_DATE + INTERVAL 10 HOUR),
-  (10, 4, CURRENT_DATE,                   'in_progress', CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 25 MINUTE,                 CURRENT_DATE + INTERVAL 9 HOUR),
-  (11, 2, CURRENT_DATE + INTERVAL 1 DAY,  'planned',     CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR,                      CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR),
-  (12, 3, CURRENT_DATE + INTERVAL 1 DAY,  'planned',     CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE,  CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (13, 4, CURRENT_DATE + INTERVAL 1 DAY,  'planned',     CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 10 MINUTE, CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 10 MINUTE),
-  (14, 2, CURRENT_DATE + INTERVAL 2 DAY,  'planned',     CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR,                      CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (15, 3, CURRENT_DATE + INTERVAL 2 DAY,  'planned',     CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE,  CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE);
-
+  (1,  @alejandro_id,    CURRENT_DATE - INTERVAL 13 DAY, 'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '07:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '10:05:00')),
+  (2,  @alejandro_id,    CURRENT_DATE - INTERVAL 12 DAY, 'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '07:30:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '11:45:00')),
+  (3,  @sergio_id,       CURRENT_DATE - INTERVAL 11 DAY, 'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '07:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '10:45:00')),
+  (4,  @julen_arruti_id, CURRENT_DATE - INTERVAL 10 DAY, 'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '07:50:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '11:00:00')),
+  (5,  @alejandro_id,    CURRENT_DATE - INTERVAL 7 DAY,  'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY,  '07:35:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY,  '11:15:00')),
+  (6,  @sergio_id,       CURRENT_DATE - INTERVAL 5 DAY,  'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY,  '07:40:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY,  '12:45:00')),
+  (7,  @alejandro_id,    CURRENT_DATE - INTERVAL 1 DAY,  'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '07:55:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '12:30:00')),
+  (8,  @sergio_id,       CURRENT_DATE - INTERVAL 1 DAY,  'completed',   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '08:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY,  '15:50:00')),
+  (9,  @alejandro_id,    CURRENT_DATE,                   'in_progress', NOW() - INTERVAL 420 MINUTE, NOW()),
+  (10, @sergio_id,       CURRENT_DATE,                   'in_progress', NOW() - INTERVAL 410 MINUTE, NOW()),
+  (11, @julen_arruti_id, CURRENT_DATE,                   'in_progress', NOW() - INTERVAL 400 MINUTE, NOW()),
+  (12, @alejandro_id,    CURRENT_DATE + INTERVAL 1 DAY,  'planned',     NOW() - INTERVAL 25 MINUTE,  NOW() - INTERVAL 25 MINUTE),
+  (13, @sergio_id,       CURRENT_DATE + INTERVAL 1 DAY,  'planned',     NOW() - INTERVAL 24 MINUTE,  NOW() - INTERVAL 24 MINUTE),
+  (14, @julen_arruti_id, CURRENT_DATE + INTERVAL 1 DAY,  'planned',     NOW() - INTERVAL 23 MINUTE,  NOW() - INTERVAL 23 MINUTE);
 
 -- ================================================================
--- 7. ROUTE STOPS
--- TIME formatua: HH:MM:SS soilik.
+-- 8. ROUTE STOPS
 -- ================================================================
-INSERT INTO route_stops (id, route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at) VALUES
-  (1,  1,  1,  1, '09:30:00', '09:28:00', CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (2,  1,  2,  2, '10:15:00', '10:12:00', CURRENT_DATE - INTERVAL 10 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (3,  2,  3,  1, '09:10:00', '09:07:00', CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (4,  2,  4,  2, '10:05:00', '10:01:00', CURRENT_DATE - INTERVAL 8 DAY + INTERVAL 7 HOUR + INTERVAL 45 MINUTE),
-  (5,  3,  5,  1, '09:45:00', '09:50:00', CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE),
-  (6,  3,  6,  2, '11:30:00', '11:22:00', CURRENT_DATE - INTERVAL 6 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE),
-  (7,  4,  7,  1, '09:20:00', '09:18:00', CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE),
-  (8,  4,  8,  2, '10:35:00', '10:38:00', CURRENT_DATE - INTERVAL 4 DAY + INTERVAL 7 HOUR + INTERVAL 50 MINUTE),
-  (9,  5,  9,  1, '09:30:00', '09:35:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (10, 5,  10, 2, '10:10:00', '10:20:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (11, 5,  11, 3, '11:35:00', '11:45:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (12, 6,  12, 1, '09:20:00', '09:25:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (13, 6,  13, 2, '10:00:00', '10:05:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (14, 6,  14, 3, '11:10:00', '11:15:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (15, 7,  15, 1, '09:15:00', '09:20:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (16, 7,  16, 2, '10:30:00', '10:40:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (17, 7,  17, 3, '11:50:00', '12:00:00', CURRENT_DATE - INTERVAL 1 DAY + INTERVAL 7 HOUR + INTERVAL 55 MINUTE),
-  (18, 8,  18, 1, '09:05:00', '09:08:00', CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 15 MINUTE),
-  (19, 8,  19, 2, '10:10:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 15 MINUTE),
-  (20, 8,  20, 3, '11:15:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 15 MINUTE),
-  (21, 8,  21, 4, '12:05:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 15 MINUTE),
-  (22, 9,  22, 1, '09:35:00', '09:38:00', CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (23, 9,  23, 2, '10:05:00', '10:15:00', CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (24, 9,  24, 3, '11:20:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (25, 9,  25, 4, '12:00:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 20 MINUTE),
-  (26, 10, 26, 1, '09:50:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 25 MINUTE),
-  (27, 10, 27, 2, '10:45:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 25 MINUTE),
-  (28, 10, 28, 3, '11:40:00', NULL,       CURRENT_DATE + INTERVAL 8 HOUR + INTERVAL 25 MINUTE),
-  (29, 11, 29, 1, '09:10:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR),
-  (30, 11, 30, 2, '10:05:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR),
-  (31, 11, 31, 3, '11:20:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR),
-  (32, 12, 32, 1, '09:25:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (33, 12, 33, 2, '10:30:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (34, 12, 34, 3, '11:15:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (35, 13, 35, 1, '09:45:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 10 MINUTE),
-  (36, 13, 36, 2, '10:50:00', NULL,       CURRENT_DATE + INTERVAL 1 DAY + INTERVAL 8 HOUR + INTERVAL 10 MINUTE),
-  (37, 14, 37, 1, '09:20:00', NULL,       CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (38, 14, 38, 2, '10:40:00', NULL,       CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR),
-  (39, 15, 39, 1, '09:35:00', NULL,       CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE),
-  (40, 15, 40, 2, '10:55:00', NULL,       CURRENT_DATE + INTERVAL 2 DAY + INTERVAL 8 HOUR + INTERVAL 5 MINUTE);
+INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at) VALUES
+  (1,  1,  1, '09:05:00', '09:10:00', TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '07:30:00')),
+  (1,  2,  2, '09:45:00', '09:42:00', TIMESTAMP(CURRENT_DATE - INTERVAL 13 DAY, '07:30:00')),
 
+  (2,  3,  1, '10:00:00', '10:05:00', TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '07:35:00')),
+  (2,  4,  2, '11:25:00', '11:30:00', TIMESTAMP(CURRENT_DATE - INTERVAL 12 DAY, '07:35:00')),
+
+  (3,  5,  1, '09:20:00', '09:25:00', TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '07:25:00')),
+  (3,  6,  2, '10:15:00', '10:20:00', TIMESTAMP(CURRENT_DATE - INTERVAL 11 DAY, '07:25:00')),
+
+  (4,  7,  1, '09:40:00', '09:45:00', TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '07:55:00')),
+  (4,  8,  2, '10:25:00', '10:35:00', TIMESTAMP(CURRENT_DATE - INTERVAL 10 DAY, '07:55:00')),
+
+  (5,  9,  1, '09:45:00', '09:50:00', TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY, '07:40:00')),
+  (5,  10, 2, '10:35:00', '10:40:00', TIMESTAMP(CURRENT_DATE - INTERVAL 7 DAY, '07:40:00')),
+
+  (6,  11, 1, '11:05:00', '11:10:00', TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY, '07:45:00')),
+  (6,  12, 2, '12:20:00', '12:30:00', TIMESTAMP(CURRENT_DATE - INTERVAL 5 DAY, '07:45:00')),
+
+  (7,  13, 1, '09:30:00', '09:35:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00')),
+  (7,  14, 2, '10:10:00', '10:18:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00')),
+  (7,  15, 3, '11:00:00', '11:05:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00')),
+  (7,  19, 4, '12:05:00', '12:12:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00')),
+
+  (8,  16, 1, '09:50:00', '09:55:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:10:00')),
+  (8,  17, 2, '11:35:00', '11:42:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:10:00')),
+  (8,  18, 3, '14:10:00', '14:20:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:10:00')),
+  (8,  20, 4, '15:30:00', '15:35:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:10:00')),
+
+  (9,  21, 1, TIME(NOW() - INTERVAL 245 MINUTE), TIME(NOW() - INTERVAL 240 MINUTE), NOW() - INTERVAL 420 MINUTE),
+  (9,  22, 2, TIME(NOW() - INTERVAL 205 MINUTE), TIME(NOW() - INTERVAL 200 MINUTE), NOW() - INTERVAL 420 MINUTE),
+  (9,  25, 3, TIME(NOW() + INTERVAL 20 MINUTE),  NULL,                            NOW() - INTERVAL 420 MINUTE),
+  (9,  26, 4, TIME(NOW() + INTERVAL 75 MINUTE),  NULL,                            NOW() - INTERVAL 420 MINUTE),
+  (9,  31, 5, TIME(NOW() + INTERVAL 135 MINUTE), NULL,                            NOW() - INTERVAL 420 MINUTE),
+  (9,  32, 6, TIME(NOW() + INTERVAL 190 MINUTE), NULL,                            NOW() - INTERVAL 420 MINUTE),
+
+  (10, 23, 1, TIME(NOW() - INTERVAL 175 MINUTE), TIME(NOW() - INTERVAL 170 MINUTE), NOW() - INTERVAL 410 MINUTE),
+  (10, 27, 2, TIME(NOW() + INTERVAL 30 MINUTE),  NULL,                            NOW() - INTERVAL 410 MINUTE),
+  (10, 28, 3, TIME(NOW() + INTERVAL 95 MINUTE),  NULL,                            NOW() - INTERVAL 410 MINUTE),
+  (10, 33, 4, TIME(NOW() + INTERVAL 155 MINUTE), NULL,                            NOW() - INTERVAL 410 MINUTE),
+  (10, 36, 5, TIME(NOW() + INTERVAL 215 MINUTE), NULL,                            NOW() - INTERVAL 410 MINUTE),
+
+  (11, 24, 1, TIME(NOW() - INTERVAL 135 MINUTE), TIME(NOW() - INTERVAL 130 MINUTE), NOW() - INTERVAL 400 MINUTE),
+  (11, 29, 2, TIME(NOW() + INTERVAL 25 MINUTE),  NULL,                            NOW() - INTERVAL 400 MINUTE),
+  (11, 30, 3, TIME(NOW() + INTERVAL 80 MINUTE),  NULL,                            NOW() - INTERVAL 400 MINUTE),
+  (11, 34, 4, TIME(NOW() + INTERVAL 145 MINUTE), NULL,                            NOW() - INTERVAL 400 MINUTE),
+  (11, 35, 5, TIME(NOW() + INTERVAL 200 MINUTE), NULL,                            NOW() - INTERVAL 400 MINUTE),
+
+  (12, 43, 1, '09:45:00', NULL, NOW() - INTERVAL 25 MINUTE),
+  (13, 44, 1, '10:15:00', NULL, NOW() - INTERVAL 24 MINUTE),
+  (14, 45, 1, '11:00:00', NULL, NOW() - INTERVAL 23 MINUTE);
+
+DROP TEMPORARY TABLE seed_packages;
 
 COMMIT;
 
 -- ================================================================
--- RESUMEN
+-- QUICK CHECKS
 -- ================================================================
 --
--- Usuarios:
---   1 admin        Julen Ramos Tolosa
---   2 distributor  Alejandro Ariza Aguilar
---   3 distributor  Sergio Rocha Tolosaldea
---   4 distributor  Julen Ramos Arruti
---   5 distributor  Penelope Garcia (inactivo, sin paquetes ni rutas)
+-- Login:
+--   julenramostolosa@gmail.com / Test1234!
+--   alejandroarizaaguilar@gmail.com / Test1234!
+--   jramosarruti@gmail.com / Test1234!
+--   sergiotolosaldea@gmail.com / Test1234!
 --
--- Datos cargados:
---   44 direcciones
---   44 paquetes
---   44 tracking tokens
---   15 rutas
---   40 paradas de ruta
+-- Useful tracking token shape:
+--   trk-dev-0001-...
 --
--- Distribucion de rutas:
---   Historico: rutas completadas de hace 10, 8, 6 y 4 dias
---   Ayer: rutas completadas para usuarios 2, 3 y 4
---   Hoy: rutas en progreso para usuarios 2, 3 y 4
---   Manana: rutas planificadas para usuarios 2, 3 y 4
---   Pasado manana: rutas planificadas para usuarios 2 y 3
---
--- Tracking URL de ejemplo:
--- GET /api/tracking/trk-7f3a9b2c1d4e5f6a7b8c9d0e1f2a3b4c
+-- Dataset size:
+--   users: 5
+--   addresses: 45
+--   packages: 45
+--   tracking tokens: 45
+--   status logs: 130+
+--   routes: 14
+--   route stops: 39
 -- ================================================================

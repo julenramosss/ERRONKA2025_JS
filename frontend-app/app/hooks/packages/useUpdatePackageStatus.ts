@@ -21,14 +21,25 @@ export function useUpdatePackageStatus() {
   >({
     mutationFn: updatePackageStatus,
     onSuccess: async (_response, variables) => {
+      const packageIds =
+        "package_ids" in variables && Array.isArray(variables.package_ids)
+          ? variables.package_ids
+          : typeof variables.package_id === "number"
+            ? [variables.package_id]
+            : [];
+
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: packagesKeys.myPackages() }),
-        queryClient.invalidateQueries({
-          queryKey: packagesKeys.detail(variables.package_id),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: logsKeys.package(variables.package_id),
-        }),
+        ...packageIds.map((packageId) =>
+          queryClient.invalidateQueries({
+            queryKey: packagesKeys.detail(packageId),
+          })
+        ),
+        ...packageIds.map((packageId) =>
+          queryClient.invalidateQueries({
+            queryKey: logsKeys.package(packageId),
+          })
+        ),
         queryClient.invalidateQueries({ queryKey: routesKeys.all() }),
       ]);
     },

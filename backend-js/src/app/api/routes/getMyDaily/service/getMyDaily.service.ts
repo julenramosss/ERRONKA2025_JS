@@ -4,9 +4,10 @@ import { findRouteWithStops } from "../repository/getMyDaily.repository";
 
 export async function getMyDailyService(
   userId: number,
-  date: string
+  date: string,
+  allowFutureFallback: boolean
 ): Promise<GetMyDailyRouteResult> {
-  const data = await findRouteWithStops(userId, date);
+  const data = await findRouteWithStops(userId, date, allowFutureFallback);
 
   if (!data) throw new NotFoundError(`No route found for date ${date}`);
 
@@ -28,5 +29,12 @@ export async function getMyDailyService(
     },
   }));
 
-  return { route: { id: data.route.id, route_date: data.route.route_date }, stops };
+  return {
+    route: {
+      id: data.route.id,
+      route_date: data.route.route_date,
+      status: data.route.status,
+    },
+    stops,
+  };
 }

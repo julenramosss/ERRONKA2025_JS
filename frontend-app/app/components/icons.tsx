@@ -1,6 +1,9 @@
 import type { ReactElement, SVGProps } from "react";
 
-type SvgIconProps = Omit<SVGProps<SVGSVGElement>, "children" | "d" | "stroke"> & {
+type SvgIconProps = Omit<
+  SVGProps<SVGSVGElement>,
+  "children" | "d" | "stroke"
+> & {
   size?: number;
   stroke?: number;
   fill?: string;
@@ -256,6 +259,68 @@ export const Icons: Record<string, (props: SvgIconProps) => ReactElement> = {
       d={
         <>
           <polygon points="3 11 22 2 13 21 11 13 3 11" />
+        </>
+      }
+    />
+  ),
+  NavigationDepart: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <rect width="10" height="18" x="7" y="3" rx="5" />
+          <circle cx="12" cy="8" r="1.25" fill="currentColor" />
+          <circle cx="12" cy="13" r="1.25" />
+          <circle cx="12" cy="18" r="1.25" />
+        </>
+      }
+    />
+  ),
+  NavigationArrive: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <path d="M5 21V4" />
+          <path d="M5 4h11l-2 4 2 4H5" />
+          <path d="M19 21H3" />
+        </>
+      }
+    />
+  ),
+  NavigationTurn: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <path d="M7 7h5a5 5 0 0 1 5 5v8" />
+          <path d="m7 7 5-5" />
+          <path d="M7 7l5 5" />
+        </>
+      }
+    />
+  ),
+  NavigationRoundabout: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <path d="M7.5 7.5A6.5 6.5 0 0 1 18 12.5" />
+          <path d="M16 10.5h2.5V8" />
+          <path d="M16.5 16.5A6.5 6.5 0 0 1 6 11.5" />
+          <path d="M8 13.5H5.5V16" />
+          <circle cx="12" cy="12" r="2" />
+        </>
+      }
+    />
+  ),
+  NavigationStraight: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <path d="M12 21V3" />
+          <path d="m6 9 6-6 6 6" />
         </>
       }
     />

@@ -8,8 +8,12 @@ export async function GET(request: Request) {
   try {
     const user = requireAuth(request, [USER_ROLES.distributor]);
     const { searchParams } = new URL(request.url);
-    const date = validateGetMyDailyDto(searchParams);
-    const result = await getMyDailyService(user.sub, date);
+    const { date, allowFutureFallback } = validateGetMyDailyDto(searchParams);
+    const result = await getMyDailyService(
+      user.sub,
+      date,
+      allowFutureFallback
+    );
     return res.ok(result);
   } catch (error) {
     return handleError("[GET /api/routes/getMyDaily]", error);

@@ -13,7 +13,7 @@ export function ForgotPasswordModal({
 
   return (
     <div
-      className={`z-200 absolute inset-0 bg-black/70 shadow-[0_0_70px_100px_rgba(0,0,0,0.5)] flex items-center justify-center md:p-4 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      className={`z-200 absolute inset-0 bg-black/70 shadow-[0_0_0px_1000px_rgba(0,0,0,0.7)] flex items-center justify-center md:p-4 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
     >
       <div
         className={`relative bg-bg-dark rounded-lg p-6 w-full max-w-md border ${isError ? "border-red-500" : "border-border"} transition-all duration-300 ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-40"}`}

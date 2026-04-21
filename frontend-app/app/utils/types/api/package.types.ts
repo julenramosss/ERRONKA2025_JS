@@ -29,11 +29,20 @@ export interface PackageWithAddress {
   country: string;
 }
 
-export interface UpdatePackageStatusRequest {
-  package_id: number;
-  new_status: PackageStatus;
-}
+export type UpdatePackageStatusRequest =
+  | {
+      package_id: number;
+      package_ids?: never;
+      new_status: PackageStatus;
+    }
+  | {
+      package_id?: never;
+      package_ids: number[];
+      new_status: PackageStatus;
+    };
 
 export type GetMyPackagesResponse = PackageWithAddress[];
 export type GetPackageByIdResponse = PackageWithAddress;
-export type UpdatePackageStatusResponse = PackageWithAddress;
+export type UpdatePackageStatusResponse =
+  | PackageWithAddress
+  | PackageWithAddress[];
