@@ -22,6 +22,7 @@ export function LoginForm() {
         onClose={toggleForgotPasswordModal}
       />
       <form
+        method="POST"
         onSubmit={(e) => {
           e.preventDefault();
           onSubmitLogin();

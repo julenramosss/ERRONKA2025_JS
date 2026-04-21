@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useHereMaps } from "../../../hooks/useHereMaps";
 import type {
   DriverNavigationProps,
+  GpsStatus,
   NavigationMetrics,
   NavigationPosition,
 } from "../types";
@@ -31,9 +32,10 @@ export function useDriverNavigation({
   const { loaded, error: hereMapsError } = useHereMaps();
   const watchRef = useRef<number | null>(null);
   const currentPositionRef = useRef<NavigationPosition | null>(null);
+  const gpsStatusRef = useRef<GpsStatus>("requesting");
   const { speak, toggleVoice, voiceEnabled } = useNavigationVoice();
 
-  const [navigating, setNavigating] = useState(false);
+  const [gpsStatus, setGpsStatus] = useState<GpsStatus>("requesting");
   const [currentPosition, setCurrentPosition] =
     useState<NavigationPosition | null>(null);
   const [metrics, setMetrics] = useState<NavigationMetrics>(EMPTY_METRICS);
@@ -80,56 +82,24 @@ export function useDriverNavigation({
   const isRouteReady =
     !setupError && actions.length > 0 && summary != null && !routeLoading;
 
-  function startNavigation(): void {
-    if (!("geolocation" in navigator)) {
-      setNavigationError("Este navegador no soporta geolocalizacion.");
-      return;
-    }
-    if (actionsRef.current.length === 0) return;
-
-    setNavigationError(null);
-    setNavigating(true);
-    setCurrentActionIndexSafe(0, false);
-    speak(actionsRef.current[0].instruction);
-
-    stopWatchingPosition();
-    watchRef.current = navigator.geolocation.watchPosition(
-      handlePositionUpdate,
-      (error) => setNavigationError(getGeolocationErrorMessage(error)),
-      { enableHighAccuracy: true, maximumAge: 500, timeout: 8000 }
-    );
+  function setGpsBoth(status: GpsStatus): void {
+    gpsStatusRef.current = status;
+    setGpsStatus(status);
   }
 
-  function stopNavigation(): void {
-    setNavigating(false);
-    stopWatchingPosition();
-  }
+  function setCurrentActionIndexSafe(
+    index: number,
+    shouldSpeak: boolean
+  ): void {
+    const maxIndex = actionsRef.current.length - 1;
+    const nextIndex = Math.max(0, Math.min(index, maxIndex));
+    if (nextIndex === currentActionIndexRef.current && index !== 0) return;
 
-  function recenter(): void {
-    const position = currentPositionRef.current;
-    if (!position || !mapInstance.current) return;
-    focusMapOnPosition(mapInstance.current.map, position, true);
-  }
+    currentActionIndexRef.current = nextIndex;
+    setCurrentActionIndex(nextIndex);
 
-  function handlePositionUpdate(pos: GeolocationPosition): void {
-    const { latitude: lat, longitude: lng, heading, speed, accuracy } =
-      pos.coords;
-    const position: NavigationPosition = {
-      coords: { lat, lng },
-      accuracy: accuracy ?? null,
-      heading: heading ?? null,
-      speed: speed ?? null,
-      timestamp: pos.timestamp,
-    };
-
-    currentPositionRef.current = position;
-    setCurrentPosition(position);
-    updateNavigationMetrics(position);
-    updateCurrentAction(position.coords);
-
-    if (!mapInstance.current) return;
-    mapInstance.current.driverMarker.setGeometry(position.coords);
-    focusMapOnPosition(mapInstance.current.map, position, true);
+    const action = actionsRef.current[nextIndex];
+    if (shouldSpeak && action) speak(action.instruction);
   }
 
   function updateNavigationMetrics(position: NavigationPosition): void {
@@ -154,7 +124,8 @@ export function useDriverNavigation({
 
     if (haversineDistanceMeters(coords, destination) <= ARRIVAL_RADIUS_M) {
       setCurrentActionIndexSafe(routeActions.length - 1, true);
-      stopNavigation();
+      stopWatchingPosition();
+      setGpsBoth("arrived");
       return;
     }
 
@@ -167,21 +138,64 @@ export function useDriverNavigation({
     }
   }
 
-  function setCurrentActionIndexSafe(index: number, shouldSpeak: boolean): void {
-    const maxIndex = actionsRef.current.length - 1;
-    const nextIndex = Math.max(0, Math.min(index, maxIndex));
-    if (nextIndex === currentActionIndexRef.current && index !== 0) return;
+  // Auto-start GPS on mount
+  useEffect(() => {
+    if (!("geolocation" in navigator)) {
+      setGpsBoth("unavailable");
+      return;
+    }
 
-    currentActionIndexRef.current = nextIndex;
-    setCurrentActionIndex(nextIndex);
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        if (gpsStatusRef.current === "arrived") return;
 
-    const action = actionsRef.current[nextIndex];
-    if (shouldSpeak && action) speak(action.instruction);
+        const { latitude: lat, longitude: lng, heading, speed, accuracy } =
+          pos.coords;
+        const position: NavigationPosition = {
+          coords: { lat, lng },
+          accuracy: accuracy ?? null,
+          heading: heading ?? null,
+          speed: speed ?? null,
+          timestamp: pos.timestamp,
+        };
+
+        setGpsBoth("granted");
+        currentPositionRef.current = position;
+        setCurrentPosition(position);
+        updateNavigationMetrics(position);
+        updateCurrentAction(position.coords);
+
+        if (mapInstance.current) {
+          mapInstance.current.driverMarker.setGeometry(position.coords);
+          focusMapOnPosition(mapInstance.current.map, position, true);
+        }
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          setGpsBoth("denied");
+        } else {
+          setNavigationError(getGeolocationErrorMessage(err));
+          setGpsBoth("unavailable");
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 500, timeout: 10000 }
+    );
+
+    watchRef.current = id;
+    return () => stopWatchingPosition();
+    // GPS watch runs once on mount — deps are all stable refs/callbacks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopWatchingPosition]);
+
+  function recenter(): void {
+    const position = currentPositionRef.current;
+    if (!position || !mapInstance.current) return;
+    focusMapOnPosition(mapInstance.current.map, position, true);
   }
 
   return {
     mapRef,
-    navigating,
+    gpsStatus,
     routeLoading: displayedRouteLoading,
     navigationError: displayedNavigationError,
     currentAction,
@@ -191,8 +205,6 @@ export function useDriverNavigation({
     currentPosition,
     voiceEnabled,
     isRouteReady,
-    startNavigation,
-    stopNavigation,
     toggleVoice,
     recenter,
   };

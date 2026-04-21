@@ -1,4 +1,5 @@
 import type { Coords, HereMarker, NavigationPosition } from "../types";
+import { TRUCK_SVG } from "./mapConstants";
 import { getNavigationZoom } from "./navigationMetrics";
 
 export function addDriverMarkers({
@@ -11,7 +12,11 @@ export function addDriverMarkers({
   origin: Coords;
 }): HereMarker {
   const H = window.H;
-  const driverMarker = new H.map.Marker(origin);
+  const truckIcon = new H.map.Icon(TRUCK_SVG, {
+    size: { w: 32, h: 44 },
+    anchor: { x: 16, y: 22 },
+  });
+  const driverMarker = new H.map.Marker(origin, { icon: truckIcon });
   const destinationMarker = new H.map.Marker(destination);
 
   map.addObject(driverMarker);

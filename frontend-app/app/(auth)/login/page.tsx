@@ -1,6 +1,5 @@
 "use client";
 import { PakLogo } from "../../components/PackLogo";
-import { ForgotPasswordModal } from "./components/ForgotPasswordModal";
 import { GlowAmbient } from "./components/GlowAmbient";
 import { LoginForm } from "./components/LoginForm";
 import { RightPanel } from "./components/RightPanel";

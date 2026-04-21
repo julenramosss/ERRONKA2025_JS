@@ -1,6 +1,6 @@
 "use client";
 import { useLogin } from "@/app/hooks/auth/useLogin";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { refresh } from "../../../lib/api/auth-api";
 import { redirect } from "next/navigation";
 

@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode, Ref } from "react";
 
+export type GpsStatus = "requesting" | "granted" | "denied" | "unavailable" | "arrived";
+
 export type CoordinateValue = number | string | null | undefined;
 export type Coordinates = { lat: number; lng: number };
 export type Coords = Coordinates;
@@ -93,22 +95,19 @@ export interface NavigationStatusPanelProps {
   navigationError: string | null;
   currentAction: NavigationAction | null;
   maneuverDistance: number | null;
+  show: boolean;
 }
 
 export interface NavigationControlsProps {
   voiceEnabled: boolean;
   onToggleVoice: () => void;
   onRecenter: () => void;
+  hasPosition: boolean;
 }
 
 export interface NavigationMetricsPanelProps {
-  currentPosition: NavigationPosition | null;
-  isRouteReady: boolean;
   metrics: NavigationMetrics;
-  navigating: boolean;
-  nextAction: NavigationAction | null;
-  onStart: () => void;
-  onStop: () => void;
+  gpsStatus: GpsStatus;
   summary: RouteSummary | null;
 }
 

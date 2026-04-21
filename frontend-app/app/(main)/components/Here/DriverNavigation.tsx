@@ -5,6 +5,7 @@ import { NavigationMetricsPanel } from "./components/NavigationMetricsPanel";
 import { NavigationStatusPanel } from "./components/NavigationStatusPanel";
 import { useDriverNavigation } from "./hooks/useDriverNavigation";
 import type { DriverNavigationProps } from "./types";
+import { ALERT_DISTANCE_M } from "./utils/mapConstants";
 
 export default function DriverNavigation({
   origin,
@@ -13,16 +14,12 @@ export default function DriverNavigation({
   const {
     currentAction,
     currentPosition,
-    isRouteReady,
+    gpsStatus,
     mapRef,
     metrics,
-    navigating,
     navigationError,
-    nextAction,
     recenter,
     routeLoading,
-    startNavigation,
-    stopNavigation,
     summary,
     toggleVoice,
     voiceEnabled,
@@ -31,8 +28,15 @@ export default function DriverNavigation({
   const maneuverDistance =
     metrics.distanceToNextActionMeters ?? currentAction?.length ?? null;
 
+  // Show turn alert only when close to a maneuver (not depart) or on error/loading
+  const showTurnAlert =
+    !!currentAction &&
+    currentAction.action !== "depart" &&
+    maneuverDistance != null &&
+    maneuverDistance <= ALERT_DISTANCE_M;
+
   return (
-    <div className="relative h-dvh w-screen overflow-hidden bg-bg-darkest">
+    <div className="relative h-dvh w-full overflow-hidden bg-bg-darkest">
       <div ref={mapRef} className="absolute inset-0 z-0 h-full w-full" />
 
       <NavigationStatusPanel
@@ -40,22 +44,19 @@ export default function DriverNavigation({
         maneuverDistance={maneuverDistance}
         navigationError={navigationError}
         routeLoading={routeLoading}
+        show={showTurnAlert}
       />
 
       <NavigationControls
         onRecenter={recenter}
         onToggleVoice={toggleVoice}
         voiceEnabled={voiceEnabled}
+        hasPosition={!!currentPosition}
       />
 
       <NavigationMetricsPanel
-        currentPosition={currentPosition}
-        isRouteReady={isRouteReady}
         metrics={metrics}
-        navigating={navigating}
-        nextAction={nextAction}
-        onStart={startNavigation}
-        onStop={stopNavigation}
+        gpsStatus={gpsStatus}
         summary={summary}
       />
     </div>

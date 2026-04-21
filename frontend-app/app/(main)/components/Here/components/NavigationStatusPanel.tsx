@@ -1,7 +1,6 @@
 import { Icons } from "../../../../components/icons";
 import type { NavigationStatusPanelProps } from "../types";
 import { formatDistance } from "../utils/formatters";
-import { StatusRow } from "./StatusRow";
 import { TurnIcon } from "./TurnIcon";
 
 export function NavigationStatusPanel({
@@ -9,38 +8,41 @@ export function NavigationStatusPanel({
   maneuverDistance,
   navigationError,
   routeLoading,
+  show,
 }: NavigationStatusPanelProps) {
+  const shouldRender = routeLoading || !!navigationError || show;
+  if (!shouldRender) return null;
+
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-30 p-3 sm:p-4">
-      <div className="pointer-events-auto rounded-xl border border-border bg-bg-surface/95 p-4 text-text-primary shadow-2xl backdrop-blur-md">
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-30 p-3">
+      <div className="pointer-events-auto rounded-2xl bg-bg-surface/96 shadow-2xl backdrop-blur-md border border-border">
         {routeLoading ? (
-          <StatusRow icon={<Icons.Loader size={22} className="animate-spin" />}>
-            Kalkulatzen...
-          </StatusRow>
+          <div className="flex items-center gap-3 px-4 py-3">
+            <Icons.Loader size={20} className="animate-spin shrink-0 text-accent-light" />
+            <span className="text-sm font-medium text-text-primary">
+              Ibilbidea kalkulatzen...
+            </span>
+          </div>
         ) : navigationError ? (
-          <StatusRow icon={<Icons.AlertTriangle size={22} />}>
-            {navigationError}
-          </StatusRow>
+          <div className="flex items-center gap-3 px-4 py-3">
+            <Icons.AlertTriangle size={20} className="shrink-0 text-text-error" />
+            <span className="text-sm font-medium text-text-primary">{navigationError}</span>
+          </div>
         ) : currentAction ? (
-          <div className="flex items-center gap-4">
-            <TurnIcon
-              action={currentAction.action}
-              direction={currentAction.direction}
-            />
+          <div className="flex items-center gap-3 px-4 py-3">
+            <TurnIcon action={currentAction.action} direction={currentAction.direction} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xl font-bold leading-tight sm:text-2xl">
+              <p className="text-base font-bold leading-tight text-text-primary">
                 {currentAction.instruction}
               </p>
-              <p className="mt-1 text-sm text-text-secondary">
-                {maneuverDistance != null
-                  ? `${formatDistance(maneuverDistance)} barru`
-                  : "Jarraitu ibilbidean"}
-              </p>
+              {maneuverDistance != null && (
+                <p className="mt-0.5 text-xs font-medium text-accent-light">
+                  {formatDistance(maneuverDistance)} barru
+                </p>
+              )}
             </div>
           </div>
-        ) : (
-          <StatusRow icon={<Icons.Route size={22} />}>Ibilbidea prest</StatusRow>
-        )}
+        ) : null}
       </div>
     </div>
   );

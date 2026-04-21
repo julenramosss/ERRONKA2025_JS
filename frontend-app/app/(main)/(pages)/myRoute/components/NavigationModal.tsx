@@ -27,12 +27,12 @@ export function NavigationModal({
   if (!origin || !destination) return null;
 
   return (
-    <div className="fixed inset-0 z-[999] bg-bg-darkest">
+    <div className="fixed inset-0 z-999 bg-bg-darkest">
       <button
         type="button"
         onClick={onClose}
         aria-label="Itxi nabigazioa"
-        className="absolute right-3 top-3 z-[1000] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg-surface text-text-primary shadow-xl transition-colors hover:border-border-focus"
+        className="absolute right-3 top-3 z-1000 flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg-surface text-text-primary shadow-xl transition-colors hover:border-border-focus"
       >
         <Icons.X size={20} />
       </button>

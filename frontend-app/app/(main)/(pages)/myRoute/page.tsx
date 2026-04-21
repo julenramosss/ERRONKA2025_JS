@@ -53,7 +53,7 @@ export default function MyRoutePage() {
         {noRoute ? (
           <EmptyRouteState />
         ) : isError || !routeData ? (
-          <div className="flex min-h-[420px] flex-col items-center justify-center gap-4 rounded-xl border border-border bg-bg-surface px-6 text-center">
+          <div className="flex min-h-105 flex-col items-center justify-center gap-4 rounded-xl border border-border bg-bg-surface px-6 text-center">
             <Icons.AlertTriangle size={34} className="text-text-error" />
             <div>
               <p className="font-semibold text-text-primary">
