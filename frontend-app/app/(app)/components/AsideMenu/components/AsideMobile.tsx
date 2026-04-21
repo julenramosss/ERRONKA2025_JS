@@ -1,7 +1,7 @@
 "use client";
 import { Icons } from "../../../../components/icons";
 import { PakLogo } from "../../../../components/PackLogo";
-import { USER_ROLES } from "../../../../types";
+import { USER_ROLES } from "../../../../utils/types";
 import { useMenuMobile } from "../hooks/useMenuMobile";
 import { MenuOptions } from "./MenuOptions";
 
@@ -57,7 +57,7 @@ export function AsideMobile() {
           <h3 className="px-4 text-[10px] text-text-disabled font-bold uppercase tracking-wide">
             {role === USER_ROLES.admin ? "ADMINISTRATZAILEA" : "DISTRIBUIDOREA"}
           </h3>
-          <MenuOptions />
+          <MenuOptions onClose={onClose} />
         </nav>
 
         <footer className="w-full mt-auto py-4 px-2 border-t border-border">

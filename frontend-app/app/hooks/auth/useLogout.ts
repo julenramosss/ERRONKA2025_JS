@@ -7,8 +7,8 @@ import { authKeys } from "../../query/keys/auth.keys";
 import { logsKeys } from "../../query/keys/logs.keys";
 import { packagesKeys } from "../../query/keys/packages.keys";
 import { routesKeys } from "../../query/keys/routes.keys";
-import type { LogoutResponse } from "../../types/api/auth.types";
-import type { AppError } from "../../types/api/common.types";
+import type { LogoutResponse } from "../../utils/types/api/auth.types";
+import type { AppError } from "../../utils/types/api/common.types";
 
 export function useLogout() {
   const queryClient = useQueryClient();

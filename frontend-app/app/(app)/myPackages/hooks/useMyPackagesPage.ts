@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMyPackages } from "../../../hooks/packages/useMyPackages";
 import { useUpdatePackageStatus } from "../../../hooks/packages/useUpdatePackageStatus";
-import type { PackageStatus } from "../../../types/api/package.types";
+import type { PackageStatus } from "../../../utils/types/api/package.types";
 import type { ConfirmState, ViewMode } from "../types";
 
 export function useMyPackagesPage() {

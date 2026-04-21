@@ -1,7 +1,7 @@
 import type {
   PackageStatus,
   PackageWithAddress,
-} from "../../../types/api/package.types";
+} from "../../../utils/types/api/package.types";
 
 export type ViewMode = "list" | "grid";
 

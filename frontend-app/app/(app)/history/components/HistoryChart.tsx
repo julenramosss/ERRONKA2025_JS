@@ -3,8 +3,8 @@ import type { HistoryChartProps } from "../types";
 export function HistoryChart({ bars }: HistoryChartProps) {
   if (bars.length === 0) {
     return (
-      <div className="bg-bg-surface border border-border rounded-xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex justify-between items-center">
+      <div className="overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5 sm:py-4">
           <div>
             <p className="text-sm font-semibold text-text-primary">
               Eguneko emaitzak
@@ -14,7 +14,7 @@ export function HistoryChart({ bars }: HistoryChartProps) {
             </p>
           </div>
         </div>
-        <div className="px-6 py-10 flex items-center justify-center text-sm text-text-disabled">
+        <div className="flex items-center justify-center px-4 py-8 text-sm text-text-disabled sm:px-6 sm:py-10">
           Ez dago daturik
         </div>
       </div>
@@ -22,21 +22,20 @@ export function HistoryChart({ bars }: HistoryChartProps) {
   }
 
   const max = Math.max(...bars.map((bar) => bar.total), 0);
-  const minChartWidth = Math.max(bars.length * 56, 640);
 
   return (
-    <div className="bg-bg-surface border border-border rounded-xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-border flex flex-wrap justify-between items-center gap-3">
+    <div className="overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5 sm:py-4">
         <div>
           <p className="text-sm font-semibold text-text-primary">
             Eguneko emaitzak
           </p>
           <p className="text-xs text-text-secondary mt-0.5">Azken 14 egunak</p>
         </div>
-        <div className="flex gap-4 text-xs text-text-secondary">
+        <div className="flex gap-3 text-xs text-text-secondary sm:gap-4">
           <span className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-sm bg-accent" />
-            Entregatuta
+            OK
           </span>
           <span className="flex items-center gap-1.5">
             <span
@@ -48,23 +47,22 @@ export function HistoryChart({ bars }: HistoryChartProps) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="px-5 py-6" style={{ minWidth: `${minChartWidth}px` }}>
-          <div className="flex items-end gap-3 h-52">
-            {bars.map((bar) => {
+      <div className="px-3 py-4 sm:px-5 sm:py-6">
+        <div className="flex h-40 items-end gap-1 sm:h-52 sm:gap-3">
+          {bars.map((bar, index) => {
               const deliveredPct = max > 0 ? (bar.delivered / max) * 100 : 0;
               const failedPct = max > 0 ? (bar.failed / max) * 100 : 0;
 
               return (
                 <div
                   key={bar.dateKey}
-                  className="flex-1 flex flex-col items-center gap-2"
+                  className="flex min-w-0 flex-1 flex-col items-center gap-1 sm:gap-2"
                   title={`${bar.fullLabel}: ${bar.total} pakete`}
                 >
                   <div className="h-4 text-[10px] font-mono text-text-disabled">
                     {bar.total > 0 ? bar.total : ""}
                   </div>
-                  <div className="h-36 w-full max-w-10">
+                  <div className="h-28 w-full max-w-7 sm:h-36 sm:max-w-10">
                     <div className="flex h-full flex-col-reverse overflow-hidden rounded-md border border-border bg-bg-elevated">
                       {deliveredPct > 0 && (
                         <div
@@ -87,13 +85,14 @@ export function HistoryChart({ bars }: HistoryChartProps) {
                       )}
                     </div>
                   </div>
-                  <span className="text-[10px] text-text-disabled font-mono text-center">
-                    {bar.shortLabel}
+                  <span className="h-3 text-center font-mono text-[9px] text-text-disabled sm:text-[10px]">
+                    <span className={index % 2 === 0 ? "" : "hidden sm:inline"}>
+                      {bar.shortLabel}
+                    </span>
                   </span>
                 </div>
               );
             })}
-          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { PackageStatus } from "../../../types/api/package.types";
+import type { PackageStatus } from "../../../utils/types/api/package.types";
 
 export type HistoryFilterStatus = "all" | "delivered" | "failed";
 export type HistoryFinalStatus = Extract<PackageStatus, "delivered" | "failed">;
@@ -48,7 +48,9 @@ export interface HistoryListItem {
 export interface HistoryDayGroup {
   dateKey: string;
   dateLabel: string;
+  compactDateLabel: string;
   summary: string;
+  compactSummary: string;
   delivered: number;
   failed: number;
   total: number;

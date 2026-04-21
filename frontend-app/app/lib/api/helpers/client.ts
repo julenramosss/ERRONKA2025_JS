@@ -3,11 +3,12 @@ import axios, {
   type AxiosError,
   type InternalAxiosRequestConfig,
 } from "axios";
-import type { RefreshResponse } from "../../../types/api/auth.types";
+import type { RefreshResponse } from "../../../utils/types/api/auth.types";
 import { clearAccessToken, getAccessToken, setAccessToken } from "./auth-token";
 import { toAppError } from "./errors";
 import {
   API_BASE_URL,
+  AUTH_FORGOT_PASSWORD_PATH,
   AUTH_LOGIN_PATH,
   AUTH_REFRESH_PATH,
   JSON_HEADERS,
@@ -35,6 +36,7 @@ function shouldSkipAuthRefresh(url?: string): boolean {
   return (
     url.includes(AUTH_LOGIN_PATH) ||
     url.includes(AUTH_REFRESH_PATH) ||
+    url.includes(AUTH_FORGOT_PASSWORD_PATH) ||
     url.includes(TRACKING_PATH_PREFIX)
   );
 }

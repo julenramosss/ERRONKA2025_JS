@@ -1,10 +1,11 @@
 import type {
+  ForgotPassword,
   LoginRequest,
   LoginResponse,
   LogoutResponse,
   MeResponse,
   RefreshResponse,
-} from "../../types/api/auth.types";
+} from "../../utils/types/api/auth.types";
 import { apiClient } from "./helpers/client";
 
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
@@ -24,5 +25,13 @@ export async function refresh(): Promise<RefreshResponse> {
 
 export async function getMe(): Promise<MeResponse> {
   const response = await apiClient.get<MeResponse>("/auth/me");
+  return response.data;
+}
+
+export async function forgotPassword(email: string): Promise<ForgotPassword> {
+  const response = await apiClient.post<ForgotPassword>(
+    "/auth/forgotPassword",
+    { email }
+  );
   return response.data;
 }

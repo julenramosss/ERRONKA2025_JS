@@ -1,8 +1,8 @@
 import { requireAuth } from "@/app/lib/jwt";
 import { handleError, res } from "@/app/lib/response";
 import { USER_ROLES } from "@/app/types";
-import { updateRouteStatusDto } from "./dto/updateRouteStatus.dto";
-import { updateRouteStatusService } from "./service/updateRouteStatus.service";
+import { updateRouteStatusDto } from "../dto/updateRouteStatus.dto";
+import { updateRouteStatusService } from "../service/updateRouteStatus.service";
 
 export async function PATCH(
   request: Request,

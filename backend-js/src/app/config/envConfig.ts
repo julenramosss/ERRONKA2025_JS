@@ -20,7 +20,7 @@ export const tracking_expires_days = Number(
   process.env.TRACKING_EXPIRES_DAYS ?? 30
 );
 export const tracking_base_url =
-  process.env.TRACKING_BASE_URL ?? "http://localhost:3000/tracking";
+  process.env.TRACKING_BASE_URL ?? "http://localhost:80/tracking/";
 
 export const default_user_password =
   process.env.DEFAULT_USER_PASSWORD ?? "uf98UF98U)OAIfu98af98u";

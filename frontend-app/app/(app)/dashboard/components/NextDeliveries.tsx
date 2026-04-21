@@ -1,7 +1,7 @@
 import { NextDeliveriesProps } from "../types";
 import { Icons } from "../../../components/icons";
-import { STATUS_LABEL } from "../../../types";
-import type { PackageStatus } from "../../../types/api/package.types";
+import { STATUS_LABEL } from "../../../utils/types";
+import type { PackageStatus } from "../../../utils/types/api/package.types";
 import Link from "next/link";
 
 const STATUS_STYLE: Record<PackageStatus, string> = {

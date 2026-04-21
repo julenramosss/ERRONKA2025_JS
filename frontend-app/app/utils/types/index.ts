@@ -1,5 +1,3 @@
-import { PackageStatus } from "./api/package.types";
-
 export const USER_ROLES = {
   admin: "admin",
   distributor: "distributor",
@@ -13,3 +11,13 @@ export const STATUS_LABEL: Record<PackageStatus, string> = {
   delivered: "Entregatuta",
   failed: "Huts",
 };
+
+export const PACKAGE_STATUSES = {
+  pending: "pending",
+  assigned: "assigned",
+  in_transit: "in_transit",
+  delivered: "delivered",
+  failed: "failed",
+} as const;
+export type PackageStatus =
+  (typeof PACKAGE_STATUSES)[keyof typeof PACKAGE_STATUSES];

@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useMyPackages } from "../../../hooks/packages/useMyPackages";
-import type { PackageWithAddress } from "../../../types/api/package.types";
+import type { PackageWithAddress } from "../../../utils/types/api/package.types";
 import {
+  formatCompactDateLabel,
+  formatCompactGroupSummary,
   formatDayLabel,
   formatGroupSummary,
   formatPeriodLabel,
@@ -41,8 +43,8 @@ export function useHistoryPage() {
   const allHistory = useMemo<HistoryPackage[]>(
     () =>
       [...(packagesData ?? [])]
-        .filter(
-          (pkg): pkg is HistoryPackage => isHistoryFinalStatus(pkg.status)
+        .filter((pkg): pkg is HistoryPackage =>
+          isHistoryFinalStatus(pkg.status)
         )
         .sort(
           (a, b) =>
@@ -123,13 +125,17 @@ export function useHistoryPage() {
     }
 
     return Array.from(map.entries()).map(([dateKey, items]) => {
-      const delivered = items.filter((item) => item.status === "delivered").length;
+      const delivered = items.filter(
+        (item) => item.status === "delivered"
+      ).length;
       const failed = items.filter((item) => item.status === "failed").length;
 
       return {
         dateKey,
         dateLabel: formatDayLabel(items[0].updated_at),
+        compactDateLabel: formatCompactDateLabel(items[0].updated_at),
         summary: formatGroupSummary(items.length, delivered),
+        compactSummary: formatCompactGroupSummary(items.length, delivered),
         delivered,
         failed,
         total: items.length,

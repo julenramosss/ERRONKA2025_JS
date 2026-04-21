@@ -6,8 +6,8 @@ import { routesKeys } from "../../query/keys/routes.keys";
 import type {
   UpdateArrivalRequest,
   UpdateArrivalResponse,
-} from "../../types/api/route.types";
-import type { AppError } from "../../types/api/common.types";
+} from "../../utils/types/api/route.types";
+import type { AppError } from "../../utils/types/api/common.types";
 
 export function useUpdateArrival() {
   const queryClient = useQueryClient();

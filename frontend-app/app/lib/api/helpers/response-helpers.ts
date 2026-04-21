@@ -1,4 +1,4 @@
-import type { ApiErrorResponse } from "../../../types/api/common.types";
+import type { ApiErrorResponse } from "../../../utils/types/api/common.types";
 
 export function omitUndefinedParams(
   params: Record<string, string | number | boolean | undefined>

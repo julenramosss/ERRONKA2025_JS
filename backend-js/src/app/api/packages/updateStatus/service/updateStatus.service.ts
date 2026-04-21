@@ -47,7 +47,7 @@ export async function updateStatusService(
   const trackingToken = await getTrackingTokenByPackageId(dto.package_id);
   const distributorName = await getDistributorName(userId);
   const trackingUrl = trackingToken
-    ? `${tracking_base_url}/${trackingToken}`
+    ? `${tracking_base_url}${trackingToken}`
     : "";
 
   const emailParams: SendPackageTrackingEmailParams = {

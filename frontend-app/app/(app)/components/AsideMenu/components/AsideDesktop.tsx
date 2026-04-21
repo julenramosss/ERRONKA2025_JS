@@ -1,6 +1,6 @@
 import { Icons } from "../../../../components/icons";
 import { PakLogo } from "../../../../components/PackLogo";
-import { USER_ROLES } from "../../../../types";
+import { USER_ROLES } from "../../../../utils/types";
 import { useMenuDesktop } from "../hooks/useMenuDesktop";
 import { MenuOptions } from "./MenuOptions";
 
@@ -21,26 +21,30 @@ export function AsideDesktop() {
       }`}
     >
       <header
-        className={`w-full h-18 px-4 border-b border-border flex gap-3 items-center justify-between overflow-hidden ${isMinimized ? "flex-col" : "flex-row"}`}
+        className={`w-full h-18 px-4 border-b border-border flex gap-3 items-center overflow-hidden ${isMinimized ? "justify-center" : "justify-between"}`}
       >
         <PakLogo size={25} showText={!isMinimized} />
         <button
-          className="w-7 h-7 shrink-0 flex items-center justify-center rounded-full hover:bg-accent-subtle transition-colors text-text-secondary hover:text-text-primary cursor-pointer"
+          className={`w-7 h-7 shrink-0 items-center justify-center rounded-full hover:bg-accent-subtle transition-colors text-text-secondary hover:text-text-primary cursor-pointer ${isMinimized ? "hidden" : "flex"}`}
           onClick={() => onClickMinimize()}
         >
-          {isMinimized ? (
-            <Icons.ChevronRight size={20} />
-          ) : (
-            <Icons.ChevronLeft size={20} />
-          )}
+          <Icons.ChevronLeft size={20} />
         </button>
       </header>
-      <nav className="w-full flex flex-col gap-2 px-2">
+      <nav
+        className={`w-full flex flex-col gap-2 px-2 ${isMinimized ? "items-center" : ""}`}
+      >
         {!isMinimized && (
           <h3 className="px-4 text-[10px] text-text-disabled font-bold uppercase tracking-wide">
             {role === USER_ROLES.admin ? "ADMINISTRATZAILEA" : "DISTRIBUIDOREA"}
           </h3>
         )}
+        <button
+          className={`w-7 h-7 shrink-0 items-center justify-center rounded-full hover:bg-accent-subtle transition-colors text-text-secondary hover:text-text-primary cursor-pointer ${isMinimized ? "flex" : "hidden"}`}
+          onClick={() => onClickMinimize()}
+        >
+          <Icons.ChevronRight size={20} />
+        </button>
         <MenuOptions isMinimized={isMinimized} />
       </nav>
       <footer className="w-full mt-auto py-4 px-2 border-t border-border">

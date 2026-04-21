@@ -4,14 +4,12 @@ import { authKeys } from "../keys/auth.keys";
 import { setAccessToken } from "../../lib/api/helpers/auth-token";
 
 const ME_STALE_TIME = 10 * 60 * 1000;
-const ME_GC_TIME = 15 * 60 * 1000;
 
 export function meQueryOptions() {
   return queryOptions({
     queryKey: authKeys.me(),
     queryFn: getMe,
     staleTime: ME_STALE_TIME,
-    gcTime: ME_GC_TIME,
   });
 }
 

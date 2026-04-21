@@ -1,5 +1,5 @@
 import { STATUS_LABEL } from "../myPackages/constants";
-import type { PackageStatus } from "../../types/api/package.types";
+import type { PackageStatus } from "../../utils/types/api/package.types";
 
 const STATUS_STYLE: Record<PackageStatus, string> = {
   pending:

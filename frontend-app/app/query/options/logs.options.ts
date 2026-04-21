@@ -1,10 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
 import { getPackageLogs } from "../../lib/api/logs-api";
 import { logsKeys } from "../keys/logs.keys";
-import type { PackageLogsRequest } from "../../types/api/log.types";
+import type { PackageLogsRequest } from "../../utils/types/api/log.types";
 
 const STALE_TIME = 10 * 60 * 1000;
-const GC_TIME = 15 * 60 * 1000;
 
 export function packageLogsQueryOptions({
   packageId,
@@ -15,6 +14,5 @@ export function packageLogsQueryOptions({
     queryKey: logsKeys.list(packageId, page, limit),
     queryFn: () => getPackageLogs({ packageId, page, limit }),
     staleTime: STALE_TIME,
-    gcTime: GC_TIME,
   });
 }

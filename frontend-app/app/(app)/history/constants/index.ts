@@ -1,3 +1,4 @@
+import { getDayName } from "../../../utils/constants/date.constants";
 import type { HistoryFilterStatus } from "../types";
 
 export const HISTORY_FILTERS: { key: HistoryFilterStatus; label: string }[] = [
@@ -7,27 +8,31 @@ export const HISTORY_FILTERS: { key: HistoryFilterStatus; label: string }[] = [
 ];
 
 export function formatDayLabel(dateStr: string): string {
-  const label = new Date(dateStr).toLocaleDateString("es-ES", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const date = new Date(dateStr);
+  const weekday = date.toLocaleDateString("en-EN", { weekday: "long" });
 
-  return label.charAt(0).toUpperCase() + label.slice(1);
+  return `${getDayName(weekday)}, ${formatCompactDateLabel(dateStr)}`;
+}
+
+export function formatCompactDateLabel(dateStr: string): string {
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear()).slice(-2);
+
+  return `${day}/${month}/${year}`;
 }
 
 export function formatShortDayLabel(dateStr: string): string {
-  return new Date(dateStr)
-    .toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-    })
-    .replaceAll(".", "");
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${day}/${month}`;
 }
 
 export function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString("es-ES", {
+  return new Date(dateStr).toLocaleTimeString("en-EN", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -43,13 +48,7 @@ export function toDateKey(dateStr: string): string {
 }
 
 function formatPeriodDate(dateStr: string): string {
-  return new Date(dateStr)
-    .toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    })
-    .replaceAll(".", "");
+  return formatCompactDateLabel(dateStr);
 }
 
 export function formatPeriodLabel(start: string, end: string): string {
@@ -62,6 +61,13 @@ export function formatPeriodLabel(start: string, end: string): string {
 
 export function formatGroupSummary(total: number, delivered: number): string {
   return `${total} pakete · ${delivered} entregatuta`;
+}
+
+export function formatCompactGroupSummary(
+  total: number,
+  delivered: number
+): string {
+  return `${total} - ${delivered} ok`;
 }
 
 export function getRecipientInitial(name: string): string {

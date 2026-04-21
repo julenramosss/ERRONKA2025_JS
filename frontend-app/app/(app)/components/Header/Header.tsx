@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Icons } from "../../../components/icons";
-import { AsideMobile } from "../Menu/components/AsideMobile";
+import { AsideMobile } from "../AsideMenu/components/AsideMobile";
 import { SearchMobile } from "./SearcMobile";
 import { useHeader } from "./useHeader";
 

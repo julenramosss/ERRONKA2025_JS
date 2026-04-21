@@ -28,6 +28,7 @@
   - [GET /api/users/list](#get-apiuserslist)
   - [GET /api/users/getById](#get-apiusersgetbyid)
   - [PATCH /api/users/update](#patch-apiusersupdate)
+  - [DELETE /api/users/remove](#delete-apiusersremove)
 - [Packages](#packages)
   - [POST /api/packages/create](#post-apipackagescreate)
   - [GET /api/packages/list](#get-apipackageslist)
@@ -600,6 +601,44 @@
 | 500    | `"Internal server error"`                              | Unhandled exception   |
 
 **Side Effects:** None.
+
+---
+
+### DELETE /api/users/remove
+
+**Description:** Permanently deletes a user by ID.
+
+**Authentication:** Required - `admin` only.
+
+**Cookies:** N/A
+
+**Request Parameters:**
+
+| Location    | Name | Type   | Required | Description       |
+| ----------- | ---- | ------ | -------- | ----------------- |
+| Query param | `id` | number | yes      | User ID to delete |
+
+**Request Body Example:** N/A
+
+**Response:**
+
+| Status | Description  | Body       |
+| ------ | ------------ | ---------- |
+| 204    | User deleted | No content |
+
+**Errors:**
+
+| Status | Message                                                       | When does it happen                 |
+| ------ | ------------------------------------------------------------- | ----------------------------------- |
+| 400    | `"id is required"`                                            | Missing query param                 |
+| 400    | `"id must be a positive integer"`                             | Non-integer value                   |
+| 401    | `"Authorization header is missing"`                           | No token                            |
+| 403    | `"You do not have permission to access this resource"`         | Caller is not `admin`               |
+| 404    | `"User not found"`                                            | No user with that ID                |
+| 409    | `"User cannot be deleted because it has related records"`      | User has DB records that block delete |
+| 500    | `"Internal server error"`                                     | Unhandled exception                 |
+
+**Side Effects:** Deletes the user row from the DB. Refresh, reset, and activation tokens linked to the user are removed by database cascade.
 
 ---
 

@@ -1,5 +1,5 @@
 import { Icons } from "../../../components/icons";
-import type { PackageWithAddress } from "../../../types/api/package.types";
+import type { PackageWithAddress } from "../../../utils/types/api/package.types";
 
 interface StatCardsProps {
   packagesData: PackageWithAddress[];

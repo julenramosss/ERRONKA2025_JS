@@ -1,7 +1,7 @@
 import type {
   PackageLogsRequest,
   PackageLogsResponse,
-} from "../../types/api/log.types";
+} from "../../utils/types/api/log.types";
 import { apiClient } from "./helpers/client";
 import { omitUndefinedParams } from "./helpers/response-helpers";
 

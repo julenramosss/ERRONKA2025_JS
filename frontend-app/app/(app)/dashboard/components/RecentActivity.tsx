@@ -1,5 +1,5 @@
 import { RecentActivityProps } from "../types";
-import type { PackageStatus } from "../../../types/api/package.types";
+import type { PackageStatus } from "../../../utils/types/api/package.types";
 
 const STATUS_TEXT: Record<PackageStatus, string> = {
   pending: "Zain dago",

@@ -8,8 +8,8 @@ import { routesKeys } from "../../query/keys/routes.keys";
 import type {
   UpdatePackageStatusRequest,
   UpdatePackageStatusResponse,
-} from "../../types/api/package.types";
-import type { AppError } from "../../types/api/common.types";
+} from "../../utils/types/api/package.types";
+import type { AppError } from "../../utils/types/api/common.types";
 
 export function useUpdatePackageStatus() {
   const queryClient = useQueryClient();

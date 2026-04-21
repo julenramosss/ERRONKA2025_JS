@@ -31,3 +31,7 @@ export interface LogoutResponse {
 export interface MeResponse extends AuthUser {
   created_at: ApiDateTimeString;
 }
+
+export interface ForgotPassword {
+  message: string;
+}

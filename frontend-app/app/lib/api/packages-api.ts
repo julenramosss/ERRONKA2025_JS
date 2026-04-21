@@ -3,7 +3,7 @@ import type {
   GetPackageByIdResponse,
   UpdatePackageStatusRequest,
   UpdatePackageStatusResponse,
-} from "../../types/api/package.types";
+} from "../../utils/types/api/package.types";
 import { apiClient } from "./helpers/client";
 
 export async function getMyPackages(): Promise<GetMyPackagesResponse> {

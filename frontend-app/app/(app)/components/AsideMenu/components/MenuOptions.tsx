@@ -3,7 +3,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icons } from "../../../../components/icons";
 
-export function MenuOptions({ isMinimized }: { isMinimized?: boolean }) {
+export function MenuOptions({
+  isMinimized,
+  onClose,
+}: {
+  isMinimized?: boolean;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
 
   const items = [
@@ -40,6 +46,7 @@ export function MenuOptions({ isMinimized }: { isMinimized?: boolean }) {
               }`}
             >
               <Link
+                onClick={() => onClose && onClose()}
                 href={href}
                 className={`flex text-base font-semibold items-center gap-3 py-2 ${
                   isMinimized ? "justify-center px-2" : "px-4"

@@ -1,4 +1,4 @@
-import { PackageWithAddress } from "../../../types/api/package.types";
+import { PackageWithAddress } from "../../../utils/types/api/package.types";
 
 export interface NextDeliveriesProps {
   packages: PackageWithAddress[];

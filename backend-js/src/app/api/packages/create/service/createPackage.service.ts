@@ -42,7 +42,7 @@ export async function createPackageService(
   const params: SendPackageTrackingEmailParams = {
     recipientEmail: createdPackage.recipient_email,
     recipientName: createdPackage.recipient_name,
-    trackingUrl: `${tracking_base_url}/${createdToken.token}`,
+    trackingUrl: `${tracking_base_url}${createdToken.token}`,
     packageStatus: createdPackage.status,
     estimatedDelivery: createdPackage.estimated_delivery,
   };

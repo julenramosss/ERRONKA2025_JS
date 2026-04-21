@@ -4,7 +4,7 @@ import type {
   UpdateArrivalResponse,
   UpdateRouteStatusRequest,
   UpdateRouteStatusResponse,
-} from "../../types/api/route.types";
+} from "../../utils/types/api/route.types";
 import { apiClient } from "./helpers/client";
 import { omitUndefinedParams } from "./helpers/response-helpers";
 

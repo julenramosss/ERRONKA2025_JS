@@ -1,4 +1,4 @@
-import type { PackageStatus } from "../../../types/api/package.types";
+import type { PackageStatus } from "../../../utils/types/api/package.types";
 
 export function formatDate(d: string | null): string {
   if (!d) return "—";

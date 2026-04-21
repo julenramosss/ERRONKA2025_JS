@@ -1,4 +1,4 @@
-import type { PackageStatus } from "../../../../types/api/package.types";
+import type { PackageStatus } from "../../../../utils/types/api/package.types";
 import { STATUS_LABEL } from "../../constants";
 import { StatusBadge } from "../../../components/StatusBadge";
 import type { PackageStatusHistoryProps } from "../types";

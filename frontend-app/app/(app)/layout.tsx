@@ -1,5 +1,5 @@
 import { Header } from "./components/Header/Header";
-import { AsideMenu } from "./components/Menu/AsideMenu";
+import { AsideMenu } from "./components/AsideMenu/AsideMenu";
 import { SessionKeepAlive } from "../components/SessionKeepAlive";
 
 export default function AuthLayout({

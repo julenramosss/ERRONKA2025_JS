@@ -29,7 +29,7 @@ export default function HistoryPage() {
       loading={isLoading}
       fallback={<HistoryLoader />}
     >
-      <div className="py-6 px-4 md:px-8 lg:px-10 flex flex-col gap-6">
+      <div className="flex flex-col gap-4 px-3 py-4 sm:px-5 md:px-8 md:py-6 lg:px-10">
         <HistoryHeader
           period={period}
           filters={filters}
