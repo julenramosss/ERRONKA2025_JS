@@ -17,11 +17,11 @@
   const visibilityButtons = Array.from(form.querySelectorAll('[data-toggle-visibility]'));
 
   const strengthMeta = [
-    { label: 'Muy débil', color: '#EF4444', pct: 20 },
-    { label: 'Débil', color: '#F97316', pct: 40 },
-    { label: 'Aceptable', color: '#F59E0B', pct: 60 },
-    { label: 'Buena', color: '#84CC16', pct: 80 },
-    { label: 'Excelente', color: '#10B981', pct: 100 },
+    { label: 'Oso ahula', color: '#EF4444', pct: 20 },
+    { label: 'Ahula', color: '#F97316', pct: 40 },
+    { label: 'Nahikoa', color: '#F59E0B', pct: 60 },
+    { label: 'Ona', color: '#84CC16', pct: 80 },
+    { label: 'Bikaina', color: '#10B981', pct: 100 },
   ];
 
   const criteria = {
@@ -60,10 +60,8 @@
     const confirm = confirmInput.value;
     const mismatch = confirm.length > 0 && password !== confirm;
     const matched = confirm.length > 0 && password === confirm;
-
     mismatchError.classList.toggle('is-visible', mismatch);
     matchSuccess.classList.toggle('is-visible', matched);
-
     confirmInput.closest('.input-wrap').classList.toggle('has-error', mismatch);
   }
 
@@ -71,7 +69,6 @@
     const value = passwordInput.value;
     const strength = getStrength(value);
     const meta = strengthMeta[Math.max(0, strength - 1)] || strengthMeta[0];
-
     strengthBox.classList.toggle('is-visible', value.length > 0);
     strengthLabel.textContent = meta.label;
     strengthLabel.style.color = meta.color;
@@ -79,7 +76,6 @@
     strengthValue.style.color = meta.color;
     strengthBar.style.width = `${value.length === 0 ? 0 : meta.pct}%`;
     strengthBar.style.background = meta.color;
-
     refreshCriteria(value);
   }
 
@@ -120,10 +116,8 @@
       refreshSubmit();
       return;
     }
-
     submitButton.disabled = true;
-    submitButton.innerHTML = 'Actualizando contraseña…';
-
+    submitButton.innerHTML = 'Pasahitza eguneratzen…';
     if (formCard && loadingState) {
       formCard.classList.add('hidden');
       loadingState.classList.remove('hidden');
