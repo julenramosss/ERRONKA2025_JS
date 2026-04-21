@@ -22,7 +22,7 @@ BEGIN;
 INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) VALUES
   (1, 'Julen Ramos Tolosa', 'julenramostolosa@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'admin',       true,  NOW() - INTERVAL 6 MONTH),
   (2, 'Alejandro Ariza Aguilar','alejandroarizaaguilar@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', true,  NOW() - INTERVAL 4 MONTH),
-  (3, 'Sergio Rocha Tolosaldea', 'sergiorochatolosaldea@gmail.com', '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', true,  NOW() - INTERVAL 3 MONTH),
+  (3, 'Sergio Rocha Tolosaldea', 'sergiotolosaldea@gmail.com', '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', true,  NOW() - INTERVAL 3 MONTH),
   (4, 'Julen Ramos Arruti', 'jramosarruti@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', true,  NOW() - INTERVAL 2 MONTH),
   (5, 'Penelope Garcia',     'penelopeg@gmail.com',  '$2b$10$5KOuOakmK3bUreVh7tSAKuwnwz1RZdTVx.8Dl73Kc9e9PzU8XfVUC', 'distributor', false, NOW() - INTERVAL 5 MONTH);
 

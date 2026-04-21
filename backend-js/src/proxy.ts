@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyAccessToken } from "./app/lib/jwt";
 import { is_dev } from "./app/config/envConfig";
 
-const ALLOWED_ORIGINS = ["http://localhost:3001", "http://127.0.0.1:3001"];
+const ALLOWED_ORIGINS = [
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+  "http://10.23.26.64:3000",
+];
 
 const PUBLIC_PATHS = [
   "/api/auth/login",
@@ -23,8 +27,12 @@ function addCorsHeaders(response: NextResponse, origin: string | null): void {
     // En desarrollo: permitir cualquier origen
     response.headers.set("Access-Control-Allow-Origin", origin || "*");
   } else {
-    // En producción: solo orígenes permitidos
-    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    // En producción: permitir orígenes en lista o peticiones sin origin (apps de escritorio)
+    if (!origin) {
+      // Apps de escritorio (Java, Postman, etc.) no envían Origin
+      response.headers.set("Access-Control-Allow-Origin", "*");
+    } else if (ALLOWED_ORIGINS.includes(origin)) {
+      // Navegadores con origen permitido
       response.headers.set("Access-Control-Allow-Origin", origin);
     }
   }
@@ -41,8 +49,13 @@ export function proxy(request: NextRequest) {
 
     if (is_dev) {
       response.headers.set("Access-Control-Allow-Origin", origin || "*");
-    } else if (origin && ALLOWED_ORIGINS.includes(origin)) {
-      response.headers.set("Access-Control-Allow-Origin", origin);
+    } else {
+      // Permitir peticiones sin origin (apps de escritorio) o con origen permitido
+      if (!origin) {
+        response.headers.set("Access-Control-Allow-Origin", "*");
+      } else if (ALLOWED_ORIGINS.includes(origin)) {
+        response.headers.set("Access-Control-Allow-Origin", origin);
+      }
     }
 
     response.headers.set("Access-Control-Allow-Credentials", "true");

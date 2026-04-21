@@ -6,24 +6,21 @@ export function useLoginForm() {
   const { data, isError, error, isPending, isSuccess, mutateAsync } =
     useLogin();
 
-  async function onFormSubmit(e: React.FormEvent<HTMLFormElement> | undefined) {
-    if (!e) return;
+  async function onFormSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const { email, password } = e.currentTarget
-      .elements as typeof e.currentTarget.elements & {
-      email: HTMLInputElement;
-      password: HTMLInputElement;
-    };
+    const formData = new FormData(e.target as HTMLFormElement);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    if (!email.value || !password.value) {
+    if (!email || !password) {
       // Handle validation error (e.g., show a message to the user)
       return;
     }
 
     try {
       await mutateAsync({
-        email: email.value,
-        password: password.value,
+        email: email,
+        password: password,
       });
 
       const redirectPathName = sessionStorage.getItem("redirect_after_login");
