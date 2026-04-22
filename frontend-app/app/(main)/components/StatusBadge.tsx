@@ -1,4 +1,4 @@
-import { STATUS_LABEL } from "../(pages)/myPackages/constants";
+import { STATUS_LABEL } from "../../utils/types";
 import type { PackageStatus } from "../../utils/types/api/package.types";
 
 const STATUS_STYLE: Record<PackageStatus, string> = {

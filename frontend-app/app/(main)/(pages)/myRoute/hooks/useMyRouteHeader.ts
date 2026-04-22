@@ -44,9 +44,9 @@ export function useMyRouteHeader() {
   );
 
   const startButtonLabel = (() => {
-    if (isCompleted) return "Ez dago ruta pendenterik";
+    if (isCompleted) return "Ez dago ibilbide pendenterik";
     if (isInProgress) return "Ibilbidea bukatu";
-    if (!isToday) return "Gaurko ruta sortu";
+    if (!isToday) return "Gaurko ibilbidea sortu";
     return "Ibilbidea hasi";
   })();
 
@@ -97,9 +97,9 @@ export function useMyRouteHeader() {
     totalStops,
     completedStops,
     isToday,
+    isPlanned,
     canUpdateRoute,
-    isStartingRoute:
-      isStartingRoute || updateRouteStatus.isPending,
+    isStartingRoute: isStartingRoute || updateRouteStatus.isPending,
     actionError,
     startButtonLabel,
     onClickUpdateRouteStatus,

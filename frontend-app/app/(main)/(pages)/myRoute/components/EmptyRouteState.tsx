@@ -32,7 +32,7 @@ export function EmptyRouteState() {
       </div>
       <div>
         <p className="text-base font-semibold text-text-primary">
-          Ez dago gaurko ruta pendenterik
+          Ez dago gaurko ibilbide pendenterik
         </p>
         <p className="mt-1 text-sm">
           Gaur ez daukazu hasteko edo jarraitzeko rutarik.
@@ -48,19 +48,19 @@ export function EmptyRouteState() {
       {pending && (
         <div className="mt-2 flex w-full max-w-md flex-col gap-3 rounded-lg border border-border bg-bg-elevated px-4 py-4 text-left">
           <div className="flex items-start gap-2 text-sm text-text-primary">
-            <Icons.AlertCircle
-              size={16}
-              className="mt-0.5 shrink-0 text-accent-light"
-            />
-            <div>
-              <p className="font-semibold">
-                Aurreko egunetako paketeak entregatzeke
+            <div className="flex flex-col gap-2">
+              <p className="flex items-center justify-start gap-3 font-semibold">
+                <Icons.AlertCircle
+                  size={16}
+                  className="mt-0.5 shrink-0 text-accent-light"
+                />
+                <span>Aurreko egunetako paketeak entreggatu gabe daude</span>
               </p>
-              <p className="mt-1 text-xs text-text-secondary">
+              <p className="mt-1 text-sm text-text-secondary letter-spacing-large text-balance">
                 {pending.pending_count} pakete geratu dira entregatu gabe
                 {pending.route_count > 1
-                  ? ` ${pending.route_count} rutatan`
-                  : ` ${formatRouteDate(pending.route_date)}eko rutan`}
+                  ? ` ${pending.route_count} ibilbidean`
+                  : ` ${formatRouteDate(pending.route_date)}eko ibilbidean`}
                 . Gaur berriro banatu nahi dituzu?
               </p>
             </div>

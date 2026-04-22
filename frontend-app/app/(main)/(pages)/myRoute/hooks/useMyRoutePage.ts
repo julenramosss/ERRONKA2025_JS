@@ -20,9 +20,7 @@ export function useMyRoutePage() {
   const noRoute =
     routeQuery.isError && getErrorStatus(routeQuery.error) === 404;
   const noPendingRoute =
-    noRoute ||
-    routeData?.route.status === ROUTE_STATUSES.completed ||
-    (routeData?.route.status === ROUTE_STATUSES.planned && !isToday);
+    noRoute || routeData?.route.status === ROUTE_STATUSES.completed;
 
   function selectStop(stopId: number): void {
     setSelectedStopId(stopId);

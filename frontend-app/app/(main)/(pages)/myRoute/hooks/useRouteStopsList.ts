@@ -14,7 +14,7 @@ import { pointToString } from "../utils/utils";
 
 type TerminalStatus = Extract<PackageStatus, "delivered" | "failed">;
 
-const PAKAG_ORIGIN = { lat: 43.2691, lng: -2.0 };
+const PAKAG_ORIGIN = { lat: 43.1253804, lng: -2.0619009 };
 const originString = `${PAKAG_ORIGIN.lat},${PAKAG_ORIGIN.lng}`;
 
 export function useRouteStopsList() {
@@ -87,17 +87,30 @@ export function useRouteStopsList() {
     }
   }
 
-  const base = `https://www.google.com/maps/dir/?api=1`;
-  const originParam = `origin=${originString}`;
-  const destinationParam = `destination=${encodeURIComponent(pointToString(routeData?.stops[routeData.stops.length - 1].package.address)) || originString}`;
-  const travelModeParam = `travelmode=driving`;
+  const base = "https://www.google.com/maps/dir/?api=1";
+  const originParam = `origin=${encodeURIComponent(originString)}`;
+  const travelModeParam = "travelmode=driving";
 
-  for (const adress of stops.map((s) => s.package.address)) {
-    const waypointParam = `&waypoints=${encodeURIComponent(pointToString(adress))}`;
-    originParam.concat(waypointParam);
-  }
+  const orderedStops = [...stops].sort((a, b) => a.stop_order - b.stop_order);
 
-  const googleMapsRouteUrl = `${base}&${originParam}&${destinationParam}&${travelModeParam}`;
+  const lastStop = orderedStops[orderedStops.length - 1];
+
+  const destinationParam = `destination=${encodeURIComponent(
+    lastStop ? pointToString(lastStop.package.address) : originString
+  )}`;
+
+  const intermediateStops = orderedStops.slice(0, -1);
+
+  const waypointsParam =
+    intermediateStops.length > 0
+      ? `&waypoints=${encodeURIComponent(
+          intermediateStops
+            .map((stop) => pointToString(stop.package.address))
+            .join("|")
+        )}`
+      : "";
+
+  const googleMapsRouteUrl = `${base}&${originParam}&${destinationParam}${waypointsParam}&${travelModeParam}`;
 
   return {
     stops,

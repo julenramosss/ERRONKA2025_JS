@@ -1,5 +1,3 @@
-import type { PackageStatus } from "../../../../utils/types/api/package.types";
-
 export function formatDate(d: string | null): string {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("es-ES", {
@@ -7,14 +5,6 @@ export function formatDate(d: string | null): string {
     month: "2-digit",
   });
 }
-
-export const FILTERS: { key: PackageStatus | "all"; label: string }[] = [
-  { key: "all", label: "Denak" },
-  { key: "assigned", label: "Esleituta" },
-  { key: "in_transit", label: "Garraioan" },
-  { key: "delivered", label: "Entregatuta" },
-  { key: "failed", label: "Huts" },
-];
 
 export const TABLE_COLS = [
   "Tracking",
@@ -24,15 +14,6 @@ export const TABLE_COLS = [
   "Data",
   "",
 ];
-
-export const STATUS_LABEL: Record<PackageStatus, string> = {
-  pending: "Zain",
-  assigned: "Esleituta",
-  in_transit: "Garraioan",
-  delivered: "Entregatuta",
-  undelivered: "Entregatu gabe",
-  failed: "Huts",
-};
 
 export const TOAST_MSG: Record<string, (name: string) => string> = {
   in_transit: (n) => `Entrega hasita · ${n}`,

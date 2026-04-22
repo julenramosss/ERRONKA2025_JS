@@ -26,7 +26,7 @@ export async function findRouteWithStops(
 ): Promise<{ route: RouteHeaderRow; stops: StopDetailRow[] } | null> {
   const db = await connect();
   const [routeRows] = await db.query<RouteHeaderRow[]>(
-    "SELECT id, route_date FROM routes WHERE user_id = ? AND route_date = ?",
+    "SELECT id, DATE_FORMAT(route_date, '%Y-%m-%d') AS route_date FROM routes WHERE user_id = ? AND route_date = ?",
     [userId, date]
   );
 

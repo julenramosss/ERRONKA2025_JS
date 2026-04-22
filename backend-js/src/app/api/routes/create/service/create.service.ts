@@ -18,7 +18,7 @@ import {
   updatePackagesEstimatedDelivery,
 } from "../repository/create.repository";
 
-const PAKAG_ORIGIN = { lat: 43.2691, lng: -2.0 };
+const PAKAG_ORIGIN = { lat: 43.1253804, lng: -2.0619009 };
 
 export async function createRouteService(
   dto: CreateRouteDto
@@ -42,6 +42,12 @@ export async function createRouteService(
   );
   const carryoverIds = carryoverPackages.map((p) => p.id);
   const allPackageIds = [...new Set([...dto.package_ids, ...carryoverIds])];
+
+  if (allPackageIds.length > 20) {
+    throw new ValidationError(
+      `Route cannot have more than 20 stops (attempted: ${allPackageIds.length})`
+    );
+  }
 
   if (carryoverIds.length > 0) {
     await updatePackagesStatusToAssigned(carryoverIds);

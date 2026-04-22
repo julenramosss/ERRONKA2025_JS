@@ -16,7 +16,6 @@ export default function DashboardPage() {
     userData,
     packagesData,
     todayPackagesData,
-    todayRoutesData,
     todayDay,
     isUserLoading,
     isPackagesLoading,
@@ -37,7 +36,6 @@ export default function DashboardPage() {
           todayDay={todayDay}
           userName={userData?.name}
           todayPackagesData={todayPackagesData || []}
-          todayRoutesData={todayRoutesData || null}
         />
       </Skeleton>
 

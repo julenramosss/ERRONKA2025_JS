@@ -39,7 +39,7 @@ export function Header() {
       </div>
       {/* SEARCH INPUT DESKTOP */}
       <div className="flex flex-1 h-full items-center justify-end gap-4">
-        <div className="hidden sm:flex flex-1 max-w-xs md:max-w-sm lg:max-w-md bg-bg-surface items-center justify-between px-4 py-1 rounded-md border border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors placeholder:text-text-secondary">
+        <div className="hidden sm:flex flex-1 max-w-xs lg:max-w-md bg-bg-surface items-center justify-between px-4 py-1 rounded-md border border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors placeholder:text-text-secondary">
           <Icons.Search size={17} className="text-text-secondary shrink-0" />
           <input
             type="text"

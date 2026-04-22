@@ -3,6 +3,7 @@ import { useMyPackages } from "../../../../hooks/packages/useMyPackages";
 import { useUpdatePackageStatus } from "../../../../hooks/packages/useUpdatePackageStatus";
 import type { PackageStatus } from "../../../../utils/types/api/package.types";
 import type { ConfirmState, ViewMode } from "../types";
+import { PACKAGE_STATUSES } from "../../../../utils/types";
 
 export function useMyPackagesPage() {
   const { data: packagesData, isLoading } = useMyPackages();
@@ -19,14 +20,13 @@ export function useMyPackagesPage() {
 
   const packages = packagesData ?? [];
 
-  const counts = {
-    all: packages.length,
-    assigned: packages.filter((p) => p.status === "assigned").length,
-    in_transit: packages.filter((p) => p.status === "in_transit").length,
-    delivered: packages.filter((p) => p.status === "delivered").length,
-    failed: packages.filter((p) => p.status === "failed").length,
-    pending: packages.filter((p) => p.status === "pending").length,
-  };
+  const counts = {} as Record<PackageStatus | "all", number>;
+  counts["all"] = packages.length;
+  Object.keys(PACKAGE_STATUSES).forEach((status) => {
+    counts[status as PackageStatus] = packages.filter(
+      (p) => p.status === status
+    ).length;
+  });
 
   const filtered = packages.filter((p) => {
     if (filter !== "all" && p.status !== filter) return false;

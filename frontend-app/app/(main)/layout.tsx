@@ -14,7 +14,7 @@ export default function AuthLayout({
       <div className="flex flex-1 flex-col">
         <Header />
         <div className="flex-1">{children}</div>
-        <footer className="w-full flex items-center justify-center py-2 text-text-secondary text-sm">
+        <footer className="w-full flex items-center justify-center py-5 text-text-secondary text-sm">
           pakAG © 2026 — Elduaien / Aduna · v2.4.1
         </footer>
       </div>

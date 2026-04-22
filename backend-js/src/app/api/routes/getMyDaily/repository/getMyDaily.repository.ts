@@ -29,7 +29,7 @@ export async function findRouteWithStops(
   const db = await connect();
   const [routeRows] = allowFutureFallback
     ? await db.query<RouteHeaderRow[]>(
-        `SELECT id, route_date, status
+        `SELECT id, DATE_FORMAT(route_date, '%Y-%m-%d') AS route_date, status
          FROM routes
          WHERE user_id = ?
            AND (status = 'in_progress' OR route_date >= ?)
@@ -44,7 +44,7 @@ export async function findRouteWithStops(
         [userId, date, date]
       )
     : await db.query<RouteHeaderRow[]>(
-        "SELECT id, route_date, status FROM routes WHERE user_id = ? AND route_date = ?",
+        "SELECT id, DATE_FORMAT(route_date, '%Y-%m-%d') AS route_date, status FROM routes WHERE user_id = ? AND route_date = ?",
         [userId, date]
       );
 

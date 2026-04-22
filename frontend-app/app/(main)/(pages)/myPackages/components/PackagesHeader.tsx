@@ -1,6 +1,10 @@
 "use client";
 import { Icons } from "../../../../components/icons";
-import { FILTERS } from "../constants";
+import {
+  STATUS_LABEL,
+  PACKAGE_STATUSES,
+  PackageStatus,
+} from "../../../../utils/types";
 import type { FilterChipProps, PackagesHeaderProps, ViewMode } from "../types";
 
 function FilterChip({ label, count, active, onClick }: FilterChipProps) {
@@ -91,14 +95,14 @@ export function PackagesHeader({
       </div>
 
       {/* Filter chips */}
-      <div className="flex flex-wrap gap-2">
-        {FILTERS.map(({ key, label }) => (
+      <div className="flex flex-wrap gap-y-5 md:gap-y-2 gap-x-2">
+        {Object.keys(counts).map((key, status) => (
           <FilterChip
-            key={key}
-            label={label}
+            key={status}
+            label={key === "all" ? "Denak" : STATUS_LABEL[key as PackageStatus]}
             count={counts[key] ?? 0}
             active={filter === key}
-            onClick={() => setFilter(key)}
+            onClick={() => setFilter(key as PackageStatus)}
           />
         ))}
       </div>

@@ -8,6 +8,7 @@ export function MyRouteHeader() {
     totalStops,
     completedStops,
     isToday,
+    isPlanned,
     canUpdateRoute,
     isStartingRoute,
     actionError,
@@ -47,11 +48,10 @@ export function MyRouteHeader() {
         </button>
       </div>
 
-      {!isToday && (
+      {!isToday && isPlanned && (
         <div className="rounded-lg border border-border bg-bg-surface px-4 py-3 text-sm text-text-secondary">
-          Ruta hau beste egun batekoa da. Hasita badago, paketeak entregatzen
-          jarrai dezakezu; planifikatuta badago, gaurko berrabiarazte-ruta
-          sortu behar da.
+          Ruta hau beste egun batekoa da. Planifikatuta dago, baina gaur ezin
+          da hasi.
         </div>
       )}
 
