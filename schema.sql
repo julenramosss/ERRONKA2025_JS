@@ -66,6 +66,7 @@ CREATE TABLE packages (
                         'assigned',      -- banatzaileari esleituta
                         'in_transit',    -- bidalketan
                         'delivered',     -- entregatu
+                        'undelivered',   -- ez entregatua (banatzaileak huts egin du)
                         'failed'         -- entrega huts egin du
                       ) NOT NULL DEFAULT 'pending',
   estimated_delivery  DATE            NULL,
@@ -103,8 +104,8 @@ CREATE TABLE tokens (
 CREATE TABLE package_status_logs (
   id          INT UNSIGNED    NOT NULL AUTO_INCREMENT,
   package_id  INT UNSIGNED    NOT NULL,
-  old_status  ENUM('pending', 'assigned', 'in_transit', 'delivered', 'failed') NULL,
-  new_status  ENUM('pending', 'assigned', 'in_transit', 'delivered', 'failed') NOT NULL,
+  old_status  ENUM('pending', 'assigned', 'in_transit', 'delivered', 'undelivered', 'failed') NULL,
+  new_status  ENUM('pending', 'assigned', 'in_transit', 'delivered', 'undelivered', 'failed') NOT NULL,
   changed_by  INT UNSIGNED    NOT NULL,   -- zeinek egin zuen aldaketa (users.id)
   notes       TEXT            NULL,
   changed_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,

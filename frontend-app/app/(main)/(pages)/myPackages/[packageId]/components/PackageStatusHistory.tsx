@@ -8,6 +8,7 @@ const STATUS_DOT_COLOR: Record<PackageStatus, string> = {
   assigned: "var(--st-assigned-fg)",
   in_transit: "var(--st-transit-fg)",
   delivered: "var(--st-delivered-fg)",
+  undelivered: "var(--st-undelivered-fg)",
   failed: "var(--st-failed-fg)",
 };
 

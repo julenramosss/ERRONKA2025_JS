@@ -20,8 +20,12 @@ export function useLoginForm() {
     const onExecuteRedirect = async () => {
       await refresh();
       const redirectPathName = sessionStorage.getItem("redirect_after_login");
-      sessionStorage.removeItem("redirect_after_login");
-      redirect(redirectPathName ?? "/dashboard");
+      if (typeof redirectPathName === "object" || redirectPathName === "") {
+        redirect("/dashboard");
+      } else {
+        sessionStorage.removeItem("redirect_after_login");
+        redirect(redirectPathName ?? "/dashboard");
+      }
     };
 
     onExecuteRedirect();

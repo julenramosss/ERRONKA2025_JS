@@ -5,6 +5,7 @@ import {
   USER_ROLES,
   UserRole,
 } from "../types";
+import { AccessTokenPayload } from "./types";
 
 export const isString = (value: unknown): value is string => {
   return typeof value === "string" && value.trim().length > 0;
@@ -63,6 +64,22 @@ export async function isValidPackage(package_id: number): Promise<boolean> {
   const [rows] = await db.execute("SELECT id FROM packages WHERE id = ?", [
     package_id,
   ]);
+
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+export async function isValidRoute(
+  route_id: number,
+  caller: AccessTokenPayload
+): Promise<boolean> {
+  const db = await connect();
+  const [rows] =
+    caller.role === USER_ROLES.admin
+      ? await db.execute("SELECT id FROM routes WHERE id = ?", [route_id])
+      : await db.execute(
+          "SELECT id FROM routes WHERE id = ? AND user_id = ?",
+          [route_id, caller.sub]
+        );
 
   return Array.isArray(rows) && rows.length > 0;
 }

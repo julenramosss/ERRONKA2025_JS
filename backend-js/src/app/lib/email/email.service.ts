@@ -4,6 +4,7 @@ import { packageDeliveredTemplate } from "./templates/packageDelivered.template"
 import { packageAssignedTemplate } from "./templates/packageAssigned.template";
 import { packageFailedEmailTemplate } from "./templates/packageFailed.template";
 import { packagePendingTemplate } from "./templates/packagePending.template";
+import { packageUndeliveredTemplate } from "./templates/packageUndelivered.template";
 import { passwordChangeEmailTemplate } from "./templates/passwordChangeEmail.template";
 import { accountActivationTemplate } from "./templates/accountActivation.template";
 import {
@@ -14,6 +15,7 @@ import {
   PendingEmailParams,
   ResetPasswordEmailParams,
   TrackingEmailParams,
+  UndeliveredEmailParams,
 } from "./types";
 
 const FROM = "PakAG <no-reply@tolosaerronka.es>";
@@ -105,6 +107,18 @@ export const emailService = {
       html: accountActivationTemplate({
         recipientName: params.recipientName,
         activationUrl: params.activationUrl,
+      }),
+    });
+  },
+
+  async sendUndeliveredEmail(params: UndeliveredEmailParams): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Your package could not be delivered today — PakAG",
+      html: packageUndeliveredTemplate({
+        recipientName: params.recipientName,
+        attemptedAt: params.attemptedAt,
       }),
     });
   },

@@ -2,6 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateRouteStatus } from "../../lib/api/routes-api";
+import { packagesKeys } from "../../query/keys/packages.keys";
 import { routesKeys } from "../../query/keys/routes.keys";
 import type {
   UpdateRouteStatusRequest,
@@ -24,7 +25,10 @@ export function useUpdateRouteStatus() {
   >({
     mutationFn: ({ routeId, payload }) => updateRouteStatus(routeId, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: routesKeys.all() });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: routesKeys.all() }),
+        queryClient.invalidateQueries({ queryKey: packagesKeys.all() }),
+      ]);
     },
   });
 }

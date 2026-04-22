@@ -43,3 +43,9 @@ export interface ActivationEmailParams {
   recipientName: string;
   activationUrl: string;
 }
+
+export interface UndeliveredEmailParams {
+  to: string;
+  recipientName: string;
+  attemptedAt: string;
+}

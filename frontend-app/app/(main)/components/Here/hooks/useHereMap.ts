@@ -7,7 +7,11 @@ import {
   animateMapToCoordinates,
   focusMapOnCoordinates,
 } from "../utils/mapFocus";
-import { createRasterHereMap, enableMapBehavior } from "../utils/hereMapFactory";
+import {
+  createRasterHereMap,
+  enableMapBehavior,
+} from "../utils/hereMapFactory";
+import { HERE_API_KEY } from "../../../../config/envConfig";
 
 export function useHereMap({ center }: UseHereMapOptions) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -17,7 +21,6 @@ export function useHereMap({ center }: UseHereMapOptions) {
   const animationFrameRef = useRef<number | null>(null);
   const lastFocusedCoordsRef = useRef<Coordinates | null>(null);
   const { loaded } = useHereMaps();
-  const hereApiKey = process.env.NEXT_PUBLIC_HERE_API_KEY ?? "";
 
   const coords = useMemo(
     () => normalizeCoordinates(center.lat, center.lng),
@@ -33,7 +36,7 @@ export function useHereMap({ center }: UseHereMapOptions) {
 
   useEffect(() => {
     const initialCoords = coords;
-    if (!loaded || !mapRef.current || !initialCoords || !hereApiKey) return;
+    if (!loaded || !mapRef.current || !initialCoords || !HERE_API_KEY) return;
 
     const H = window.H as HereMapsNamespace | undefined;
     if (!H?.map) return;
@@ -41,7 +44,7 @@ export function useHereMap({ center }: UseHereMapOptions) {
     let disposed = false;
 
     const instance = createRasterHereMap({
-      apiKey: hereApiKey,
+      apiKey: HERE_API_KEY,
       center: initialCoords,
       container: mapRef.current,
       zoom: MAP_ZOOM,
@@ -92,7 +95,7 @@ export function useHereMap({ center }: UseHereMapOptions) {
       lastFocusedCoordsRef.current = null;
       map.dispose();
     };
-  }, [hereApiKey, loaded, hasValidCoords]);
+  }, [HERE_API_KEY, loaded, hasValidCoords]);
 
   useEffect(() => {
     if (!coords || !mapInstanceRef.current || !markerRef.current) return;

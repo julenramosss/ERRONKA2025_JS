@@ -30,6 +30,7 @@ export const STATUS_LABEL: Record<PackageStatus, string> = {
   assigned: "Esleituta",
   in_transit: "Garraioan",
   delivered: "Entregatuta",
+  undelivered: "Entregatu gabe",
   failed: "Huts",
 };
 

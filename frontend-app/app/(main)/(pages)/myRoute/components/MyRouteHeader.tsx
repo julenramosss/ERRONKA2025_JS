@@ -1,21 +1,23 @@
 import { Icons } from "../../../../components/icons";
-import type { MyRouteHeaderProps } from "../types";
+import { useMyRouteHeader } from "../hooks/useMyRouteHeader";
 
-export function MyRouteHeader({
-  routeDateLabel,
-  routeStatusLabel,
-  totalStops,
-  completedStops,
-  isToday,
-  isStartingRoute,
-  canStartRoute,
-  actionError,
-  startButtonLabel,
-  onStartRoute,
-}: MyRouteHeaderProps) {
+export function MyRouteHeader() {
+  const {
+    routeDateLabel,
+    routeStatusLabel,
+    totalStops,
+    completedStops,
+    isToday,
+    canUpdateRoute,
+    isStartingRoute,
+    actionError,
+    startButtonLabel,
+    onClickUpdateRouteStatus,
+  } = useMyRouteHeader();
+
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row items-start md:items-center md:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-accent-light">
             <span>{isToday ? "Gaurko ruta" : "Hurrengo ruta"}</span>
@@ -32,8 +34,8 @@ export function MyRouteHeader({
 
         <button
           type="button"
-          onClick={onStartRoute}
-          disabled={!canStartRoute || isStartingRoute}
+          onClick={onClickUpdateRouteStatus}
+          disabled={!canUpdateRoute || isStartingRoute}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_4px] shadow-accent/30 transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isStartingRoute ? (
@@ -47,12 +49,14 @@ export function MyRouteHeader({
 
       {!isToday && (
         <div className="rounded-lg border border-border bg-bg-surface px-4 py-3 text-sm text-text-secondary">
-          Ruta hau ez da gaurkoa; nabigazioa eta egoera-aldaketak desgaituta daude.
+          Ruta hau beste egun batekoa da. Hasita badago, paketeak entregatzen
+          jarrai dezakezu; planifikatuta badago, gaurko berrabiarazte-ruta
+          sortu behar da.
         </div>
       )}
 
       {actionError && (
-        <div className="flex items-center gap-2 rounded-lg border border-[var(--st-failed-fg)] bg-[var(--st-failed-bg)] px-4 py-3 text-sm text-[var(--st-failed-fg)]">
+        <div className="flex items-center gap-2 rounded-lg border border-text-error bg-bg-error px-4 py-3 text-sm text-text-error">
           <Icons.AlertCircle size={16} />
           <span>{actionError}</span>
         </div>

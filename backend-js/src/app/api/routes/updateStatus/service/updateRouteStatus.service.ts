@@ -6,16 +6,27 @@ import {
 import { AccessTokenPayload } from "@/app/lib/types";
 import { USER_ROLES } from "@/app/types";
 import {
+  checkPackageStatus,
   findRouteById,
+  migratePastPendingStopsIntoRoute,
+  setRoutePendingPackagesInTransit,
   setRouteStatus,
 } from "../repository/updateRouteStatus.repo";
-import { RouteStatus, UpdateRouteStatusDto } from "../types";
+import { ROUTE_STATUSES, RouteStatus, UpdateRouteStatusDto } from "../types";
 
 const VALID_TRANSITIONS: Record<RouteStatus, RouteStatus | null> = {
-  planned: "in_progress",
-  in_progress: "completed",
+  planned: ROUTE_STATUSES.in_progress,
+  in_progress: ROUTE_STATUSES.completed,
   completed: null,
 };
+
+function todayIso(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
 export async function updateRouteStatusService(
   dto: UpdateRouteStatusDto,
@@ -35,5 +46,27 @@ export async function updateRouteStatusService(
     );
   }
 
+  if (
+    route.status === ROUTE_STATUSES.planned &&
+    dto.status === ROUTE_STATUSES.in_progress &&
+    route.route_date !== todayIso()
+  ) {
+    throw new ValidationError(
+      `Route can only be started on its scheduled day (${route.route_date})`
+    );
+  }
+
   await setRouteStatus(dto.routeId, dto.status);
+
+  if (
+    route.status === ROUTE_STATUSES.planned &&
+    dto.status === ROUTE_STATUSES.in_progress
+  ) {
+    await migratePastPendingStopsIntoRoute(route.user_id, route.id);
+    await setRoutePendingPackagesInTransit(route.id);
+  }
+
+  if (dto.status === ROUTE_STATUSES.completed) {
+    await checkPackageStatus(route.id);
+  }
 }

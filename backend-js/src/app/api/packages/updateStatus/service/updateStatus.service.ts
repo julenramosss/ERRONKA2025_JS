@@ -7,6 +7,7 @@ import { PackageStatus, SendPackageTrackingEmailParams } from "@/app/types";
 import {
   findPackageById,
   findPackagesByIds,
+  findRouteStatusByPackageId,
   insertStatusLog,
   insertStatusLogs,
   countBlockingPreviousStops,
@@ -23,9 +24,10 @@ import { tracking_base_url } from "@/app/config/envConfig";
 
 const VALID_TRANSITIONS: Record<PackageStatus, PackageStatus[]> = {
   assigned: ["in_transit"],
-  in_transit: ["delivered", "failed"],
+  in_transit: ["delivered", "failed", "undelivered"],
   pending: [],
   delivered: [],
+  undelivered: [],
   failed: [],
 };
 
@@ -61,6 +63,7 @@ async function updateOneStatus(
     );
   }
 
+  await assertRouteIsInProgress(packageId, userId);
   await assertRouteOrderAllowsStatus(packageId, newStatus, userId);
 
   await updatePackageStatus(packageId, newStatus);
@@ -95,6 +98,7 @@ async function updateManyStatuses(
       );
     }
 
+    await assertRouteIsInProgress(pkg.id, userId);
     await assertRouteOrderAllowsStatus(pkg.id, newStatus, userId);
   }
 
@@ -115,6 +119,23 @@ async function updateManyStatuses(
   const updated = await findPackagesByIds(packageIds);
   const updatedById = new Map(updated.map((pkg) => [pkg.id, pkg]));
   return packageIds.map((id) => updatedById.get(id)!);
+}
+
+async function assertRouteIsInProgress(
+  packageId: number,
+  userId: number
+): Promise<void> {
+  const routeStatus = await findRouteStatusByPackageId(packageId, userId);
+  if (!routeStatus) {
+    throw new ValidationError(
+      "Package is not attached to any route of yours"
+    );
+  }
+  if (routeStatus !== "in_progress") {
+    throw new ValidationError(
+      `Route must be in progress to update packages (current: '${routeStatus}')`
+    );
+  }
 }
 
 async function assertRouteOrderAllowsStatus(
@@ -151,7 +172,9 @@ async function sendStatusEmail(
     distributorName: distributorName || undefined,
     estimatedDelivery: pkg.estimated_delivery || undefined,
     deliveredAt:
-      newStatus === "delivered" ? new Date().toLocaleString("en-GB") : undefined,
+      newStatus === "delivered"
+        ? new Date().toLocaleString("en-GB")
+        : undefined,
   };
   await sendPackageTrackingEmail(emailParams);
 }

@@ -32,6 +32,7 @@
   --color-st-assigned: var(--st-assigned-fg);
   --color-st-transit: var(--st-transit-fg);
   --color-st-delivered: var(--st-delivered-fg);
+  --color-st-undelivered: var(--st-undelivered-fg);
   --color-st-failed: var(--st-failed-fg);
 
   --color-bg-error: var(--st-failed-bg);
@@ -81,6 +82,8 @@
   --st-transit-bg: #2d1f4d;
   --st-delivered-fg: #10b981;
   --st-delivered-bg: #0a2e20;
+  --st-undelivered-fg: #f97316;
+  --st-undelivered-bg: #3d1f0a;
   --st-failed-fg: #ef4444;
   --st-failed-bg: #3d0f0f;
 

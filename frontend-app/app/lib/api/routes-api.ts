@@ -1,5 +1,7 @@
 import type {
+  ContinueFromPastResponse,
   GetMyDailyRouteResponse,
+  GetPendingPastRouteResponse,
   UpdateArrivalRequest,
   UpdateArrivalResponse,
   UpdateRouteStatusRequest,
@@ -41,5 +43,19 @@ export async function updateArrival(
     payload
   );
 
+  return response.data;
+}
+
+export async function getPendingPastRoute(): Promise<GetPendingPastRouteResponse> {
+  const response = await apiClient.get<GetPendingPastRouteResponse>(
+    "/routes/continueFromPast"
+  );
+  return response.data;
+}
+
+export async function continueFromPast(): Promise<ContinueFromPastResponse> {
+  const response = await apiClient.post<ContinueFromPastResponse>(
+    "/routes/continueFromPast"
+  );
   return response.data;
 }

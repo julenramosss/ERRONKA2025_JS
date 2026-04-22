@@ -26,7 +26,6 @@ interface StopDetailRow extends RowDataPacket {
   lat: number;
   lng: number;
 }
-
 export async function findUserById(userId: number): Promise<UserRow | null> {
   const db = await connect();
   const [rows] = await db.query<UserRow[]>(
@@ -83,10 +82,42 @@ export async function insertRouteStops(
     packageId: number;
     stopOrder: number;
     estimatedArrival: string;
-  }>
+  }>,
+  options?: {
+    movePackageIds?: number[];
+    routeDate?: string;
+  }
 ): Promise<void> {
   const db = await connect();
+  const movePackageIds = new Set(options?.movePackageIds ?? []);
+
   for (const stop of stops) {
+    if (movePackageIds.has(stop.packageId) && options?.routeDate) {
+      const [existingStops] = await db.query<
+        (RowDataPacket & { id: number })[]
+      >(
+        `SELECT rs.id
+         FROM route_stops rs
+         JOIN routes r ON r.id = rs.route_id
+         WHERE rs.package_id = ?
+           AND r.route_date < ?
+         ORDER BY r.route_date DESC, rs.stop_order ASC
+         LIMIT 1`,
+        [stop.packageId, options.routeDate]
+      );
+
+      const existingStopId = existingStops[0]?.id;
+      if (existingStopId) {
+        await db.query<ResultSetHeader>(
+          `UPDATE route_stops
+           SET route_id = ?, stop_order = ?, estimated_arrival = ?, actual_arrival = NULL
+           WHERE id = ?`,
+          [routeId, stop.stopOrder, stop.estimatedArrival, existingStopId]
+        );
+        continue;
+      }
+    }
+
     await db.query<ResultSetHeader>(
       "INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival) VALUES (?, ?, ?, ?)",
       [routeId, stop.packageId, stop.stopOrder, stop.estimatedArrival]
@@ -121,6 +152,54 @@ export async function findStopsByRouteId(
     [routeId]
   );
   return rows;
+}
+
+export async function findCarryoverPackagesByUser(
+  userId: number,
+  routeDate: string
+): Promise<(RowDataPacket & PackageAddressRow)[]> {
+  const db = await connect();
+  const [rows] = await db.query<(RowDataPacket & PackageAddressRow)[]>(
+    `SELECT DISTINCT p.id, p.recipient_name, p.status, p.assigned_to,
+            a.street, a.city,
+            a.latitude AS lat, a.longitude AS lng
+     FROM packages p
+     JOIN addresses a ON p.address_id = a.id
+     WHERE p.status IN ('assigned', 'in_transit', 'undelivered')
+       AND p.assigned_to = ?
+       AND EXISTS (
+         SELECT 1
+         FROM route_stops old_rs
+         JOIN routes old_r ON old_r.id = old_rs.route_id
+         WHERE old_rs.package_id = p.id
+           AND old_r.route_date < ?
+           AND (
+             old_r.status IN ('planned', 'in_progress')
+             OR p.status = 'undelivered'
+           )
+       )
+       AND NOT EXISTS (
+         SELECT 1
+         FROM route_stops scheduled_rs
+         JOIN routes scheduled_r ON scheduled_r.id = scheduled_rs.route_id
+         WHERE scheduled_rs.package_id = p.id
+           AND scheduled_r.route_date >= ?
+       )`,
+    [userId, routeDate, routeDate]
+  );
+  return rows;
+}
+
+export async function updatePackagesStatusToAssigned(
+  packageIds: number[]
+): Promise<void> {
+  if (packageIds.length === 0) return;
+  const db = await connect();
+  const placeholders = packageIds.map(() => "?").join(", ");
+  await db.query<ResultSetHeader>(
+    `UPDATE packages SET status = 'assigned' WHERE id IN (${placeholders})`,
+    packageIds
+  );
 }
 
 export async function updatePackagesEstimatedDelivery(

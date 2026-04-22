@@ -30,4 +30,4 @@ export const secure = isProduction ? ", Secure; " : "";
 
 export const reset_expires_minutes = 15;
 export const reset_base_url =
-  process.env.RESET_BASE_URL ?? "http://localhost:3000/reset-password";
+  process.env.RESET_BASE_URL ?? "http://localhost:3000/resetPassword";

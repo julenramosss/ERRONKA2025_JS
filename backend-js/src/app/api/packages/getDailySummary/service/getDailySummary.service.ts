@@ -10,6 +10,7 @@ export async function getDailySummaryService(): Promise<DailySummaryResult> {
     assigned: 0,
     in_transit: 0,
     delivered: 0,
+    undelivered: 0,
     failed: 0,
   };
 

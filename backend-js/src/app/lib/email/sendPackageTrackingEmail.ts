@@ -50,6 +50,14 @@ export async function sendPackageTrackingEmail(
     });
   }
 
+  if (packageStatus === PACKAGE_STATUSES.undelivered) {
+    await emailService.sendUndeliveredEmail({
+      to: recipientEmail,
+      recipientName,
+      attemptedAt: new Date().toLocaleString("en-GB"),
+    });
+  }
+
   if (packageStatus === PACKAGE_STATUSES.pending) {
     await emailService.sendPendingEmail({
       to: recipientEmail,

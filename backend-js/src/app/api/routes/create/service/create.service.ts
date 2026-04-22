@@ -9,6 +9,8 @@ import {
   findUserById,
   findRouteByUserAndDate,
   findPackagesWithAddresses,
+  findCarryoverPackagesByUser,
+  updatePackagesStatusToAssigned,
   insertRoute,
   insertRouteStops,
   findRouteById,
@@ -34,8 +36,20 @@ export async function createRouteService(
     );
   }
 
-  const packages = await findPackagesWithAddresses(dto.package_ids);
-  if (packages.length !== dto.package_ids.length) {
+  const carryoverPackages = await findCarryoverPackagesByUser(
+    dto.user_id,
+    dto.date
+  );
+  const carryoverIds = carryoverPackages.map((p) => p.id);
+  const allPackageIds = [...new Set([...dto.package_ids, ...carryoverIds])];
+
+  if (carryoverIds.length > 0) {
+    await updatePackagesStatusToAssigned(carryoverIds);
+  }
+
+  const packages = await findPackagesWithAddresses(allPackageIds);
+
+  if (packages.length !== allPackageIds.length) {
     throw new NotFoundError("One or more package_ids do not exist");
   }
 
@@ -68,7 +82,10 @@ export async function createRouteService(
     estimatedArrival: new Date(s.estimatedArrival).toISOString().slice(11, 19),
   }));
 
-  await insertRouteStops(routeId, stopsToInsert);
+  await insertRouteStops(routeId, stopsToInsert, {
+    movePackageIds: carryoverIds,
+    routeDate: dto.date,
+  });
 
   const deliveryUpdates = optimized.orderedStops.map((s) => ({
     packageId: s.packageId,

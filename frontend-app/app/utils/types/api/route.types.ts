@@ -60,3 +60,21 @@ export interface UpdateArrivalResponse {
   estimated_arrival: ApiTimeString | null;
   actual_arrival: ApiTimeString | null;
 }
+
+export interface PendingPastRoute {
+  route_id: number;
+  route_date: ApiDateString;
+  status: RouteStatus;
+  pending_count: number;
+  route_count: number;
+}
+
+export interface GetPendingPastRouteResponse {
+  pending: PendingPastRoute | null;
+}
+
+export interface ContinueFromPastResponse {
+  route_id: number;
+  new_route_date: ApiDateString;
+  migrated_stops: number;
+}

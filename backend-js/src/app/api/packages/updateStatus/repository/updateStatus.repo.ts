@@ -80,6 +80,24 @@ export async function insertStatusLogs(entries: StatusLogEntry[]): Promise<void>
   );
 }
 
+export async function findRouteStatusByPackageId(
+  packageId: number,
+  userId: number
+): Promise<string | null> {
+  const db = await connect();
+  const [rows] = await db.query<(RowDataPacket & { status: string })[]>(
+    `SELECT r.status
+     FROM route_stops rs
+     JOIN routes r ON r.id = rs.route_id
+     WHERE rs.package_id = ?
+       AND r.user_id = ?
+     ORDER BY r.route_date DESC
+     LIMIT 1`,
+    [packageId, userId]
+  );
+  return rows[0]?.status ?? null;
+}
+
 export async function countBlockingPreviousStops(
   packageId: number,
   userId: number

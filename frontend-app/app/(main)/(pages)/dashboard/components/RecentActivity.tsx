@@ -6,6 +6,7 @@ const STATUS_TEXT: Record<PackageStatus, string> = {
   assigned: "Esleituta",
   in_transit: "Garraioan dago",
   delivered: "Entregatuta",
+  undelivered: "Entregatu gabe",
   failed: "Entrega huts egin du",
 };
 
@@ -14,6 +15,7 @@ const STATUS_DOT: Record<PackageStatus, string> = {
   assigned: "var(--st-assigned-fg)",
   in_transit: "var(--st-transit-fg)",
   delivered: "var(--st-delivered-fg)",
+  undelivered: "var(--st-undelivered-fg)",
   failed: "var(--st-failed-fg)",
 };
 

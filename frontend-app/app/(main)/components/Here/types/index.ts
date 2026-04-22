@@ -1,6 +1,11 @@
-import type { CSSProperties, ReactNode, Ref } from "react";
+import type { Ref } from "react";
 
-export type GpsStatus = "requesting" | "granted" | "denied" | "unavailable" | "arrived";
+export type GpsStatus =
+  | "requesting"
+  | "granted"
+  | "denied"
+  | "unavailable"
+  | "arrived";
 
 export type CoordinateValue = number | string | null | undefined;
 export type Coordinates = { lat: number; lng: number };
@@ -24,94 +29,4 @@ export interface NoHereMapProps {
 
 export interface UseHereMapOptions {
   center: { lat?: CoordinateValue; lng?: CoordinateValue };
-}
-
-export interface DriverNavigationProps {
-  origin: Coords;
-  destination: Coords;
-}
-
-export interface NavigationAction extends HereTurnAction {
-  coords: Coords | null;
-}
-
-export interface NavigationPosition {
-  coords: Coords;
-  accuracy: number | null;
-  heading: number | null;
-  speed: number | null;
-  timestamp: number;
-}
-
-export interface NavigationMetrics {
-  remainingDistanceMeters: number | null;
-  distanceToNextActionMeters: number | null;
-  speedKmh: number | null;
-  accuracyMeters: number | null;
-  eta: Date | null;
-}
-
-export type RouteSummary = { duration: number; length: number };
-
-export interface NavigationRoute {
-  actions: NavigationAction[];
-  lineString: HereMapsLineString;
-  summary: RouteSummary;
-}
-
-export interface MapInstanceRef {
-  map: HereMapsMap;
-  driverMarker: HereMarker;
-  resizeObserver: ResizeObserver;
-}
-
-export interface UseDriverRouteMapOptions {
-  destination: Coords;
-  hereApiKey: string;
-  loaded: boolean;
-  origin: Coords;
-  stopWatchingPosition: () => void;
-}
-
-export interface TurnIconProps {
-  action: string;
-  direction?: string;
-  compact?: boolean;
-}
-
-export interface StatusRowProps {
-  icon: ReactNode;
-  children: ReactNode;
-}
-
-export interface MetricProps {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}
-
-export interface NavigationStatusPanelProps {
-  routeLoading: boolean;
-  navigationError: string | null;
-  currentAction: NavigationAction | null;
-  maneuverDistance: number | null;
-  show: boolean;
-}
-
-export interface NavigationControlsProps {
-  voiceEnabled: boolean;
-  onToggleVoice: () => void;
-  onRecenter: () => void;
-  hasPosition: boolean;
-}
-
-export interface NavigationMetricsPanelProps {
-  metrics: NavigationMetrics;
-  gpsStatus: GpsStatus;
-  summary: RouteSummary | null;
-}
-
-export interface TurnIconRenderOptions {
-  size: number;
-  style?: CSSProperties;
 }

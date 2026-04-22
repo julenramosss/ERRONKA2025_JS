@@ -15,7 +15,7 @@ export async function PATCH(
     ]);
     const { id } = await params;
     const body = await request.json();
-    const dto = updateRouteStatusDto(id, body);
+    const dto = await updateRouteStatusDto(id, caller, body);
     await updateRouteStatusService(dto, caller);
     return res.ok({ message: "Route status updated" });
   } catch (error) {

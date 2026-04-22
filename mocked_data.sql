@@ -40,7 +40,7 @@ INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) 
   (@admin_id,        'Julen Ramos Tolosa',       'julenramostolosa@gmail.com',       @password_hash, 'admin',       TRUE,  NOW() - INTERVAL 6 MONTH),
   (@alejandro_id,    'Alejandro Ariza Aguilar',  'alejandroarizaaguilar@gmail.com',  @password_hash, 'distributor', TRUE,  NOW() - INTERVAL 4 MONTH),
   (@julen_arruti_id, 'Julen Ramos Arruti',       'jramosarruti@gmail.com',           @password_hash, 'distributor', TRUE,  NOW() - INTERVAL 3 MONTH),
-  (@sergio_id,       'Sergio Rocha Tolosaldea',  'sergiotolosaldea@gmail.com',       @password_hash, 'distributor', TRUE,  NOW() - INTERVAL 2 MONTH),
+  (@sergio_id,       'Sergio Rocha Tolosaldea',  'sergiotolosaldea@gmail.com',       @password_hash, 'admin',       TRUE,  NOW() - INTERVAL 2 MONTH),
   (5,                'Penelope Garcia',          'penelopeg@gmail.com',              @password_hash, 'distributor', FALSE, NOW() - INTERVAL 5 MONTH);
 
 -- ================================================================
@@ -163,7 +163,13 @@ VALUES
   (42, 'PAK-DEV-0042', 'Naiara Odriozola',    0.480, 'Sobre ordinario pendiente',                  'pending',    CURRENT_DATE + INTERVAL 1 DAY, 28, NULL,             NOW() - INTERVAL 40 MINUTE,  NULL, NULL, NULL),
   (43, 'PAK-DEV-0043', 'Olatz Muguruza',      5.900, 'Ruta de manana: industria',                  'assigned',   CURRENT_DATE + INTERVAL 1 DAY, 29, @alejandro_id,    NOW() - INTERVAL 35 MINUTE,  NOW() - INTERVAL 30 MINUTE, NULL, NULL),
   (44, 'PAK-DEV-0044', 'Koldo Azkarate',      2.560, 'Ruta de manana: comercio',                   'assigned',   CURRENT_DATE + INTERVAL 1 DAY, 30, @sergio_id,       NOW() - INTERVAL 34 MINUTE,  NOW() - INTERVAL 29 MINUTE, NULL, NULL),
-  (45, 'PAK-DEV-0045', 'Nerea Amilibia',      4.340, 'Ruta de manana: entrega urbana',             'assigned',   CURRENT_DATE + INTERVAL 1 DAY, 31, @julen_arruti_id, NOW() - INTERVAL 33 MINUTE,  NOW() - INTERVAL 28 MINUTE, NULL, NULL);
+  (45, 'PAK-DEV-0045', 'Nerea Amilibia',      4.340, 'Ruta de manana: entrega urbana',             'assigned',   CURRENT_DATE + INTERVAL 1 DAY, 31, @julen_arruti_id, NOW() - INTERVAL 33 MINUTE,  NOW() - INTERVAL 28 MINUTE, NULL, NULL),
+
+  -- Ruta de AYER no completada (el repartidor no termino la jornada).
+  -- El dia ya paso, por tanto los paquetes terminan en estado final (delivered / failed).
+  (46, 'PAK-DEV-0046', 'Oihana Berrondo',     2.300, 'Entregado antes de abandono de ruta',        'delivered',  CURRENT_DATE - INTERVAL 1 DAY, 32, @julen_arruti_id, TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:25:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '09:10:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '10:05:00')),
+  (47, 'PAK-DEV-0047', 'Ekaitz Larrea',       1.800, 'Intento fallido, cliente ausente',           'failed',     CURRENT_DATE - INTERVAL 1 DAY, 33, @julen_arruti_id, TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:05:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:30:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '09:15:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '12:40:00')),
+  (48, 'PAK-DEV-0048', 'Irune Azurmendi',     3.400, 'Marcado como fallido al cerrar jornada',     'failed',     CURRENT_DATE - INTERVAL 1 DAY, 34, @julen_arruti_id, TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:10:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:35:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '09:20:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '18:00:00'));
 
 -- ================================================================
 -- 4. PACKAGES
@@ -275,7 +281,11 @@ INSERT INTO routes (id, user_id, route_date, status, created_at, updated_at) VAL
   (11, @julen_arruti_id, CURRENT_DATE,                   'in_progress', NOW() - INTERVAL 400 MINUTE, NOW()),
   (12, @alejandro_id,    CURRENT_DATE + INTERVAL 1 DAY,  'planned',     NOW() - INTERVAL 25 MINUTE,  NOW() - INTERVAL 25 MINUTE),
   (13, @sergio_id,       CURRENT_DATE + INTERVAL 1 DAY,  'planned',     NOW() - INTERVAL 24 MINUTE,  NOW() - INTERVAL 24 MINUTE),
-  (14, @julen_arruti_id, CURRENT_DATE + INTERVAL 1 DAY,  'planned',     NOW() - INTERVAL 23 MINUTE,  NOW() - INTERVAL 23 MINUTE);
+  (14, @julen_arruti_id, CURRENT_DATE + INTERVAL 1 DAY,  'planned',     NOW() - INTERVAL 23 MINUTE,  NOW() - INTERVAL 23 MINUTE),
+  -- Ruta de ayer NO completada: el repartidor cerro sesion sin terminar.
+  -- La fecha ya paso, por lo que la ruta queda en 'in_progress' y sus paquetes
+  -- no pueden quedar en 'assigned' / 'in_transit'; todos pasan a estado final.
+  (15, @julen_arruti_id, CURRENT_DATE - INTERVAL 1 DAY,  'in_progress', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '07:45:00'), TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '18:00:00'));
 
 -- ================================================================
 -- 8. ROUTE STOPS
@@ -330,7 +340,13 @@ INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, ac
 
   (12, 43, 1, '09:45:00', NULL, NOW() - INTERVAL 25 MINUTE),
   (13, 44, 1, '10:15:00', NULL, NOW() - INTERVAL 24 MINUTE),
-  (14, 45, 1, '11:00:00', NULL, NOW() - INTERVAL 23 MINUTE);
+  (14, 45, 1, '11:00:00', NULL, NOW() - INTERVAL 23 MINUTE),
+
+  -- Ruta 15: ayer incompleta. Primer reparto OK, segundo fallido,
+  -- tercero marcado como fallido al cerrar sesion sin volver al deposito.
+  (15, 46, 1, '09:05:00', '09:10:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '07:50:00')),
+  (15, 47, 2, '10:30:00', '12:40:00', TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '07:50:00')),
+  (15, 48, 3, '11:15:00', NULL,       TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '07:50:00'));
 
 DROP TEMPORARY TABLE seed_packages;
 
@@ -341,20 +357,28 @@ COMMIT;
 -- ================================================================
 --
 -- Login:
---   julenramostolosa@gmail.com / Test1234!
---   alejandroarizaaguilar@gmail.com / Test1234!
---   jramosarruti@gmail.com / Test1234!
---   sergiotolosaldea@gmail.com / Test1234!
+--   julenramostolosa@gmail.com     / Test1234!   (admin)
+--   alejandroarizaaguilar@gmail.com / Test1234!  (distributor)
+--   jramosarruti@gmail.com         / Test1234!   (distributor)
+--   sergiotolosaldea@gmail.com     / Test1234!   (admin)
 --
 -- Useful tracking token shape:
 --   trk-dev-0001-...
 --
 -- Dataset size:
---   users: 5
+--   users: 5 (2 admin, 2 distributors + 1 disabled distributor)
 --   addresses: 45
---   packages: 45
---   tracking tokens: 45
+--   packages: 48
+--   tracking tokens: 48
 --   status logs: 130+
---   routes: 14
---   route stops: 39
+--   routes: 15  (incl. yesterday-incomplete demo route)
+--   route stops: 42
+--
+-- Invariantes comprobables:
+--   * Toda ruta con route_date < CURRENT_DATE tiene sus paquetes en estado
+--     final (delivered | failed), tanto si esta 'completed' como si quedo
+--     'in_progress' (ruta 15 = demo de jornada abandonada).
+--   * Las rutas 'in_progress' de CURRENT_DATE SI pueden tener paquetes
+--     'assigned' / 'in_transit' (jornada en curso).
+--   * Las rutas 'planned' de CURRENT_DATE + 1 solo tienen paquetes 'assigned'.
 -- ================================================================

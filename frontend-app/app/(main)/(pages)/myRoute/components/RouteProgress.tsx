@@ -1,12 +1,10 @@
 import { Icons } from "../../../../components/icons";
-import type { RouteProgressProps } from "../types";
+import { useRouteProgress } from "../hooks/useRouteProgress";
 
-export function RouteProgress({
-  totalStops,
-  completedStops,
-  activeStopOrder,
-}: RouteProgressProps) {
-  const value = totalStops > 0 ? Math.round((completedStops / totalStops) * 100) : 0;
+export function RouteProgress() {
+  const { totalStops, completedStops, activeStopOrder } = useRouteProgress();
+  const value =
+    totalStops > 0 ? Math.round((completedStops / totalStops) * 100) : 0;
 
   return (
     <div className="rounded-xl border border-border bg-bg-surface p-5">

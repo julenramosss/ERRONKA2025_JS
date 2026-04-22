@@ -2,19 +2,25 @@ import { Icons } from "../../../../components/icons";
 import type { KeyboardEvent } from "react";
 import { StatusBadge } from "../../../components/StatusBadge";
 import { formatStopTime, isTerminalPackageStatus } from "../constants";
+import { useRouteStopsList } from "../hooks/useRouteStopsList";
 import type { RouteStopsListProps } from "../types";
 import { RouteStopActions } from "./RouteStopActions";
+import Link from "next/link";
 
 export function RouteStopsList({
-  stops,
   selectedStopId,
-  activeStopId,
-  isToday,
-  routeStatus,
-  isUpdatingStop,
   onSelectStop,
-  onMarkStop,
 }: RouteStopsListProps) {
+  const {
+    stops,
+    activeStop,
+    routeStatus,
+    isUpdatingStop,
+    actionError,
+    googleMapsRouteUrl,
+    markStopStatus,
+  } = useRouteStopsList();
+
   function handleRowKeyDown(
     event: KeyboardEvent<HTMLDivElement>,
     stopId: number
@@ -26,17 +32,29 @@ export function RouteStopsList({
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-bg-surface">
-      <div className="border-b border-border px-5 py-4">
-        <p className="text-sm font-semibold">Geldialdiak</p>
-        <p className="mt-0.5 text-xs text-text-secondary">
-          Paketeak ordenean kudeatu behar dira
-        </p>
+      <div className="flex justify-between flex-col md:items-center md:flex-row border-b border-border gap-5 px-5 py-4">
+        <div>
+          <p className="text-sm font-semibold">Geldialdiak</p>
+          <p className="mt-0.5 text-xs text-text-secondary">
+            Paketeak ordenean kudeatu behar dira
+          </p>
+        </div>
+        <Link
+          href={googleMapsRouteUrl}
+          target="_blank"
+          className="flex items-center gap-2 bg-accent py-2 px-4 text-sm border-border-focus rounded-lg hover:opacity-80"
+        >
+          <Icons.Route size={14} />
+          <span className="text-sm md:text-xs font-semibold">
+            GoogleMaps Ireki
+          </span>
+        </Link>
       </div>
 
-      <div className="max-h-[620px] overflow-y-auto">
+      <div className="max-h-155 overflow-y-auto">
         {stops.map((stop, index) => {
           const isSelected = selectedStopId === stop.id;
-          const isActive = activeStopId === stop.id;
+          const isActive = activeStop?.id === stop.id;
           const isDone = isTerminalPackageStatus(stop.package.status);
 
           return (
@@ -54,7 +72,7 @@ export function RouteStopsList({
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
                     isDone
-                      ? "border-[var(--st-delivered-fg)] bg-[var(--st-delivered-bg)] text-[var(--st-delivered-fg)]"
+                      ? "border-text-success bg-bg-success text-text-success"
                       : isActive
                         ? "border-accent bg-accent text-white"
                         : "border-border bg-bg-elevated text-text-secondary"
@@ -79,7 +97,8 @@ export function RouteStopsList({
                         className="mt-0.5 shrink-0 text-text-disabled"
                       />
                       <span className="truncate">
-                        {stop.package.address.street}, {stop.package.address.city}
+                        {stop.package.address.street},{" "}
+                        {stop.package.address.city}
                       </span>
                     </p>
                   </div>
@@ -92,7 +111,7 @@ export function RouteStopsList({
                     ETA {formatStopTime(stop.estimated_arrival)}
                   </span>
                   {stop.actual_arrival && (
-                    <span className="font-mono text-[var(--st-delivered-fg)]">
+                    <span className="font-mono text-text-success">
                       {formatStopTime(stop.actual_arrival)}
                     </span>
                   )}
@@ -107,16 +126,22 @@ export function RouteStopsList({
                 <RouteStopActions
                   stop={stop}
                   isActive={isActive}
-                  isToday={isToday}
                   routeStatus={routeStatus}
                   isUpdatingStop={isUpdatingStop}
-                  onMarkStop={onMarkStop}
+                  onMarkStop={markStopStatus}
                 />
               </div>
             </div>
           );
         })}
       </div>
+
+      {actionError && (
+        <div className="flex items-center gap-2 border-t border-border px-5 py-3 text-sm text-text-error">
+          <Icons.AlertCircle size={15} />
+          <span>{actionError}</span>
+        </div>
+      )}
     </div>
   );
 }

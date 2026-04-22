@@ -9,6 +9,7 @@ export const PACKAGE_STATUSES = {
   assigned: "assigned",
   in_transit: "in_transit",
   delivered: "delivered",
+  undelivered: "undelivered",
   failed: "failed",
 } as const;
 export type PackageStatus =

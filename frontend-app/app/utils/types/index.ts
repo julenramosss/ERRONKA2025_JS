@@ -9,6 +9,7 @@ export const STATUS_LABEL: Record<PackageStatus, string> = {
   assigned: "Esleituta",
   in_transit: "Garraioan",
   delivered: "Entregatuta",
+  undelivered: "Ez entregatua",
   failed: "Huts",
 };
 
@@ -17,7 +18,21 @@ export const PACKAGE_STATUSES = {
   assigned: "assigned",
   in_transit: "in_transit",
   delivered: "delivered",
+  undelivered: "undelivered",
   failed: "failed",
 } as const;
 export type PackageStatus =
   (typeof PACKAGE_STATUSES)[keyof typeof PACKAGE_STATUSES];
+
+export interface RouteRow {
+  id: number;
+  user_id: number;
+  status: RouteStatus;
+}
+
+export const ROUTE_STATUSES = {
+  planned: "planned",
+  in_progress: "in_progress",
+  completed: "completed",
+} as const;
+export type RouteStatus = (typeof ROUTE_STATUSES)[keyof typeof ROUTE_STATUSES];

@@ -5,6 +5,7 @@ export type PackageStatus =
   | "assigned"
   | "in_transit"
   | "delivered"
+  | "undelivered"
   | "failed";
 
 export interface PackageWithAddress {

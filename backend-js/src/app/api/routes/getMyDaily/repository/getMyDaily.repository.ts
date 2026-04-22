@@ -31,10 +31,17 @@ export async function findRouteWithStops(
     ? await db.query<RouteHeaderRow[]>(
         `SELECT id, route_date, status
          FROM routes
-         WHERE user_id = ? AND route_date >= ?
-         ORDER BY route_date ASC
+         WHERE user_id = ?
+           AND (status = 'in_progress' OR route_date >= ?)
+         ORDER BY
+           CASE
+             WHEN status = 'in_progress' THEN 0
+             WHEN route_date = ? THEN 1
+             ELSE 2
+           END,
+           route_date ASC
          LIMIT 1`,
-        [userId, date]
+        [userId, date, date]
       )
     : await db.query<RouteHeaderRow[]>(
         "SELECT id, route_date, status FROM routes WHERE user_id = ? AND route_date = ?",

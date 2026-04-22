@@ -13,6 +13,8 @@ const STATUS_STYLE: Record<PackageStatus, string> = {
     "bg-[var(--st-transit-bg)] text-[var(--st-transit-fg)] border-[var(--st-transit-fg)]",
   delivered:
     "bg-[var(--st-delivered-bg)] text-[var(--st-delivered-fg)] border-[var(--st-delivered-fg)]",
+  undelivered:
+    "bg-[var(--st-undelivered-bg)] text-[var(--st-undelivered-fg)] border-[var(--st-undelivered-fg)]",
   failed:
     "bg-[var(--st-failed-bg)] text-[var(--st-failed-fg)] border-[var(--st-failed-fg)]",
 };
