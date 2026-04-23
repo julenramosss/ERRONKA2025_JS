@@ -1,7 +1,9 @@
 export const mysql_user = process.env.MYSQL_USER;
 export const mysql_password = process.env.MYSQL_PASSWORD;
 export const mysql_host = process.env.MYSQL_HOST;
+export const mysql_port = Number(process.env.MYSQL_PORT ?? 3306);
 export const mysql_database = process.env.MYSQL_DATABASE;
+export const mysql_ca_cert = process.env.MYSQL_CA_CERT;
 
 export const resend_api_key = process.env.RESEND_API_KEY;
 
