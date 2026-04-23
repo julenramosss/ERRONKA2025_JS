@@ -3,10 +3,10 @@
 import { useMemo } from "react";
 import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
 import {
-  isTerminalPackageStatus,
   normalizeDateKey,
   toLocalDateKey,
-} from "../constants";
+} from "../../../../utils/date.utils";
+import { isTerminalPackageStatus } from "../constants";
 
 export function useRouteMapPanel(selectedStopId: number | null) {
   const routeQuery = useMyDailyRoute();

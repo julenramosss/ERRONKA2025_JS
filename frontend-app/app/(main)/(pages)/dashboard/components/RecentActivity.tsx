@@ -1,5 +1,6 @@
 import { RecentActivityProps } from "../types";
 import type { PackageStatus } from "../../../../utils/types/api/package.types";
+import { formatTime } from "../../../../utils/date.utils";
 
 const STATUS_TEXT: Record<PackageStatus, string> = {
   pending: "Zain dago",
@@ -18,11 +19,6 @@ const STATUS_DOT: Record<PackageStatus, string> = {
   undelivered: "var(--st-undelivered-fg)",
   failed: "var(--st-failed-fg)",
 };
-
-function formatTime(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-}
 
 export function RecentActivity({ packages }: RecentActivityProps) {
   const recent = [...packages]

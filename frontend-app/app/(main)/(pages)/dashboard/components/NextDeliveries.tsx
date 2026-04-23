@@ -2,6 +2,7 @@ import { NextDeliveriesProps } from "../types";
 import { Icons } from "../../../../components/icons";
 import { STATUS_LABEL } from "../../../../utils/types";
 import type { PackageStatus } from "../../../../utils/types/api/package.types";
+import { formatDayMonth } from "../../../../utils/date.utils";
 import Link from "next/link";
 
 const STATUS_STYLE: Record<PackageStatus, string> = {
@@ -87,13 +88,7 @@ export function NextDeliveries({
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
                   {pkg.estimated_delivery && (
                     <span className="text-[11px] text-text-disabled font-mono">
-                      {new Date(pkg.estimated_delivery).toLocaleDateString(
-                        "es-ES",
-                        {
-                          day: "2-digit",
-                          month: "2-digit",
-                        }
-                      )}
+                      {formatDayMonth(pkg.estimated_delivery)}
                     </span>
                   )}
                   <span

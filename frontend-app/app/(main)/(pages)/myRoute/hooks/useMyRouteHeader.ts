@@ -2,20 +2,21 @@
 
 import { useState } from "react";
 import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
+import { usePreferences } from "../../../../hooks/usePreferences";
 import { useUpdateRouteStatus } from "../../../../hooks/routes/useUpdateRouteStatus";
 import {
-  formatRouteDate,
-  isTerminalPackageStatus,
+  formatDate,
   normalizeDateKey,
-  ROUTE_STATUS_LABEL,
   toLocalDateKey,
-} from "../constants";
+} from "../../../../utils/date.utils";
+import { isTerminalPackageStatus, ROUTE_STATUS_LABEL } from "../constants";
 import { getActionErrorMessage } from "./routeUtils";
 import { ROUTE_STATUSES } from "../../../../utils/types";
 
 export function useMyRouteHeader() {
   const routeQuery = useMyDailyRoute();
   const updateRouteStatus = useUpdateRouteStatus();
+  usePreferences();
 
   const routeData = routeQuery.data ?? null;
   const stops = routeData?.stops ?? [];
@@ -55,7 +56,7 @@ export function useMyRouteHeader() {
     : "--";
 
   const routeDateLabel = routeData
-    ? formatRouteDate(routeData.route.route_date)
+    ? formatDate(normalizeDateKey(routeData.route.route_date))
     : "--";
 
   async function onClickUpdateRouteStatus(): Promise<void> {

@@ -1,19 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { usePreferences } from "../../../../hooks/usePreferences";
 import { useMyPackages } from "../../../../hooks/packages/useMyPackages";
 import type { PackageWithAddress } from "../../../../utils/types/api/package.types";
 import {
-  formatCompactDateLabel,
-  formatCompactGroupSummary,
+  formatCompactDate,
   formatDayLabel,
-  formatGroupSummary,
+  formatDayMonth,
   formatPeriodLabel,
-  formatShortDayLabel,
   formatTime,
+  toDateKey,
+} from "../../../../utils/date.utils";
+import {
+  formatCompactGroupSummary,
+  formatGroupSummary,
   getRecipientInitial,
   HISTORY_FILTERS,
-  toDateKey,
 } from "../constants";
 import type {
   HistoryChartBar,
@@ -37,6 +40,7 @@ function isHistoryFinalStatus(
 
 export function useHistoryPage() {
   const { data: packagesData, isLoading } = useMyPackages();
+  const { dateFormat } = usePreferences();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<HistoryFilterStatus>("all");
 
@@ -62,7 +66,7 @@ export function useHistoryPage() {
     const rate = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
     return { total, delivered, failed, rate };
-  }, [allHistory]);
+  }, [allHistory, dateFormat]);
 
   const filters = useMemo<HistoryFilterOption[]>(
     () =>
@@ -96,7 +100,7 @@ export function useHistoryPage() {
       end: latest.updated_at,
       label: formatPeriodLabel(oldest.updated_at, latest.updated_at),
     };
-  }, [allHistory]);
+  }, [allHistory, dateFormat]);
 
   const filtered = useMemo<HistoryPackage[]>(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -133,7 +137,7 @@ export function useHistoryPage() {
       return {
         dateKey,
         dateLabel: formatDayLabel(items[0].updated_at),
-        compactDateLabel: formatCompactDateLabel(items[0].updated_at),
+        compactDateLabel: formatCompactDate(items[0].updated_at),
         summary: formatGroupSummary(items.length, delivered),
         compactSummary: formatCompactGroupSummary(items.length, delivered),
         delivered,
@@ -153,7 +157,7 @@ export function useHistoryPage() {
         })),
       };
     });
-  }, [filtered]);
+  }, [dateFormat, filtered]);
 
   const chartBars = useMemo<HistoryChartBar[]>(() => {
     const map = new Map<
@@ -191,13 +195,13 @@ export function useHistoryPage() {
       .slice(-14)
       .map(([dateKey, item]) => ({
         dateKey,
-        shortLabel: formatShortDayLabel(item.date),
+        shortLabel: formatDayMonth(item.date),
         fullLabel: formatDayLabel(item.date),
         delivered: item.delivered,
         failed: item.failed,
         total: item.delivered + item.failed,
       }));
-  }, [allHistory]);
+  }, [allHistory, dateFormat]);
 
   return {
     dayGroups,

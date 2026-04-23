@@ -1,13 +1,17 @@
 "use client";
 import Link from "next/link";
+import { useRef } from "react";
 import { Icons } from "../../../components/icons";
 import { AsideMobile } from "../AsideMenu/components/AsideMobile";
 import { SearchMobile } from "./SearcMobile";
 import { useHeader } from "./useHeader";
+import { useSearchShortcut } from "./useSearchShortcut";
 import { HeaderCorner } from "./HeaderCorner";
 
 export function Header() {
   const { pathname, userName, userSurname } = useHeader();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const shortcut = useSearchShortcut(searchInputRef);
 
   return (
     <header className="z-100 sticky top-0 w-full h-18 bg-bg-elevated border-b border-border flex items-center justify-between px-2 md:px-10">
@@ -39,14 +43,23 @@ export function Header() {
       </div>
       {/* SEARCH INPUT DESKTOP */}
       <div className="flex flex-1 h-full items-center justify-end gap-4">
-        <div className="hidden sm:flex flex-1 max-w-xs lg:max-w-md bg-bg-surface items-center justify-between px-4 py-1 rounded-md border border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors placeholder:text-text-secondary">
-          <Icons.Search size={17} className="text-text-secondary shrink-0" />
+        <div className="hidden sm:flex flex-1 max-w-xs lg:max-w-md bg-bg-surface items-center gap-2 px-3 py-1 rounded-md border border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors placeholder:text-text-secondary">
+          <Icons.Search size={16} className="text-text-secondary shrink-0" />
+          <kbd
+            className="hidden md:inline-flex items-center gap-0.5 shrink-0 font-mono text-[10px] leading-none font-semibold text-text-secondary bg-bg-dark border border-border rounded px-1.5 py-1 select-none"
+            aria-label={`Atajo: ${shortcut.modifier} + ${shortcut.key}`}
+          >
+            <span>{shortcut.modifier}</span>
+            <span>+</span>
+            <span>{shortcut.key}</span>
+          </kbd>
           <input
+            ref={searchInputRef}
             type="text"
             name="search"
             autoComplete="off"
             maxLength={200}
-            className="w-full bg-transparent px-3 py-2 focus:outline-none text-white"
+            className="w-full bg-transparent px-1 py-2 focus:outline-none text-white"
             placeholder="Bilatu pakete bat..."
           />
         </div>

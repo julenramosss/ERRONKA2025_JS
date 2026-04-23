@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icons } from "../../../../components/icons";
-import { formatDate, TABLE_COLS } from "../constants";
+import { formatListDate, TABLE_COLS } from "../constants";
 import type { PackagesTableProps } from "../types";
 import { PackageMobileCard } from "./PackageMobileCard";
 import { StatusBadge } from "../../../components/StatusBadge";
@@ -76,7 +76,7 @@ export function PackagesTable({ packages }: PackagesTableProps) {
                     <StatusBadge status={pkg.status} />
                   </td>
                   <td className="px-5 py-3.5 font-mono text-xs text-text-secondary">
-                    {formatDate(pkg.estimated_delivery)}
+                    {formatListDate(pkg.estimated_delivery)}
                   </td>
                   <td className="px-5 py-3.5">
                     <Link

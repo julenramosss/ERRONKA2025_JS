@@ -1,9 +1,8 @@
-export function formatDate(d: string | null): string {
+import { formatDayMonth } from "../../../../utils/date.utils";
+
+export function formatListDate(d: string | null): string {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-  });
+  return formatDayMonth(d);
 }
 
 export const TABLE_COLS = [

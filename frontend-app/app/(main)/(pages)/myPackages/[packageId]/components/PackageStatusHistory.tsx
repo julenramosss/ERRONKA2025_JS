@@ -1,5 +1,7 @@
+import { usePreferences } from "../../../../../hooks/usePreferences";
 import type { PackageStatus } from "../../../../../utils/types/api/package.types";
 import { STATUS_LABEL } from "../../../../../utils/types";
+import { formatDateTime } from "../../../../../utils/date.utils";
 import { StatusBadge } from "../../../../components/StatusBadge";
 import type { PackageStatusHistoryProps } from "../types";
 
@@ -12,20 +14,12 @@ const STATUS_DOT_COLOR: Record<PackageStatus, string> = {
   failed: "var(--st-failed-fg)",
 };
 
-function formatDateTime(d: string): string {
-  return new Date(d).toLocaleString("es-ES", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export function PackageStatusHistory({
   logs,
   isLoading,
 }: PackageStatusHistoryProps) {
+  usePreferences();
+
   const sorted = [...logs].sort(
     (a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
   );

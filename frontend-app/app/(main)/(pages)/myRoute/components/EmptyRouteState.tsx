@@ -5,7 +5,11 @@ import {
   useContinueFromPast,
   usePendingPastRoute,
 } from "../../../../hooks/routes/usePendingPastRoute";
-import { formatRouteDate } from "../constants";
+import {
+  formatDate,
+  normalizeDateKey,
+} from "../../../../utils/date.utils";
+import { usePreferences } from "../../../../hooks/usePreferences";
 import { getActionErrorMessage } from "../hooks/routeUtils";
 import { useState } from "react";
 
@@ -13,6 +17,7 @@ export function EmptyRouteState() {
   const pendingQuery = usePendingPastRoute();
   const continueMutation = useContinueFromPast();
   const [error, setError] = useState<string | null>(null);
+  usePreferences();
 
   const pending = pendingQuery.data?.pending ?? null;
 
@@ -60,7 +65,7 @@ export function EmptyRouteState() {
                 {pending.pending_count} pakete geratu dira entregatu gabe
                 {pending.route_count > 1
                   ? ` ${pending.route_count} ibilbidean`
-                  : ` ${formatRouteDate(pending.route_date)}eko ibilbidean`}
+                  : ` ${formatDate(normalizeDateKey(pending.route_date))}eko ibilbidean`}
                 . Gaur berriro banatu nahi dituzu?
               </p>
             </div>

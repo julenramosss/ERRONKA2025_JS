@@ -1,6 +1,7 @@
 import { Header } from "./components/Header/Header";
 import { AsideMenu } from "./components/AsideMenu/AsideMenu";
 import { SessionKeepAlive } from "../components/SessionKeepAlive";
+import { PreferencesSync } from "../components/PreferencesSync";
 
 export default function AuthLayout({
   children,
@@ -9,6 +10,7 @@ export default function AuthLayout({
 }>) {
   return (
     <main className="flex flex-row min-h-screen">
+      <PreferencesSync />
       <SessionKeepAlive />
       <AsideMenu />
       <div className="flex flex-1 flex-col">

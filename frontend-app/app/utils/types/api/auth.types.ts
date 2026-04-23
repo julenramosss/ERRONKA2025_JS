@@ -35,3 +35,12 @@ export interface MeResponse extends AuthUser {
 export interface ForgotPassword {
   message: string;
 }
+
+export interface ChangeMyPwdRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface ChangeMyPwdResponse {
+  message: string;
+}

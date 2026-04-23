@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icons } from "../../../../components/icons";
-import { formatDate } from "../constants";
+import { formatListDate } from "../constants";
 import type { PackagesGridProps } from "../types";
 import { StatusBadge } from "../../../components/StatusBadge";
 
@@ -48,7 +48,7 @@ export function PackagesGrid({ packages }: PackagesGridProps) {
             <div className="flex items-center gap-1.5 text-xs text-text-disabled">
               <Icons.Clock size={12} />
               <span className="font-mono">
-                {formatDate(pkg.estimated_delivery)}
+                {formatListDate(pkg.estimated_delivery)}
               </span>
             </div>
             <Link

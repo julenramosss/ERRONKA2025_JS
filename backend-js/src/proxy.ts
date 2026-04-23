@@ -3,6 +3,8 @@ import { verifyAccessToken } from "./app/lib/jwt";
 import { isDev } from "./app/config/envConfig";
 
 const ALLOWED_ORIGINS = [
+  "https://portal.tolosaerronka.com",
+  "https://tolosaerronka.com",
   "http://localhost:3001",
   "http://localhost:3000",
   "http://127.0.0.1:3001",
@@ -82,7 +84,7 @@ export function proxy(request: NextRequest) {
 
   if (!header?.startsWith("Bearer ")) {
     const response = NextResponse.json(
-      { error: "Authorization goiburua falta da" },
+      { error: "Authorization bearer was missing or invalid" },
       { status: 401 }
     );
     addCorsHeaders(response, origin);
@@ -97,7 +99,7 @@ export function proxy(request: NextRequest) {
   } catch {
     // Token invalid or expired
     const response = NextResponse.json(
-      { error: "Token baliogabea edo iraungita" },
+      { error: "Token was invalid or expired" },
       { status: 401 }
     );
     addCorsHeaders(response, origin);

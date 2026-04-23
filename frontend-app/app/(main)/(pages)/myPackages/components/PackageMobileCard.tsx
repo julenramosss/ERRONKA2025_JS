@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Icons } from "../../../../components/icons";
-import { formatDate } from "../constants";
+import { formatListDate } from "../constants";
 import type { PackageMobileCardProps } from "../types";
 import { StatusBadge } from "../../../components/StatusBadge";
 
@@ -39,7 +39,7 @@ export function PackageMobileCard({ pkg }: PackageMobileCardProps) {
         </div>
         <div className="flex items-center gap-1 text-text-disabled shrink-0 font-mono">
           <Icons.Clock size={11} />
-          {formatDate(pkg.estimated_delivery)}
+          {formatListDate(pkg.estimated_delivery)}
         </div>
       </div>
 

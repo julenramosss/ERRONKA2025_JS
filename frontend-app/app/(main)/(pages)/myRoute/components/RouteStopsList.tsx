@@ -1,7 +1,8 @@
 import { Icons } from "../../../../components/icons";
 import type { KeyboardEvent } from "react";
 import { StatusBadge } from "../../../components/StatusBadge";
-import { formatStopTime, isTerminalPackageStatus } from "../constants";
+import { formatStopTime } from "../../../../utils/date.utils";
+import { isTerminalPackageStatus } from "../constants";
 import { useRouteStopsList } from "../hooks/useRouteStopsList";
 import type { RouteStopsListProps } from "../types";
 import { RouteStopActions } from "./RouteStopActions";

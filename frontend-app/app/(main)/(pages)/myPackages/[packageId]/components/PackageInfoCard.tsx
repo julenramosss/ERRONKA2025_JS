@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Icons } from "../../../../../components/icons";
-import { formatDate } from "../../constants";
+import { formatDate } from "../../../../../utils/date.utils";
+import { usePreferences } from "../../../../../hooks/usePreferences";
 import type { DetailRowProps, PackageInfoCardProps } from "../types";
 import { StatusBadge } from "../../../../components/StatusBadge";
 
@@ -19,6 +20,7 @@ function DetailRow({ label, value, icon, span }: DetailRowProps) {
 }
 
 export function PackageInfoCard({ pkg }: PackageInfoCardProps) {
+  usePreferences();
   return (
     <div className="bg-bg-surface border border-border rounded-xl px-5 py-4 md:px-6">
       <div className="flex items-center justify-between gap-4 border-b border-border pb-4 mb-5">
@@ -56,16 +58,12 @@ export function PackageInfoCard({ pkg }: PackageInfoCardProps) {
         />
         <DetailRow
           label="Sortze-data"
-          value={new Date(pkg.created_at).toLocaleDateString("es-ES", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
+          value={formatDate(pkg.created_at)}
           icon={<Icons.Calendar size={12} />}
         />
         <DetailRow
           label="ETA"
-          value={formatDate(pkg.estimated_delivery)}
+          value={pkg.estimated_delivery ? formatDate(pkg.estimated_delivery) : "—"}
           icon={<Icons.Clock size={12} />}
         />
       </div>

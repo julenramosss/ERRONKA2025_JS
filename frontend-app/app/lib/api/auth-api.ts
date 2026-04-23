@@ -1,4 +1,6 @@
 import type {
+  ChangeMyPwdRequest,
+  ChangeMyPwdResponse,
   ForgotPassword,
   LoginRequest,
   LoginResponse,
@@ -33,5 +35,16 @@ export async function forgotPassword(email: string): Promise<ForgotPassword> {
     "/auth/forgotPassword",
     { email }
   );
+  return response.data;
+}
+
+export async function changeMyPwd(
+  payload: ChangeMyPwdRequest
+): Promise<ChangeMyPwdResponse> {
+  const response = await apiClient.patch<ChangeMyPwdResponse>(
+    "/users/changeMyPwd",
+    payload
+  );
+
   return response.data;
 }

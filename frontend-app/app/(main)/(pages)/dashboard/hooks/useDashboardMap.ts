@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { AssignedPackageLatLng } from "../types";
+import { usePreferences } from "../../../../hooks/usePreferences";
 import type { PackageWithAddress } from "../../../../utils/types/api/package.types";
 
 export function useDashboardMap() {
   const mapRef = useRef<HTMLDivElement>(null);
+  const { animations } = usePreferences();
   const [assignedPackageLatLng, setAssignedPackageLatLng] =
     useState<AssignedPackageLatLng | null>(null);
   const [isLinkAvailable, setIsLinkAvailable] = useState(false);
@@ -31,11 +33,14 @@ export function useDashboardMap() {
       const mapRect = mapRef.current.getBoundingClientRect();
       const scrollTop = window.scrollY + mapRect.top - 100;
 
-      window.scrollTo({ top: scrollTop, behavior: "smooth" });
+      window.scrollTo({
+        top: scrollTop,
+        behavior: animations === "off" ? "auto" : "smooth",
+      });
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [assignedPackageLatLng, isLinkAvailable]);
+  }, [animations, assignedPackageLatLng, isLinkAvailable]);
 
   return {
     mapRef,

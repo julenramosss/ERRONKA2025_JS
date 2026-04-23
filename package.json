@@ -5,9 +5,5 @@
     "install": "pnpm --filter backend-js install && pnpm --filter frontend-app install",
     "backend:dev": "pnpm --filter backend-js dev -p 3001",
     "frontend:dev": "pnpm --filter frontend-app dev -p 3000"
-  },
-  "dependencies": {
-    "boneyard-js": "1.7.7",
-    "resend": "6.12.0"
   }
 }

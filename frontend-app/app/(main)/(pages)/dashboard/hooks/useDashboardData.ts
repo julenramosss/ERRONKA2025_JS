@@ -1,11 +1,13 @@
 import { useMe } from "../../../../hooks/auth/useMe";
 import { useMyPackages } from "../../../../hooks/packages/useMyPackages";
-import { getMonthName } from "../../../../utils/constants/date.constants";
+import { usePreferences } from "../../../../hooks/usePreferences";
+import { formatDate } from "../../../../utils/date.utils";
 import { PACKAGE_STATUSES } from "../../../../utils/types";
 
 export function useDashboardData() {
   const { data: userData, isLoading: isUserLoading } = useMe();
   const { data: packagesData, isLoading: isPackagesLoading } = useMyPackages();
+  usePreferences();
   const today = new Date();
 
   const todayPackagesData = packagesData?.filter((pkg) => {
@@ -18,9 +20,7 @@ export function useDashboardData() {
         pkg.status === PACKAGE_STATUSES.assigned)
     );
   });
-  const now = new Date();
-  const monthNameEn = now.toLocaleDateString("en-EN", { month: "long" });
-  const todayDay = `${now.getDate()} ${getMonthName(monthNameEn)} ${now.getFullYear()}`;
+  const todayDay = formatDate(new Date());
 
   return {
     userData,
