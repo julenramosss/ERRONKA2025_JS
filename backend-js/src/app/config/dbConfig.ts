@@ -21,9 +21,7 @@ export async function connect(): Promise<Pool> {
     connectionLimit: 10,
     waitForConnections: true,
     queueLimit: 0,
-    ssl: mysql_ca_cert
-      ? { ca: mysql_ca_cert.replace(/\\n/g, "\n"), rejectUnauthorized: false }
-      : { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false },
   });
   return pool;
 }
