@@ -3,6 +3,7 @@ import { verifyAccessToken } from "./app/lib/jwt";
 import { isDev } from "./app/config/envConfig";
 
 const ALLOWED_ORIGINS = [
+  "https://api.tolosaerronka.es",
   "https://portal.tolosaerronka.es",
   "https://tolosaerronka.es",
   "http://localhost:3001",

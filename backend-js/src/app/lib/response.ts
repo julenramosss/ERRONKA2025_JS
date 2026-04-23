@@ -27,7 +27,7 @@ export const res = {
 
     if (cookies) {
       cookies.forEach(({ name, value, httpOnly = false }) => {
-        const cookieStr = `${name}=${value}; Path=/; ${httpOnly ? "HttpOnly; " : ""}SameSite=Strict`;
+        const cookieStr = `${name}=${value}; Path=/; ${httpOnly ? "HttpOnly; " : ""}SameSite=None; Secure`;
         response.headers.append("Set-Cookie", cookieStr);
       });
     }
@@ -36,7 +36,7 @@ export const res = {
       deleteCookies.forEach((name) => {
         response.headers.append(
           "Set-Cookie",
-          `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict ${secure};`
+          `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=None; ${secure}`
         );
       });
     }
