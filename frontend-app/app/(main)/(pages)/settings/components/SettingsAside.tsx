@@ -17,11 +17,6 @@ export function SettingsAside({
       icon: <Icons.User size={20} />,
     },
     {
-      route: SETTINGS_ROUTES.notifications,
-      label: "Notifikazioak",
-      icon: <Icons.Bell size={20} />,
-    },
-    {
       route: SETTINGS_ROUTES.security,
       label: "Segurtasuna",
       icon: <Icons.Shield size={20} />,

@@ -22,7 +22,7 @@ export function TutorialTooltip({
       {...tooltipProps}
       className="relative flex w-80 max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-bg-surface text-text-primary shadow-[0_8px_32px_rgba(124,58,237,0.25)] sm:w-96"
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-accent/20 via-accent-subtle/20 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-linear-to-b from-accent/20 via-accent-subtle/20 to-transparent" />
 
       <div className="relative flex items-start justify-between gap-3 px-5 pt-4">
         <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-light">
@@ -58,7 +58,7 @@ export function TutorialTooltip({
 
       <div className="flex h-1 w-full overflow-hidden bg-bg-dark">
         <div
-          className="h-full bg-gradient-to-r from-accent to-accent-light transition-all"
+          className="h-full bg-linear-to-r from-accent to-accent-light transition-all"
           style={{ width: `${((index + 1) / size) * 100}%` }}
         />
       </div>

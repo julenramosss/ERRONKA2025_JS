@@ -13,7 +13,11 @@ import { usePreferences } from "../hooks/usePreferences";
 import { useTutorialSeen } from "../hooks/useTutorialSeen";
 import { setPreferences } from "../utils/preferences";
 import { getStepsForPath } from "../utils/constants/steps.Joyride";
-import { setTutorialState } from "../utils/tutorial.storage";
+import {
+  DEFAULTS_TUTORIAL,
+  setTutorialState,
+  TutorialState,
+} from "../utils/tutorial.storage";
 import { TutorialTooltip } from "../components/tutorial/TutorialTooltip";
 
 interface TutorialContextValue {
@@ -29,8 +33,9 @@ const FINAL_STATUSES: Status[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
 export function TutorialProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const cleanPath = pathname.split("/")[1]; // For tutorial state key
   const { showTutorial } = usePreferences();
-  const hasSeen = useTutorialSeen();
+  const hasSeen = useTutorialSeen(cleanPath as keyof TutorialState);
 
   const steps = useMemo(
     () => getStepsForPath(pathname, !hasSeen),
@@ -59,18 +64,18 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     },
     onEvent: (data) => {
       if (FINAL_STATUSES.includes(data.status)) {
-        setTutorialState({ hasSeen: true });
+        setTutorialState({ [cleanPath]: { hasSeen: true } });
       }
     },
   });
 
   const restart = useCallback(() => {
     setPreferences({ showTutorial: true });
-    setTutorialState({ hasSeen: false });
+    setTutorialState(DEFAULTS_TUTORIAL);
   }, []);
 
   const dismiss = useCallback(() => {
-    setTutorialState({ hasSeen: true });
+    setTutorialState({ [cleanPath]: { hasSeen: true } });
   }, []);
 
   const value = useMemo<TutorialContextValue>(

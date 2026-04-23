@@ -5,12 +5,13 @@ import {
   getDefaultTutorialState,
   getTutorialState,
   subscribeTutorialState,
+  TutorialState,
 } from "../utils/tutorial.storage";
 
-export function useTutorialSeen(): boolean {
+export function useTutorialSeen(pathName: keyof TutorialState): boolean {
   return useSyncExternalStore(
     subscribeTutorialState,
-    () => getTutorialState().hasSeen,
-    () => getDefaultTutorialState().hasSeen
+    () => getTutorialState(pathName).hasSeen ?? false,
+    () => getDefaultTutorialState()[pathName].hasSeen ?? false
   );
 }

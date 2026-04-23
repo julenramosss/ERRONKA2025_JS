@@ -20,14 +20,13 @@ export const NAV_STEPS: Step[] = [
     target: ".tour-sidebar-user",
     title: "👤 Saioa eta profila",
     content:
-      "Zure izena, rola eta saioa ixteko botoia. Inisialak erakusten dira abatarean.",
+      "Zure izena, rola eta saioa ixteko botoia. Inizialak erakusten dira abatarrean.",
     placement: "right",
   },
   {
     target: ".tour-header-breadcrumb",
     title: "📍 Uneko orrialdea",
-    content:
-      "Goiburuko migak erakusten dute zein orrialdean zauden une oro.",
+    content: "Goiburuko migak erakusten dute zein orrialdean zauden une oro.",
     placement: "bottom",
   },
   {
