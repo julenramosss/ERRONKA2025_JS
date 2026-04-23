@@ -22,7 +22,7 @@ export async function connect(): Promise<Pool> {
     waitForConnections: true,
     queueLimit: 0,
     ssl: mysql_ca_cert
-      ? { ca: mysql_ca_cert, rejectUnauthorized: true }
+      ? { ca: mysql_ca_cert.replace(/\\n/g, "\n"), rejectUnauthorized: true }
       : { rejectUnauthorized: false },
   });
   return pool;
