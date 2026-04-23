@@ -373,7 +373,7 @@ FROM dual WHERE @test_scenario = 1;
 -- ESCENARIO 2: Ruta para HOY, planned
 INSERT INTO routes (id, user_id, route_date, status, created_at, updated_at)
 SELECT 11, @julen_arruti_id,
-  CURRENT_DATE + 1, 'planned',
+  CURRENT_DATE, 'planned',
   NOW() - INTERVAL 60 MINUTE, NOW() - INTERVAL 60 MINUTE
 FROM dual WHERE @test_scenario = 2;
 
