@@ -32,7 +32,7 @@ export function RouteStopsList({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-bg-surface">
+    <div className="tour-route-stops-list overflow-hidden rounded-xl border border-border bg-bg-surface">
       <div className="flex justify-between flex-col md:items-center md:flex-row border-b border-border gap-5 px-5 py-4">
         <div>
           <p className="text-sm font-semibold">Geldialdiak</p>
@@ -43,7 +43,7 @@ export function RouteStopsList({
         <Link
           href={googleMapsRouteUrl}
           target="_blank"
-          className="flex items-center gap-2 bg-accent py-2 px-4 text-sm border-border-focus rounded-lg hover:opacity-80"
+          className="tour-route-google-maps flex items-center gap-2 bg-accent py-2 px-4 text-sm border-border-focus rounded-lg hover:opacity-80"
         >
           <Icons.Route size={14} />
           <span className="text-sm md:text-xs font-semibold">

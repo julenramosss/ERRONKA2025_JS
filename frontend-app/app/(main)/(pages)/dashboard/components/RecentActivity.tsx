@@ -29,7 +29,7 @@ export function RecentActivity({ packages }: RecentActivityProps) {
     .slice(0, 6);
 
   return (
-    <div className="bg-bg-surface border border-border rounded-xl overflow-hidden flex flex-col h-full">
+    <div className="tour-recent-activity bg-bg-surface border border-border rounded-xl overflow-hidden flex flex-col h-full">
       <div className="px-5 py-4 border-b border-border">
         <p className="text-sm font-semibold">Azken jarduera</p>
         <p className="text-xs text-text-secondary mt-0.5">

@@ -25,7 +25,7 @@ export function PackageStatusHistory({
   );
 
   return (
-    <div className="bg-bg-surface border border-border rounded-xl overflow-hidden">
+    <div className="tour-pkg-status-history bg-bg-surface border border-border rounded-xl overflow-hidden">
       <div className="px-5 md:px-6 py-4 border-b border-border">
         <div className="text-sm font-semibold text-text-primary">
           Egoera historia

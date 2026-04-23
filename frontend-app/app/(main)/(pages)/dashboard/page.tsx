@@ -10,12 +10,6 @@ import { StatsCardsLoader } from "./components/loaders/StatsCards.loader";
 import { PackageInfoLoader } from "./components/loaders/PackageInfo.loader";
 import { HereMap } from "../../components/Here/HereMap";
 import { useDashboardMap } from "./hooks/useDashboardMap";
-import { Joyride } from "react-joyride";
-
-const steps = [
-  { content: "This is my awesome feature!", target: ".my-first-step" },
-  { content: "This is another awesome feature!", target: ".my-other-step" },
-];
 
 export default function DashboardPage() {
   const {
@@ -33,7 +27,6 @@ export default function DashboardPage() {
 
   return (
     <div className="py-6 px-4 md:px-8 lg:px-10 flex flex-col gap-6">
-      <Joyride continuous steps={steps} run={true} />
       <Skeleton
         name="dashboard-hero"
         loading={isUserLoading}
@@ -59,7 +52,7 @@ export default function DashboardPage() {
         loading={isPackagesLoading}
         fallback={<PackageInfoLoader />}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full  tour-my-first-step my-first-step">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
           <NextDeliveries
             packages={packages}
             assignPackage={assignPackage}
@@ -69,15 +62,17 @@ export default function DashboardPage() {
         </div>
       </Skeleton>
       <Skeleton name="dashboard-map" loading={isPackagesLoading}>
-        <HereMap
-          reference={mapRef}
-          center={{
-            lat: assignedPackageLatLng?.lat,
-            lng: assignedPackageLatLng?.lng,
-          }}
-          label={assignedPackageLatLng?.label}
-          height="500px"
-        />
+        <div className="tour-dashboard-map">
+          <HereMap
+            reference={mapRef}
+            center={{
+              lat: assignedPackageLatLng?.lat,
+              lng: assignedPackageLatLng?.lng,
+            }}
+            label={assignedPackageLatLng?.label}
+            height="500px"
+          />
+        </div>
       </Skeleton>
     </div>
   );

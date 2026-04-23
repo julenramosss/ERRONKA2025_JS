@@ -23,7 +23,7 @@ export function HistoryList({ groups, total }: HistoryListProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
+    <div className="tour-history-list overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5 sm:py-4">
         <p className="text-sm font-semibold text-text-primary">
           Pakete historikoak

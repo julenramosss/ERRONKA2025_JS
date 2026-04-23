@@ -4,7 +4,7 @@ import type { DeliveryLocationProps } from "../types";
 
 export function DeliveryLocation({ pkg }: DeliveryLocationProps) {
   return (
-    <div className="bg-bg-surface border border-border rounded-xl overflow-hidden h-fit">
+    <div className="tour-pkg-delivery-location bg-bg-surface border border-border rounded-xl overflow-hidden h-fit">
       <div className="px-5 py-4 border-b border-border">
         <div className="text-sm font-semibold text-text-primary">
           Entrega-kokapena

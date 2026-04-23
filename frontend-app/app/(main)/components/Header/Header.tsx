@@ -18,7 +18,7 @@ export function Header() {
       <HeaderCorner />
       <div className="flex items-center justify-start gap-4">
         <AsideMobile />
-        <div className="flex items-center justify-start gap-2">
+        <div className="tour-header-breadcrumb flex items-center justify-start gap-2">
           <Link
             aria-disabled={pathname === "/dashboard"}
             href={pathname === "/dashboard" ? "" : "/dashboard"}
@@ -43,7 +43,7 @@ export function Header() {
       </div>
       {/* SEARCH INPUT DESKTOP */}
       <div className="flex flex-1 h-full items-center justify-end gap-4">
-        <div className="hidden sm:flex flex-1 max-w-xs lg:max-w-md bg-bg-surface items-center gap-2 px-3 py-1 rounded-md border border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors placeholder:text-text-secondary">
+        <div className="tour-header-search hidden sm:flex flex-1 max-w-xs lg:max-w-md bg-bg-surface items-center gap-2 px-3 py-1 rounded-md border border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors placeholder:text-text-secondary">
           <Icons.Search size={16} className="text-text-secondary shrink-0" />
           <kbd
             className="hidden md:inline-flex items-center gap-0.5 shrink-0 font-mono text-[10px] leading-none font-semibold text-text-secondary bg-bg-dark border border-border rounded px-1.5 py-1 select-none"

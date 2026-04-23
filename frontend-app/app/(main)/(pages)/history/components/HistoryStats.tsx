@@ -34,7 +34,7 @@ export function HistoryStats({ stats }: HistoryStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+    <div className="tour-history-stats grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
       {cards.map((card) => (
         <StatCard key={card.label} {...card} />
       ))}

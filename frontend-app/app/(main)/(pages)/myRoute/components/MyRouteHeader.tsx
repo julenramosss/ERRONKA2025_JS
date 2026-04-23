@@ -17,7 +17,7 @@ export function MyRouteHeader() {
   } = useMyRouteHeader();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="tour-route-header flex flex-col gap-4">
       <div className="flex flex-col gap-4 md:flex-row items-start md:items-center md:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-accent-light">
@@ -37,7 +37,7 @@ export function MyRouteHeader() {
           type="button"
           onClick={onClickUpdateRouteStatus}
           disabled={!canUpdateRoute || isStartingRoute}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_4px] shadow-accent/30 transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="tour-route-status-btn inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_20px_4px] shadow-accent/30 transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isStartingRoute ? (
             <Icons.Loader size={16} className="animate-spin" />

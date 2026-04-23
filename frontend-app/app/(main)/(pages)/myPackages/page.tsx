@@ -49,11 +49,13 @@ export default function MyPackagesPage() {
           view === "list" ? <PackagesTableLoader /> : <PackagesGridLoader />
         }
       >
-        {view === "list" ? (
-          <PackagesTable packages={filtered} />
-        ) : (
-          <PackagesGrid packages={filtered} />
-        )}
+        <div className="tour-packages-table">
+          {view === "list" ? (
+            <PackagesTable packages={filtered} />
+          ) : (
+            <PackagesGrid packages={filtered} />
+          )}
+        </div>
       </Skeleton>
     </div>
   );

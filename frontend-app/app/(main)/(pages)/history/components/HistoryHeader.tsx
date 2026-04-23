@@ -10,7 +10,7 @@ export function HistoryHeader({
   setFilter,
 }: HistoryHeaderProps) {
   return (
-    <div className="flex flex-col gap-3 sm:gap-4">
+    <div className="tour-history-header flex flex-col gap-3 sm:gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
@@ -22,7 +22,7 @@ export function HistoryHeader({
         </div>
 
         <div
-          className="inline-flex w-full items-center gap-2 rounded-md border border-border bg-bg-surface px-3 py-2 text-xs text-text-secondary sm:w-auto sm:text-sm"
+          className="tour-history-period inline-flex w-full items-center gap-2 rounded-md border border-border bg-bg-surface px-3 py-2 text-xs text-text-secondary sm:w-auto sm:text-sm"
           title={period.label}
         >
           <Icons.Calendar size={14} className="shrink-0 text-accent-light" />
@@ -31,7 +31,7 @@ export function HistoryHeader({
       </div>
 
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2 bg-bg-surface border border-border rounded-md px-3 py-2 focus-within:border-border-focus focus-within:ring-1 focus-within:ring-accent transition-colors">
+        <div className="tour-history-search flex items-center gap-2 bg-bg-surface border border-border rounded-md px-3 py-2 focus-within:border-border-focus focus-within:ring-1 focus-within:ring-accent transition-colors">
           <Icons.Search size={15} className="text-text-secondary shrink-0" />
           <input
             type="text"
@@ -53,7 +53,7 @@ export function HistoryHeader({
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+        <div className="tour-history-filters grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
           {filters.map((item) => (
             <FilterChip
               key={item.key}

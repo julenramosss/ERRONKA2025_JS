@@ -16,7 +16,7 @@ export function AsideDesktop() {
   } = useMenuDesktop();
   return (
     <aside
-      className={`hidden z-100 sticky top-0 h-screen md:flex flex-col gap-5 bg-bg-surface border-r border-border transition-all duration-200 ${
+      className={`tour-sidebar hidden z-100 sticky top-0 h-screen md:flex flex-col gap-5 bg-bg-surface border-r border-border transition-all duration-200 ${
         isMinimized ? "w-16" : "w-60"
       }`}
     >
@@ -25,7 +25,7 @@ export function AsideDesktop() {
       >
         <PakLogo size={25} showText={!isMinimized} />
         <button
-          className={`w-7 h-7 shrink-0 items-center justify-center rounded-full hover:bg-accent-subtle transition-colors text-text-secondary hover:text-text-primary cursor-pointer ${isMinimized ? "hidden" : "flex"}`}
+          className={`tour-sidebar-toggle w-7 h-7 shrink-0 items-center justify-center rounded-full hover:bg-accent-subtle transition-colors text-text-secondary hover:text-text-primary cursor-pointer ${isMinimized ? "hidden" : "flex"}`}
           onClick={() => onClickMinimize()}
         >
           <Icons.ChevronLeft size={20} />
@@ -47,7 +47,7 @@ export function AsideDesktop() {
         </button>
         <MenuOptions isMinimized={isMinimized} />
       </nav>
-      <footer className="w-full mt-auto py-4 px-2 border-t border-border">
+      <footer className="tour-sidebar-user w-full mt-auto py-4 px-2 border-t border-border">
         {isMinimized ? (
           <div className="flex flex-col items-center gap-3">
             <span

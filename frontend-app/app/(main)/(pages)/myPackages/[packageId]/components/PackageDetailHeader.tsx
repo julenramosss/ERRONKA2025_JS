@@ -4,7 +4,7 @@ import type { PackageDetailHeaderProps } from "../types";
 
 export function PackageDetailHeader({ pkg }: PackageDetailHeaderProps) {
   return (
-    <div className="flex flex-col py-6">
+    <div className="tour-pkg-detail-header flex flex-col py-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-text-secondary">
         <Link

@@ -8,7 +8,7 @@ export function RouteMapPanel({ selectedStopId }: RouteMapPanelProps) {
   const center = selectedStop?.package.address ?? activeStop?.package.address;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-bg-surface">
+    <div className="tour-route-map-panel overflow-hidden rounded-xl border border-border bg-bg-surface">
       <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold">Mapa</p>
