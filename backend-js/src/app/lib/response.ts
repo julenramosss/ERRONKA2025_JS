@@ -77,6 +77,7 @@ export function handleError(tag: string, error: unknown): Response {
   if (error instanceof ForbiddenError) return res.forbidden(error.message);
   if (error instanceof NotFoundError) return res.notFound(error.message);
   if (error instanceof ConflictError) return res.conflict(error.message);
+  const message = error instanceof Error ? error.message : String(error);
   console.error(tag, error);
-  return res.serverError();
+  return res.serverError(message);
 }
