@@ -7,7 +7,7 @@ export const resend_api_key = process.env.RESEND_API_KEY;
 
 export const directions_api_key = process.env.GOOGLE_DIRECTIONS_API_KEY!;
 
-export const is_dev = process.env.NODE_ENV !== "production";
+export const isDev = process.env.NODE_ENV !== "production";
 
 export const jwt_secret =
   process.env.JWT_SECRET ??
@@ -20,14 +20,20 @@ export const tracking_expires_days = Number(
   process.env.TRACKING_EXPIRES_DAYS ?? 30
 );
 export const tracking_base_url =
-  process.env.TRACKING_BASE_URL ?? "http://localhost:80/tracking/";
-
-export const default_user_password =
-  process.env.DEFAULT_USER_PASSWORD ?? "uf98UF98U)OAIfu98af98u";
-
-const isProduction = process.env.NODE_ENV === "production";
-export const secure = isProduction ? ", Secure; " : "";
+  process.env.TRACKING_BASE_URL ??
+  (isDev
+    ? "http://localhost:80/tracking/"
+    : "https://tolosaerronka.com/tracking/");
 
 export const reset_expires_minutes = 15;
 export const reset_base_url =
-  process.env.RESET_BASE_URL ?? "http://localhost:3000/resetPassword";
+  process.env.RESET_BASE_URL ??
+  (isDev
+    ? "http://localhost:3000/resetPassword"
+    : "https://tolosaerronka.com/resetPassword");
+
+export const default_user_password =
+  process.env.DEFAULT_USER_PASSWORD ??
+  "lkasjdhAKJHSdIH23497gkG876876ad87a6daafaa";
+
+export const secure = isDev ? ", Secure; " : "";

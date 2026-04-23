@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAccessToken } from "./app/lib/jwt";
-import { is_dev } from "./app/config/envConfig";
+import { isDev } from "./app/config/envConfig";
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3001",
@@ -26,7 +26,7 @@ function isPublicPath(pathname: string): boolean {
 }
 
 function addCorsHeaders(response: NextResponse, origin: string | null): void {
-  if (is_dev) {
+  if (isDev) {
     response.headers.set("Access-Control-Allow-Origin", origin || "*");
     if (origin) {
       response.headers.set("Access-Control-Allow-Credentials", "true");
