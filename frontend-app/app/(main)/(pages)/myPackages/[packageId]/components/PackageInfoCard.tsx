@@ -22,7 +22,7 @@ function DetailRow({ label, value, icon, span }: DetailRowProps) {
 export function PackageInfoCard({ pkg }: PackageInfoCardProps) {
   usePreferences();
   return (
-    <div className="bg-bg-surface border border-border rounded-xl px-5 py-4 md:px-6">
+    <div className="tour-pkg-info-card bg-bg-surface border border-border rounded-xl px-5 py-4 md:px-6">
       <div className="flex items-center justify-between gap-4 border-b border-border pb-4 mb-5">
         <h2 className="text-2xl font-semibold text-accent-light tracking-wide">
           {pkg.tracking_code}

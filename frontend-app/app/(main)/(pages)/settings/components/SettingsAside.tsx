@@ -34,7 +34,7 @@ export function SettingsAside({
   ];
 
   return (
-    <div className="flex flex-col gap-5 ">
+    <div className="tour-settings-aside flex flex-col gap-5 ">
       {!hideTitle && (
         <div className="flex flex-col items-start justify-between">
           <h2 className="text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">

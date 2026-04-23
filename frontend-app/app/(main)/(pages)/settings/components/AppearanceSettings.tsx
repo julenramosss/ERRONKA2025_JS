@@ -70,6 +70,7 @@ export function AppearanceSettings({ isActive }: { isActive: boolean }) {
           </div>
 
           <SettingToggle
+            className="tour-settings-tutorial-toggle"
             icon={<Icons.Lightbulb size={16} />}
             title="Hasierako tutoriala"
             description="Erakutsi aplikazioaren gidaliburua hurrengo saioan."

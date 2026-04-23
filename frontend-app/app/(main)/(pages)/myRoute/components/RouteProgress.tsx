@@ -7,7 +7,7 @@ export function RouteProgress() {
     totalStops > 0 ? Math.round((completedStops / totalStops) * 100) : 0;
 
   return (
-    <div className="rounded-xl border border-border bg-bg-surface p-5">
+    <div className="tour-route-progress rounded-xl border border-border bg-bg-surface p-5">
       <div className="mb-3 flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-text-primary">Aurrerapena</p>

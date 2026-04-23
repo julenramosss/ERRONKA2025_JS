@@ -3,7 +3,7 @@ import type { HistoryChartProps } from "../types";
 export function HistoryChart({ bars }: HistoryChartProps) {
   if (bars.length === 0) {
     return (
-      <div className="overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
+      <div className="tour-history-chart overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
         <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5 sm:py-4">
           <div>
             <p className="text-sm font-semibold text-text-primary">
@@ -24,7 +24,7 @@ export function HistoryChart({ bars }: HistoryChartProps) {
   const max = Math.max(...bars.map((bar) => bar.total), 0);
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
+    <div className="tour-history-chart overflow-hidden rounded-lg border border-border bg-bg-surface sm:rounded-xl">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-5 sm:py-4">
         <div>
           <p className="text-sm font-semibold text-text-primary">

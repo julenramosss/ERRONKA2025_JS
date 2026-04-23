@@ -24,7 +24,7 @@ export default function SettingsPage() {
               onClickChangeRoute={onClickChangeRoute}
             />
           </div>
-          <div className="w-full min-w-0">
+          <div className="tour-settings-content w-full min-w-0">
             <GeneralSettings
               isActive={settingsRoute === SETTINGS_ROUTES.general}
             />

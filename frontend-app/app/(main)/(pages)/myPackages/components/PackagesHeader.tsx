@@ -38,7 +38,7 @@ export function PackagesHeader({
   setView,
 }: PackagesHeaderProps) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="tour-packages-header flex flex-col gap-4">
       {/* Title row */}
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -51,7 +51,7 @@ export function PackagesHeader({
         </div>
 
         {/* View toggle — always visible */}
-        <div className="flex gap-0.5 p-1 bg-bg-surface border border-border rounded-md shrink-0 self-start mt-1">
+        <div className="tour-packages-view-toggle flex gap-0.5 p-1 bg-bg-surface border border-border rounded-md shrink-0 self-start mt-1">
           {(["list", "grid"] as ViewMode[]).map((v) => (
             <button
               key={v}
@@ -73,7 +73,7 @@ export function PackagesHeader({
       </div>
 
       {/* Search — full width */}
-      <div className="flex items-center gap-2 bg-bg-surface border border-border rounded-md px-3 py-2 focus-within:border-border-focus focus-within:ring-1 focus-within:ring-accent transition-colors">
+      <div className="tour-packages-search flex items-center gap-2 bg-bg-surface border border-border rounded-md px-3 py-2 focus-within:border-border-focus focus-within:ring-1 focus-within:ring-accent transition-colors">
         <Icons.Search size={15} className="text-text-secondary shrink-0" />
         <input
           type="text"
@@ -95,7 +95,7 @@ export function PackagesHeader({
       </div>
 
       {/* Filter chips */}
-      <div className="flex flex-wrap gap-y-5 md:gap-y-2 gap-x-2">
+      <div className="tour-packages-filters flex flex-wrap gap-y-5 md:gap-y-2 gap-x-2">
         {Object.keys(counts).map((key, status) => (
           <FilterChip
             key={status}

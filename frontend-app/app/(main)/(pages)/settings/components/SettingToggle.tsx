@@ -6,15 +6,19 @@ export function SettingToggle({
   description,
   checked,
   onChange,
+  className,
 }: {
   icon?: ReactNode;
   title: string;
   description: string;
   checked: boolean;
   onChange: () => void;
+  className?: string;
 }) {
   return (
-    <div className="py-4 px-4 sm:py-5 sm:px-6 md:px-8 flex flex-row items-start sm:items-center justify-between gap-4">
+    <div
+      className={`py-4 px-4 sm:py-5 sm:px-6 md:px-8 flex flex-row items-start sm:items-center justify-between gap-4 ${className ?? ""}`}
+    >
       <div className="flex items-start gap-3 min-w-0">
         {icon && (
           <span className="mt-0.5 text-text-secondary shrink-0">{icon}</span>

@@ -22,7 +22,7 @@ export function StatCards({ packagesData }: StatCardsProps) {
   const failed = packagesData.filter((p) => p.status === "failed").length;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="tour-stat-cards grid grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCardItem
         label="Gaur esleitutako paketeak"
         value={assigned}

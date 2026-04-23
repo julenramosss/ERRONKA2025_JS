@@ -12,7 +12,7 @@ export function DashboardHeader({
   todayPackagesData: PackageWithAddress[];
 }) {
   return (
-    <div className="flex items-start md:items-center justify-between flex-col md:flex-row gap-6">
+    <div className="tour-dashboard-header flex items-start md:items-center justify-between flex-col md:flex-row gap-6">
       <div className="flex items-start justify-between flex-col">
         <h3 className="text-[10px] sm:text-sm uppercase text-accent-light font-semibold">
           {todayDay}
@@ -33,7 +33,7 @@ export function DashboardHeader({
       <div>
         <Link
           href="/myRoute"
-          className="flex items-center justify-between gap-3 font-semibold text-text-primary bg-accent rounded-md px-4 py-2 shadow-[0_0_20px_4px] shadow-accent/40 hover:bg-accent-hover hover:shadow-accent/60 transition-all"
+          className="tour-start-route-btn flex items-center justify-between gap-3 font-semibold text-text-primary bg-accent rounded-md px-4 py-2 shadow-[0_0_20px_4px] shadow-accent/40 hover:bg-accent-hover hover:shadow-accent/60 transition-all"
         >
           <Icons.Route />
           <span>Ibilbidea hasi</span>

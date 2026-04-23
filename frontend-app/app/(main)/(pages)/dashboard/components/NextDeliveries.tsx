@@ -34,7 +34,7 @@ export function NextDeliveries({
     .slice(0, 6);
 
   return (
-    <div className="bg-bg-surface border border-border rounded-xl overflow-hidden flex flex-col h-full">
+    <div className="tour-next-deliveries bg-bg-surface border border-border rounded-xl overflow-hidden flex flex-col h-full">
       <div className="px-5 py-4 border-b border-border flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold">Hurrengo entregatuak</p>
