@@ -1,10 +1,6 @@
 import { renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
-
-export interface PendingEmailTemplateParams {
-  recipientName: string;
-  trackingUrl: string;
-}
+import type { PendingEmailTemplateParams } from "./types";
 
 export const packagePendingTemplate = (
   params: PendingEmailTemplateParams

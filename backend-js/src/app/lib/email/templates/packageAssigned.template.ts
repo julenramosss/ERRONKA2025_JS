@@ -1,10 +1,6 @@
 import { renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
-
-export interface AssignedEmailTemplateParams {
-  recipientName: string;
-  estimatedDelivery?: string;
-}
+import type { AssignedEmailTemplateParams } from "./types";
 
 export const packageAssignedTemplate = (
   params: AssignedEmailTemplateParams

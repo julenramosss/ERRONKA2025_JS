@@ -9,17 +9,10 @@ import {
 import { NotFoundError } from "@/app/lib/errors";
 import { sendPackageTrackingEmail } from "@/app/lib/email/sendPackageTrackingEmail";
 import { tracking_base_url } from "@/app/config/envConfig";
-import { PackageStatus } from "@/app/types";
-
-export interface PackageStatusChange {
-  packageId: number;
-  oldStatus: PackageStatus;
-  newStatus: PackageStatus;
-}
-
-export interface ApplyPackageStatusSideEffectsOptions {
-  defaultDistributorId?: number | null;
-}
+import type {
+  ApplyPackageStatusSideEffectsOptions,
+  PackageStatusChange,
+} from "./types";
 
 export async function applyPackageStatusSideEffects(
   changes: PackageStatusChange[],

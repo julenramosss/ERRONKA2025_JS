@@ -1,10 +1,6 @@
 import { renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
-
-export interface PackageUndeliveredEmailTemplateParams {
-  recipientName: string;
-  attemptedAt: string;
-}
+import type { PackageUndeliveredEmailTemplateParams } from "./types";
 
 export function packageUndeliveredTemplate(
   params: PackageUndeliveredEmailTemplateParams

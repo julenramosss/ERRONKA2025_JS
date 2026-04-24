@@ -1,10 +1,6 @@
 import { renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
-
-export interface AccountActivationTemplateParams {
-  recipientName: string;
-  activationUrl: string;
-}
+import type { AccountActivationTemplateParams } from "./types";
 
 export const accountActivationTemplate = (
   params: AccountActivationTemplateParams

@@ -1,11 +1,6 @@
 import { escapeHtml, renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
-
-export interface InTransitEmailTemplateParams {
-  recipientName: string;
-  distributorName: string;
-  estimatedDelivery: string;
-}
+import type { InTransitEmailTemplateParams } from "./types";
 
 export function packageInTransitTemplate(
   params: InTransitEmailTemplateParams

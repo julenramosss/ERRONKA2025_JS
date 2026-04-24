@@ -1,36 +1,9 @@
 import { theme } from "./_theme";
-
-export interface EmailInfoCard {
-  label: string;
-  value: string;
-  accent?: string;
-}
-
-export interface EmailCta {
-  label: string;
-  url: string;
-  fallbackHint?: string;
-}
-
-export interface EmailStatusBadge {
-  label: string;
-  fg: string;
-  bg: string;
-}
-
-export interface EmailLayoutParams {
-  title: string;
-  preheader: string;
-  statusBadge: EmailStatusBadge;
-  greetingLabel?: string;
-  greetingName: string;
-  headline: string;
-  paragraphs: string[];
-  infoCards?: EmailInfoCard[];
-  cta?: EmailCta;
-  secondaryNote?: string;
-  footerLines?: string[];
-}
+import type {
+  EmailCta,
+  EmailInfoCard,
+  EmailLayoutParams,
+} from "./types";
 
 export function escapeHtml(input: string): string {
   return input

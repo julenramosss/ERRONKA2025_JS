@@ -30,8 +30,8 @@ export const reset_expires_minutes = 15;
 export const reset_base_url =
   process.env.RESET_BASE_URL ??
   (isDev
-    ? "http://localhost:3000/resetPassword"
-    : "https://tolosaerronka.es/resetPassword");
+    ? "http://localhost:3000/resetPassword/"
+    : "https://tolosaerronka.es/resetPassword/");
 
 export const default_user_password =
   process.env.DEFAULT_USER_PASSWORD ??

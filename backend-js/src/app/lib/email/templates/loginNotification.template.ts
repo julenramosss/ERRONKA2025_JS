@@ -1,12 +1,6 @@
 import { renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
-
-export interface LoginNotificationTemplateParams {
-  recipientName: string;
-  loginAt: string;
-  ipAddress: string;
-  userAgent: string;
-}
+import type { LoginNotificationTemplateParams } from "./types";
 
 function summarizeUserAgent(userAgent: string): string {
   if (!userAgent || userAgent === "unknown" || userAgent === "Ezezaguna") {

@@ -46,5 +46,3 @@ export const theme = {
   font:
     "'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif",
 } as const;
-
-export type StatusPalette = (typeof theme.status)[keyof typeof theme.status];

@@ -1,10 +1,6 @@
 import { renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
-
-export interface PasswordChangeEmailTemplateParams {
-  recipientName: string;
-  changePasswordUrl: string;
-}
+import type { PasswordChangeEmailTemplateParams } from "./types";
 
 export const passwordChangeEmailTemplate = (
   params: PasswordChangeEmailTemplateParams

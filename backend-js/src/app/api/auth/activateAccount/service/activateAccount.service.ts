@@ -20,6 +20,6 @@ export async function sendActivationEmailService(email: string): Promise<void> {
   await emailService.sendActivationEmail({
     to: email,
     recipientName: user.name,
-    activationUrl: `${reset_base_url}/activate/${token}`,
+    activationUrl: `${reset_base_url}${token}`,
   });
 }
