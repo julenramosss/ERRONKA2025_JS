@@ -3,24 +3,17 @@ import {
   NotFoundError,
   ValidationError,
 } from "@/app/lib/errors";
-import { PackageStatus, SendPackageTrackingEmailParams } from "@/app/types";
+import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
+import { PackageStatus } from "@/app/types";
 import {
+  countBlockingPreviousStops,
   findPackageById,
   findPackagesByIds,
   findRouteStatusByPackageId,
-  insertStatusLog,
-  insertStatusLogs,
-  countBlockingPreviousStops,
   updatePackageStatus,
   updatePackagesStatus,
 } from "../repository/updateStatus.repo";
-import {
-  getDistributorName,
-  getTrackingTokenByPackageId,
-} from "../../update/repository/updatePackage.repo";
 import { PackageWithAddress, UpdateStatusDto } from "../types";
-import { sendPackageTrackingEmail } from "@/app/lib/email/sendPackageTrackingEmail";
-import { tracking_base_url } from "@/app/config/envConfig";
 
 const VALID_TRANSITIONS: Record<PackageStatus, PackageStatus[]> = {
   assigned: ["in_transit"],
@@ -67,9 +60,11 @@ async function updateOneStatus(
   await assertRouteOrderAllowsStatus(packageId, newStatus, userId);
 
   await updatePackageStatus(packageId, newStatus);
-  await insertStatusLog(packageId, pkg.status, newStatus, userId);
-
-  await sendStatusEmail(pkg, newStatus, userId);
+  await applyPackageStatusSideEffects(
+    [{ packageId, oldStatus: pkg.status, newStatus }],
+    userId,
+    { defaultDistributorId: userId }
+  );
 
   const updated = await findPackageById(packageId);
   return updated!;
@@ -103,17 +98,14 @@ async function updateManyStatuses(
   }
 
   await updatePackagesStatus(packageIds, newStatus);
-  await insertStatusLogs(
+  await applyPackageStatusSideEffects(
     orderedPackages.map((pkg) => ({
       packageId: pkg.id,
       oldStatus: pkg.status,
       newStatus,
-      changedBy: userId,
-    }))
-  );
-
-  await Promise.all(
-    orderedPackages.map((pkg) => sendStatusEmail(pkg, newStatus, userId))
+    })),
+    userId,
+    { defaultDistributorId: userId }
   );
 
   const updated = await findPackagesByIds(packageIds);
@@ -151,30 +143,4 @@ async function assertRouteOrderAllowsStatus(
       "Previous route stops must be completed before updating this package"
     );
   }
-}
-
-async function sendStatusEmail(
-  pkg: PackageWithAddress,
-  newStatus: PackageStatus,
-  userId: number
-): Promise<void> {
-  const trackingToken = await getTrackingTokenByPackageId(pkg.id);
-  const distributorName = await getDistributorName(userId);
-  const trackingUrl = trackingToken
-    ? `${tracking_base_url}${trackingToken}`
-    : "";
-
-  const emailParams: SendPackageTrackingEmailParams = {
-    recipientEmail: pkg.recipient_email,
-    recipientName: pkg.recipient_name,
-    trackingUrl,
-    packageStatus: newStatus,
-    distributorName: distributorName || undefined,
-    estimatedDelivery: pkg.estimated_delivery || undefined,
-    deliveredAt:
-      newStatus === "delivered"
-        ? new Date().toLocaleString("en-GB")
-        : undefined,
-  };
-  await sendPackageTrackingEmail(emailParams);
 }

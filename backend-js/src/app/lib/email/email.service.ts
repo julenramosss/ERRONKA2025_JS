@@ -1,34 +1,36 @@
 import { resendClient } from "./resend.config";
-import { packageInTransitTemplate } from "./templates/packageInTransit.template";
-import { packageDeliveredTemplate } from "./templates/packageDelivered.template";
+import { accountActivationTemplate } from "./templates/accountActivation.template";
+import { loginNotificationTemplate } from "./templates/loginNotification.template";
 import { packageAssignedTemplate } from "./templates/packageAssigned.template";
+import { packageDeliveredTemplate } from "./templates/packageDelivered.template";
 import { packageFailedEmailTemplate } from "./templates/packageFailed.template";
+import { packageInTransitTemplate } from "./templates/packageInTransit.template";
 import { packagePendingTemplate } from "./templates/packagePending.template";
 import { packageUndeliveredTemplate } from "./templates/packageUndelivered.template";
 import { passwordChangeEmailTemplate } from "./templates/passwordChangeEmail.template";
-import { accountActivationTemplate } from "./templates/accountActivation.template";
 import {
   ActivationEmailParams,
+  AssignedEmailParams,
   DeliveredEmailParams,
   FailedEmailParams,
   InTransitEmailParams,
+  LoginNotificationEmailParams,
   PendingEmailParams,
   ResetPasswordEmailParams,
-  TrackingEmailParams,
   UndeliveredEmailParams,
 } from "./types";
 
 const FROM = "PakAG <no-reply@tolosaerronka.es>";
 
 export const emailService = {
-  async sendAssignedEmail(params: TrackingEmailParams): Promise<void> {
+  async sendAssignedEmail(params: AssignedEmailParams): Promise<void> {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Your package tracking code — PakAG",
+      subject: "Zure paketea banatzaile bati esleitu diogu - PakAG",
       html: packageAssignedTemplate({
         recipientName: params.recipientName,
-        trackingUrl: params.trackingUrl,
+        estimatedDelivery: params.estimatedDelivery,
       }),
     });
   },
@@ -37,10 +39,9 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Your package is in transit — PakAG",
+      subject: "Zure paketea gaur bidean da - PakAG",
       html: packageInTransitTemplate({
         recipientName: params.recipientName,
-        trackingUrl: params.trackingUrl,
         distributorName: params.distributorName,
         estimatedDelivery: params.estimatedDelivery,
       }),
@@ -51,10 +52,9 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Your package has been delivered — PakAG",
+      subject: "Zure paketea entregatu dugu - PakAG",
       html: packageDeliveredTemplate({
         recipientName: params.recipientName,
-        trackingUrl: params.trackingUrl,
         deliveredAt: params.deliveredAt,
       }),
     });
@@ -64,7 +64,7 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Delivery attempt failed — PakAG",
+      subject: "Ezin izan dugu zure paketea entregatu - PakAG",
       html: packageFailedEmailTemplate({
         recipientName: params.recipientName,
         failedAt: params.failedAt,
@@ -77,7 +77,7 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "We received your package — PakAG",
+      subject: "Zure paketea erregistratu dugu - PakAG",
       html: packagePendingTemplate({
         recipientName: params.recipientName,
         trackingUrl: params.trackingUrl,
@@ -91,7 +91,7 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Reset your password — PakAG",
+      subject: "Berrezarri zure pasahitza - PakAG",
       html: passwordChangeEmailTemplate({
         recipientName: params.recipientName,
         changePasswordUrl: params.resetUrl,
@@ -103,7 +103,7 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Activate your PakAG account",
+      subject: "Aktibatu zure PakAG kontua",
       html: accountActivationTemplate({
         recipientName: params.recipientName,
         activationUrl: params.activationUrl,
@@ -115,10 +115,26 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Your package could not be delivered today — PakAG",
+      subject: "Gaur ezin izan dugu zure paketea entregatu - PakAG",
       html: packageUndeliveredTemplate({
         recipientName: params.recipientName,
         attemptedAt: params.attemptedAt,
+      }),
+    });
+  },
+
+  async sendLoginNotificationEmail(
+    params: LoginNotificationEmailParams
+  ): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Saio berria zure kontuan - PakAG",
+      html: loginNotificationTemplate({
+        recipientName: params.recipientName,
+        loginAt: params.loginAt,
+        ipAddress: params.ipAddress,
+        userAgent: params.userAgent,
       }),
     });
   },

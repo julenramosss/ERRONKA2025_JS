@@ -1,8 +1,11 @@
 import { connect } from "@/app/config/dbConfig";
 import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { RouteRow, RouteStatus } from "../types";
-import { PACKAGE_STATUSES } from "../../../../types";
-import { updatePackagesStatus } from "../../../packages/updateStatus/repository/updateStatus.repo";
+import {
+  PendingStopRow,
+  RoutePackageStatusChangeRow,
+  RouteRow,
+  RouteStatus,
+} from "../types";
 
 export async function findRouteById(routeId: number): Promise<RouteRow | null> {
   const db = await connect();
@@ -22,11 +25,6 @@ export async function setRouteStatus(
     status,
     routeId,
   ]);
-}
-
-interface PendingStopRow extends RowDataPacket {
-  stop_id: number;
-  package_id: number;
 }
 
 export async function migratePastPendingStopsIntoRoute(
@@ -98,9 +96,21 @@ export async function migratePastPendingStopsIntoRoute(
 
 export async function setRoutePendingPackagesInTransit(
   routeId: number
-): Promise<number> {
+): Promise<RoutePackageStatusChangeRow[]> {
   const db = await connect();
-  const [result] = await db.query<ResultSetHeader>(
+
+  const [packages] = await db.query<RoutePackageStatusChangeRow[]>(
+    `SELECT p.id, p.status AS old_status
+     FROM packages p
+     JOIN route_stops rs ON rs.package_id = p.id
+     WHERE rs.route_id = ?
+       AND p.status IN ('assigned', 'undelivered')`,
+    [routeId]
+  );
+
+  if (packages.length === 0) return [];
+
+  await db.query<ResultSetHeader>(
     `UPDATE packages p
      JOIN route_stops rs ON rs.package_id = p.id
      SET p.status = 'in_transit'
@@ -109,31 +119,34 @@ export async function setRoutePendingPackagesInTransit(
     [routeId]
   );
 
-  return result.affectedRows;
+  return packages;
 }
 
-export async function checkPackageStatus(routeId: number) {
+export async function setRouteRemainingPackagesUndelivered(
+  routeId: number
+): Promise<RoutePackageStatusChangeRow[]> {
   const db = await connect();
-  const [routeStops] = await db.query<RowDataPacket[]>(
-    "SELECT pkg.id, pkg.status FROM route_stops stp INNER JOIN packages pkg ON stp.package_id = pkg.id WHERE stp.route_id = ?",
+
+  const [packages] = await db.query<RoutePackageStatusChangeRow[]>(
+    `SELECT p.id, p.status AS old_status
+     FROM route_stops rs
+     JOIN packages p ON p.id = rs.package_id
+     WHERE rs.route_id = ?
+       AND p.status NOT IN ('delivered', 'failed', 'undelivered')`,
     [routeId]
   );
 
-  const undeliveredPackagesId: number[] = [];
+  if (packages.length === 0) return [];
 
-  routeStops.forEach((pkg) => {
-    if (
-      pkg.status !== PACKAGE_STATUSES.delivered &&
-      pkg.status !== PACKAGE_STATUSES.failed
-    ) {
-      undeliveredPackagesId.push(pkg.id);
-    }
-  });
+  const packageIds = packages.map((pkg) => pkg.id);
+  const placeholders = packageIds.map(() => "?").join(", ");
 
-  if (undeliveredPackagesId.length > 0) {
-    await updatePackagesStatus(
-      undeliveredPackagesId,
-      PACKAGE_STATUSES.undelivered
-    );
-  }
+  await db.query<ResultSetHeader>(
+    `UPDATE packages
+     SET status = 'undelivered'
+     WHERE id IN (${placeholders})`,
+    packageIds
+  );
+
+  return packages;
 }

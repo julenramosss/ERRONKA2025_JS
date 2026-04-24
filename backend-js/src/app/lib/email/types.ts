@@ -1,13 +1,12 @@
-export interface TrackingEmailParams {
+export interface AssignedEmailParams {
   to: string;
   recipientName: string;
-  trackingUrl: string;
+  estimatedDelivery?: string;
 }
 
 export interface InTransitEmailParams {
   to: string;
   recipientName: string;
-  trackingUrl: string;
   distributorName: string;
   estimatedDelivery: string;
 }
@@ -15,7 +14,6 @@ export interface InTransitEmailParams {
 export interface DeliveredEmailParams {
   to: string;
   recipientName: string;
-  trackingUrl: string;
   deliveredAt: string;
 }
 
@@ -48,4 +46,12 @@ export interface UndeliveredEmailParams {
   to: string;
   recipientName: string;
   attemptedAt: string;
+}
+
+export interface LoginNotificationEmailParams {
+  to: string;
+  recipientName: string;
+  loginAt: string;
+  ipAddress: string;
+  userAgent: string;
 }

@@ -1,9 +1,7 @@
 import { NotFoundError, ValidationError } from "@/app/lib/errors";
+import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
 import {
   findPackageById,
-  getDistributorName,
-  getTrackingTokenByPackageId,
-  insertStatusLog,
   updateAddressFields,
   updatePackageFields,
   validateDistributorExists,
@@ -13,9 +11,6 @@ import {
   UpdateAddressDto,
   UpdatePackageDto,
 } from "../types";
-import { tracking_base_url } from "@/app/config/envConfig";
-import { sendPackageTrackingEmail } from "@/app/lib/email/sendPackageTrackingEmail";
-import { SendPackageTrackingEmailParams } from "@/app/types";
 import { mapsService } from "@/app/lib/maps/maps.service";
 
 export async function updatePackageService(
@@ -36,10 +31,11 @@ export async function updatePackageService(
     const valid = await validateDistributorExists(
       resolvedPackageInfo.assigned_to
     );
-    if (!valid)
+    if (!valid) {
       throw new ValidationError(
         "assigned_to must be an existing active distributor"
       );
+    }
     if (
       current.status === "pending" &&
       resolvedPackageInfo.status === undefined
@@ -88,22 +84,14 @@ export async function updatePackageService(
   }
 
   if (newStatus !== undefined && newStatus !== oldStatus) {
-    await insertStatusLog(id, oldStatus, newStatus, changedBy);
-
-    const trackingToken = await getTrackingTokenByPackageId(id);
-    const distributorName = await getDistributorName(current.assigned_to);
-    const trackingUrl = trackingToken
-      ? `${tracking_base_url}${trackingToken}`
-      : null;
-    const params: SendPackageTrackingEmailParams = {
-      recipientEmail: current.recipient_email,
-      recipientName: current.recipient_name,
-      trackingUrl: trackingUrl!,
-      packageStatus: newStatus,
-      distributorName: distributorName || undefined,
-      estimatedDelivery: current.estimated_delivery || undefined,
-    };
-    await sendPackageTrackingEmail(params);
+    await applyPackageStatusSideEffects(
+      [{ packageId: id, oldStatus, newStatus }],
+      changedBy,
+      {
+        defaultDistributorId:
+          resolvedPackageInfo.assigned_to ?? current.assigned_to,
+      }
+    );
   }
 
   const updated = await findPackageById(id);

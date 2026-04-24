@@ -26,9 +26,12 @@ export type TokenType = (typeof TOKEN_TYPES)[keyof typeof TOKEN_TYPES];
 export interface SendPackageTrackingEmailParams {
   recipientEmail: string;
   recipientName: string;
-  trackingUrl: string;
+  trackingUrl?: string;
   packageStatus: PackageStatus;
   distributorName?: string;
   estimatedDelivery?: string;
   deliveredAt?: string;
+  failedAt?: string;
+  attemptedAt?: string;
+  reason?: string;
 }

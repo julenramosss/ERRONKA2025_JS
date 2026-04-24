@@ -1,4 +1,6 @@
+import { PACKAGE_STATUSES } from "@/app/types";
 import { ConflictError, NotFoundError } from "@/app/lib/errors";
+import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
 import {
   migratePastPendingStopsIntoRoute,
   setRoutePendingPackagesInTransit,
@@ -49,7 +51,16 @@ export async function continueFromPastService(
   }
 
   const migratedStops = await migratePastPendingStopsIntoRoute(userId, routeId);
-  await setRoutePendingPackagesInTransit(routeId);
+  const inTransitChanges = await setRoutePendingPackagesInTransit(routeId);
+  await applyPackageStatusSideEffects(
+    inTransitChanges.map((pkg) => ({
+      packageId: pkg.id,
+      oldStatus: pkg.old_status,
+      newStatus: PACKAGE_STATUSES.in_transit,
+    })),
+    userId,
+    { defaultDistributorId: userId }
+  );
   await clearStopArrivalsForPendingPackages(routeId);
 
   return {

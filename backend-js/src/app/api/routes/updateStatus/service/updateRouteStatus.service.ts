@@ -4,12 +4,13 @@ import {
   ValidationError,
 } from "@/app/lib/errors";
 import { AccessTokenPayload } from "@/app/lib/types";
-import { USER_ROLES } from "@/app/types";
+import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
+import { PACKAGE_STATUSES, USER_ROLES } from "@/app/types";
 import {
-  checkPackageStatus,
   findRouteById,
   migratePastPendingStopsIntoRoute,
   setRoutePendingPackagesInTransit,
+  setRouteRemainingPackagesUndelivered,
   setRouteStatus,
 } from "../repository/updateRouteStatus.repo";
 import { ROUTE_STATUSES, RouteStatus, UpdateRouteStatusDto } from "../types";
@@ -63,10 +64,30 @@ export async function updateRouteStatusService(
     dto.status === ROUTE_STATUSES.in_progress
   ) {
     await migratePastPendingStopsIntoRoute(route.user_id, route.id);
-    await setRoutePendingPackagesInTransit(route.id);
+    const inTransitChanges = await setRoutePendingPackagesInTransit(route.id);
+    await applyPackageStatusSideEffects(
+      inTransitChanges.map((pkg) => ({
+        packageId: pkg.id,
+        oldStatus: pkg.old_status,
+        newStatus: PACKAGE_STATUSES.in_transit,
+      })),
+      caller.sub,
+      { defaultDistributorId: route.user_id }
+    );
   }
 
   if (dto.status === ROUTE_STATUSES.completed) {
-    await checkPackageStatus(route.id);
+    const undeliveredChanges = await setRouteRemainingPackagesUndelivered(
+      route.id
+    );
+    await applyPackageStatusSideEffects(
+      undeliveredChanges.map((pkg) => ({
+        packageId: pkg.id,
+        oldStatus: pkg.old_status,
+        newStatus: PACKAGE_STATUSES.undelivered,
+      })),
+      caller.sub,
+      { defaultDistributorId: route.user_id }
+    );
   }
 }

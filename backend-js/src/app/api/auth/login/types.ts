@@ -5,6 +5,11 @@ export interface LoginDto {
   password: string;
 }
 
+export interface LoginRequestMetadata {
+  ipAddress: string;
+  userAgent: string;
+}
+
 export interface AuthenticatedUser {
   id: number;
   name: string;

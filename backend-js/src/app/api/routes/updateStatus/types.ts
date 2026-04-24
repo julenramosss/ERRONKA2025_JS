@@ -1,3 +1,6 @@
+import { RowDataPacket } from "mysql2/promise";
+import { PackageStatus } from "@/app/types";
+
 export interface UpdateRouteStatusDto {
   routeId: number;
   status: RouteStatus;
@@ -16,3 +19,13 @@ export const ROUTE_STATUSES = {
   completed: "completed",
 } as const;
 export type RouteStatus = (typeof ROUTE_STATUSES)[keyof typeof ROUTE_STATUSES];
+
+export interface PendingStopRow extends RowDataPacket {
+  stop_id: number;
+  package_id: number;
+}
+
+export interface RoutePackageStatusChangeRow extends RowDataPacket {
+  id: number;
+  old_status: PackageStatus;
+}
