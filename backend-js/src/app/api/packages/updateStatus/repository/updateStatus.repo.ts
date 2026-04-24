@@ -57,12 +57,12 @@ export async function insertStatusLog(
   newStatus: PackageStatus,
   changedBy: number
 ): Promise<void> {
-  await insertStatusLogs([
-    { packageId, oldStatus, newStatus, changedBy },
-  ]);
+  await insertStatusLogs([{ packageId, oldStatus, newStatus, changedBy }]);
 }
 
-export async function insertStatusLogs(entries: StatusLogEntry[]): Promise<void> {
+export async function insertStatusLogs(
+  entries: StatusLogEntry[]
+): Promise<void> {
   if (entries.length === 0) return;
 
   const db = await connect();

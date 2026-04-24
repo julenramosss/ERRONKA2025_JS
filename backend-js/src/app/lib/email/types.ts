@@ -1,6 +1,7 @@
 export interface AssignedEmailParams {
   to: string;
   recipientName: string;
+  trackingUrl: string;
   estimatedDelivery?: string;
 }
 

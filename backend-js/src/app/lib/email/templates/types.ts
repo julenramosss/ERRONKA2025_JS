@@ -37,6 +37,7 @@ export interface PendingEmailTemplateParams {
 
 export interface AssignedEmailTemplateParams {
   recipientName: string;
+  trackingUrl: string;
   estimatedDelivery?: string;
 }
 

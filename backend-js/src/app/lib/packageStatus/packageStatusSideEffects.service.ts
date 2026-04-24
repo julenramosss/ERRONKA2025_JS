@@ -39,10 +39,10 @@ export async function applyPackageStatusSideEffects(
   const packagesById = new Map(packages.map((pkg) => [pkg.id, pkg]));
 
   const trackingEntries = await Promise.all(
-    packageIds.map(async (packageId) => [
-      packageId,
-      await getTrackingTokenByPackageId(packageId),
-    ] as const)
+    packageIds.map(
+      async (packageId) =>
+        [packageId, await getTrackingTokenByPackageId(packageId)] as const
+    )
   );
   const trackingTokensById = new Map(trackingEntries);
 
@@ -58,10 +58,10 @@ export async function applyPackageStatusSideEffects(
   ];
 
   const distributorEntries = await Promise.all(
-    distributorIds.map(async (distributorId) => [
-      distributorId,
-      await getDistributorName(distributorId),
-    ] as const)
+    distributorIds.map(
+      async (distributorId) =>
+        [distributorId, await getDistributorName(distributorId)] as const
+    )
   );
   const distributorNamesById = new Map(distributorEntries);
 
@@ -84,7 +84,7 @@ export async function applyPackageStatusSideEffects(
         packageStatus: change.newStatus,
         distributorName:
           distributorId !== null && distributorId !== undefined
-            ? distributorNamesById.get(distributorId) ?? undefined
+            ? (distributorNamesById.get(distributorId) ?? undefined)
             : undefined,
         estimatedDelivery: pkg.estimated_delivery ?? undefined,
       });

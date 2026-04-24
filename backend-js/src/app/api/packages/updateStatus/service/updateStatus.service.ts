@@ -119,9 +119,7 @@ async function assertRouteIsInProgress(
 ): Promise<void> {
   const routeStatus = await findRouteStatusByPackageId(packageId, userId);
   if (!routeStatus) {
-    throw new ValidationError(
-      "Package is not attached to any route of yours"
-    );
+    throw new ValidationError("Package is not attached to any route of yours");
   }
   if (routeStatus !== "in_progress") {
     throw new ValidationError(

@@ -49,7 +49,6 @@ export async function updateRouteStatusService(
 
   if (
     route.status === ROUTE_STATUSES.planned &&
-    dto.status === ROUTE_STATUSES.in_progress &&
     route.route_date !== todayIso()
   ) {
     throw new ValidationError(
@@ -59,10 +58,7 @@ export async function updateRouteStatusService(
 
   await setRouteStatus(dto.routeId, dto.status);
 
-  if (
-    route.status === ROUTE_STATUSES.planned &&
-    dto.status === ROUTE_STATUSES.in_progress
-  ) {
+  if (route.status === ROUTE_STATUSES.planned) {
     await migratePastPendingStopsIntoRoute(route.user_id, route.id);
     const inTransitChanges = await setRoutePendingPackagesInTransit(route.id);
     await applyPackageStatusSideEffects(

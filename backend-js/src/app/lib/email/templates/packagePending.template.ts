@@ -20,7 +20,7 @@ export const packagePendingTemplate = (
     headline: "Zure paketea erregistratuta dago",
     paragraphs: [
       "Paketea gure sisteman sartuta dago jada, eta hemendik aurrera egoera eguneratuak jasoko dituzu bidalketak aurrera egin ahala.",
-      "Beheko esteka da zure jarraipen esteka pertsonala. Gorde ezazu, hurrengo mezuetan ez baitugu esteka bera behin eta berriz bidaliko.",
+      "Beheko esteka da zure jarraipen esteka pertsonala. Gorde ezazu, baina lasai: beharrezkoa denean berriro ere bidaliko dizugu.",
     ],
     cta: {
       label: "Ikusi jarraipena",

@@ -39,9 +39,14 @@ export async function sendPackageTrackingEmail(
   }
 
   if (packageStatus === PACKAGE_STATUSES.assigned) {
+    if (!trackingUrl) {
+      throw new Error("Tracking URL is required for assigned package emails");
+    }
+
     await emailService.sendAssignedEmail({
       to: recipientEmail,
       recipientName,
+      trackingUrl,
       estimatedDelivery,
     });
     return;

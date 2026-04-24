@@ -10,13 +10,15 @@ import {
   findRouteByUserAndDate,
   findPackagesWithAddresses,
   findCarryoverPackagesByUser,
-  updatePackagesStatusToAssigned,
   insertRoute,
   insertRouteStops,
   findRouteById,
   findStopsByRouteId,
   updatePackagesEstimatedDelivery,
 } from "../repository/create.repository";
+import { updatePackagesStatus } from "../../../packages/updateStatus/repository/updateStatus.repo";
+import { applyPackageStatusSideEffects } from "../../../../lib/packageStatus/packageStatusSideEffects.service";
+import { PACKAGE_STATUSES } from "../../../../types";
 
 const PAKAG_ORIGIN = { lat: 43.1253804, lng: -2.0619009 };
 
@@ -50,7 +52,16 @@ export async function createRouteService(
   }
 
   if (carryoverIds.length > 0) {
-    await updatePackagesStatusToAssigned(carryoverIds);
+    await applyPackageStatusSideEffects(
+      carryoverIds.map((id) => ({
+        packageId: id,
+        oldStatus: PACKAGE_STATUSES.pending,
+        newStatus: PACKAGE_STATUSES.assigned,
+      })),
+      dto.user_id,
+      { defaultDistributorId: dto.user_id }
+    );
+    await updatePackagesStatus(carryoverIds, PACKAGE_STATUSES.assigned);
   }
 
   const packages = await findPackagesWithAddresses(allPackageIds);
@@ -60,7 +71,7 @@ export async function createRouteService(
   }
 
   for (const pkg of packages) {
-    if (pkg.status !== "assigned") {
+    if (pkg.status !== PACKAGE_STATUSES.assigned) {
       throw new ValidationError(
         `Package ${pkg.id} is not in 'assigned' status`
       );

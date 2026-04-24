@@ -30,6 +30,7 @@ export const emailService = {
       subject: "Zure paketea banatzaile bati esleitu diogu - PakAG",
       html: packageAssignedTemplate({
         recipientName: params.recipientName,
+        trackingUrl: params.trackingUrl,
         estimatedDelivery: params.estimatedDelivery,
       }),
     });
@@ -39,7 +40,7 @@ export const emailService = {
     await resendClient.emails.send({
       from: FROM,
       to: params.to,
-      subject: "Zure paketea gaur bidean da - PakAG",
+      subject: "Zure paketea gaur bidean dago - PakAG",
       html: packageInTransitTemplate({
         recipientName: params.recipientName,
         distributorName: params.distributorName,
@@ -85,6 +86,18 @@ export const emailService = {
     });
   },
 
+  async sendUndeliveredEmail(params: UndeliveredEmailParams): Promise<void> {
+    await resendClient.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: "Gaur ezin izan dugu zure paketea entregatu - PakAG",
+      html: packageUndeliveredTemplate({
+        recipientName: params.recipientName,
+        attemptedAt: params.attemptedAt,
+      }),
+    });
+  },
+
   async sendResetPasswordEmail(
     params: ResetPasswordEmailParams
   ): Promise<void> {
@@ -107,18 +120,6 @@ export const emailService = {
       html: accountActivationTemplate({
         recipientName: params.recipientName,
         activationUrl: params.activationUrl,
-      }),
-    });
-  },
-
-  async sendUndeliveredEmail(params: UndeliveredEmailParams): Promise<void> {
-    await resendClient.emails.send({
-      from: FROM,
-      to: params.to,
-      subject: "Gaur ezin izan dugu zure paketea entregatu - PakAG",
-      html: packageUndeliveredTemplate({
-        recipientName: params.recipientName,
-        attemptedAt: params.attemptedAt,
       }),
     });
   },
