@@ -10,6 +10,8 @@ export const directions_api_key = process.env.GOOGLE_DIRECTIONS_API_KEY!;
 
 export const isDev = process.env.NODE_ENV !== "production";
 
+export const PAKAG_ORIGIN = { lat: 43.1253804, lng: -2.0619009 };
+
 export const jwt_secret =
   process.env.JWT_SECRET ??
   "kjhaf7ya(/SFYAOUhf98ya9fya(SYf9a8fY)8sfyf08=A)uf98UF98U)OAIfu98af98u";

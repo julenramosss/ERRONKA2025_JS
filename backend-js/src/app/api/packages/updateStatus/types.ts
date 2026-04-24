@@ -1,5 +1,6 @@
 import { PackageStatus } from "@/app/types";
 import type { PackageWithAddress } from "../types";
+import { PackageStatusChange } from "../../../lib/packageStatus/types";
 
 export type { PackageWithAddress };
 
@@ -9,9 +10,6 @@ export interface UpdateStatusDto {
   new_status: PackageStatus;
 }
 
-export interface StatusLogEntry {
-  packageId: number;
-  oldStatus: PackageStatus;
-  newStatus: PackageStatus;
+export interface StatusLogEntry extends PackageStatusChange {
   changedBy: number;
 }

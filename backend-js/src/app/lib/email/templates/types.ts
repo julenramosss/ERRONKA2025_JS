@@ -16,6 +16,11 @@ export interface EmailStatusBadge {
   bg: string;
 }
 
+export interface EmailProgressStep {
+  label: string;
+  status: "completed" | "current" | "upcoming" | "error";
+}
+
 export interface EmailLayoutParams {
   title: string;
   preheader: string;
@@ -28,6 +33,8 @@ export interface EmailLayoutParams {
   cta?: EmailCta;
   secondaryNote?: string;
   footerLines?: string[];
+  progressSteps?: EmailProgressStep[];
+  heroIconSvg?: string;
 }
 
 export interface PendingEmailTemplateParams {
@@ -45,6 +52,7 @@ export interface InTransitEmailTemplateParams {
   recipientName: string;
   distributorName: string;
   estimatedDelivery: string;
+  trackingUrl?: string;
 }
 
 export interface DeliveredEmailTemplateParams {

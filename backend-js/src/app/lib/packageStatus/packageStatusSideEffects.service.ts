@@ -9,24 +9,18 @@ import {
 import { NotFoundError } from "@/app/lib/errors";
 import { sendPackageTrackingEmail } from "@/app/lib/email/sendPackageTrackingEmail";
 import { tracking_base_url } from "@/app/config/envConfig";
-import type {
-  ApplyPackageStatusSideEffectsOptions,
-  PackageStatusChange,
-} from "./types";
+import type { PackageStatusChange } from "./types";
 
 export async function applyPackageStatusSideEffects(
   changes: PackageStatusChange[],
-  changedBy: number,
-  options: ApplyPackageStatusSideEffectsOptions = {}
+  changedBy: number
 ): Promise<void> {
   if (changes.length === 0) return;
 
   await insertStatusLogs(
-    changes.map((change) => ({
-      packageId: change.packageId,
-      oldStatus: change.oldStatus,
-      newStatus: change.newStatus,
+    [...changes].map((change) => ({
       changedBy,
+      ...change,
     }))
   );
 
@@ -51,7 +45,7 @@ export async function applyPackageStatusSideEffects(
       changes
         .map((change) => {
           const pkg = packagesById.get(change.packageId);
-          return pkg?.assigned_to ?? options.defaultDistributorId ?? null;
+          return pkg?.assigned_to ?? null;
         })
         .filter((value): value is number => value !== null)
     ),
@@ -72,7 +66,7 @@ export async function applyPackageStatusSideEffects(
         throw new NotFoundError(`Package ${change.packageId} not found`);
       }
 
-      const distributorId = pkg.assigned_to ?? options.defaultDistributorId;
+      const distributorId = pkg.assigned_to;
       const trackingToken = trackingTokensById.get(change.packageId);
 
       await sendPackageTrackingEmail({
@@ -83,7 +77,7 @@ export async function applyPackageStatusSideEffects(
           : undefined,
         packageStatus: change.newStatus,
         distributorName:
-          distributorId !== null && distributorId !== undefined
+          distributorId != undefined
             ? (distributorNamesById.get(distributorId) ?? undefined)
             : undefined,
         estimatedDelivery: pkg.estimated_delivery ?? undefined,

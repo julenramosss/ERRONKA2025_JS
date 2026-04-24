@@ -62,8 +62,7 @@ async function updateOneStatus(
   await updatePackageStatus(packageId, newStatus);
   await applyPackageStatusSideEffects(
     [{ packageId, oldStatus: pkg.status, newStatus }],
-    userId,
-    { defaultDistributorId: userId }
+    userId
   );
 
   const updated = await findPackageById(packageId);
@@ -104,8 +103,7 @@ async function updateManyStatuses(
       oldStatus: pkg.status,
       newStatus,
     })),
-    userId,
-    { defaultDistributorId: userId }
+    userId
   );
 
   const updated = await findPackagesByIds(packageIds);

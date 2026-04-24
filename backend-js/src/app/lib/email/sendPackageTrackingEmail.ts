@@ -57,7 +57,7 @@ export async function sendPackageTrackingEmail(
       to: recipientEmail,
       recipientName,
       distributorName: distributorName ?? "PakAG banatzailea",
-      estimatedDelivery: estimatedDelivery ?? "Gaur",
+      estimatedDelivery: estimatedDelivery ?? "Seguraski gaur",
     });
     return;
   }

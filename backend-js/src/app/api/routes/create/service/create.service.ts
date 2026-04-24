@@ -1,9 +1,9 @@
-import { mapsService } from "@/app/lib/maps/maps.service";
+import { mapsService } from "../../../../lib/maps/maps.service";
 import {
   ConflictError,
   NotFoundError,
   ValidationError,
-} from "@/app/lib/errors";
+} from "../../../../lib/errors";
 import { CreateRouteDto, CreateRouteResult } from "../types";
 import {
   findUserById,
@@ -16,11 +16,10 @@ import {
   findStopsByRouteId,
   updatePackagesEstimatedDelivery,
 } from "../repository/create.repository";
-import { updatePackagesStatus } from "../../../packages/updateStatus/repository/updateStatus.repo";
 import { applyPackageStatusSideEffects } from "../../../../lib/packageStatus/packageStatusSideEffects.service";
 import { PACKAGE_STATUSES } from "../../../../types";
-
-const PAKAG_ORIGIN = { lat: 43.1253804, lng: -2.0619009 };
+import { PAKAG_ORIGIN } from "../../../../config/envConfig";
+import { updatePackagesStatus } from "../../../packages/updateStatus/repository/updateStatus.repo";
 
 export async function createRouteService(
   dto: CreateRouteDto
@@ -58,8 +57,7 @@ export async function createRouteService(
         oldStatus: PACKAGE_STATUSES.pending,
         newStatus: PACKAGE_STATUSES.assigned,
       })),
-      dto.user_id,
-      { defaultDistributorId: dto.user_id }
+      dto.user_id
     );
     await updatePackagesStatus(carryoverIds, PACKAGE_STATUSES.assigned);
   }

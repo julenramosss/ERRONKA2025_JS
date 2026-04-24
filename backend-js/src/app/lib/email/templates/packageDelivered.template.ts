@@ -2,6 +2,8 @@ import { renderEmailLayout } from "./_layout.template";
 import { theme } from "./_theme";
 import type { DeliveredEmailTemplateParams } from "./types";
 
+const HERO_ICON = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="${theme.status.delivered.fg}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`;
+
 export function packageDeliveredTemplate(
   params: DeliveredEmailTemplateParams
 ): string {
@@ -15,6 +17,13 @@ export function packageDeliveredTemplate(
       fg: theme.status.delivered.fg,
       bg: theme.status.delivered.bg,
     },
+    heroIconSvg: HERO_ICON,
+    progressSteps: [
+      { label: "Erregistratua", status: "completed" },
+      { label: "Esleitua", status: "completed" },
+      { label: "Bidean", status: "completed" },
+      { label: "Entregatua", status: "completed" },
+    ],
     greetingName: recipientName,
     headline: "Zure paketea entregatu da",
     paragraphs: [

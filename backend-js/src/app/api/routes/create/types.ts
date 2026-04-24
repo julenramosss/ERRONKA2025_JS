@@ -37,5 +37,9 @@ export interface StopResult {
 export interface CreateRouteResult {
   route: RouteResult;
   stops: StopResult[];
-  meta: { totalStops: number; totalDistanceKm: number; totalDurationMin: number };
+  meta: {
+    totalStops: number;
+    totalDistanceKm: number;
+    totalDurationMin: number;
+  };
 }

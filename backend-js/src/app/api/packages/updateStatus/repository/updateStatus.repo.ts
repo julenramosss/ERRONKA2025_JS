@@ -69,7 +69,7 @@ export async function insertStatusLogs(
   const placeholders = entries.map(() => "(?, ?, ?, ?)").join(", ");
   const values = entries.flatMap((entry) => [
     entry.packageId,
-    entry.oldStatus,
+    entry.oldStatus ?? null,
     entry.newStatus,
     entry.changedBy,
   ]);

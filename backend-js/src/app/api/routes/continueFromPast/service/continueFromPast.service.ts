@@ -58,8 +58,7 @@ export async function continueFromPastService(
       oldStatus: pkg.old_status,
       newStatus: PACKAGE_STATUSES.in_transit,
     })),
-    userId,
-    { defaultDistributorId: userId }
+    userId
   );
   await clearStopArrivalsForPendingPackages(routeId);
 
