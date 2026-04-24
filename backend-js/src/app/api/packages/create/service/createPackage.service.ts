@@ -10,10 +10,8 @@ import {
   createPackageLog,
   createPackageToken,
 } from "../repository/createPackage.repo";
-import { SendPackageTrackingEmailParams } from "@/app/types";
-import { sendPackageTrackingEmail } from "@/app/lib/email/sendPackageTrackingEmail";
-import { tracking_base_url } from "@/app/config/envConfig";
 import { mapsService } from "@/app/lib/maps/maps.service";
+import { applyPackageStatusSideEffects } from "../../../../lib/packageStatus/packageStatusSideEffects.service";
 
 export async function createPackageService(
   packageInfo: CreatePackageDto,
@@ -39,14 +37,16 @@ export async function createPackageService(
 
   await createPackageLog(createdPackage);
 
-  const params: SendPackageTrackingEmailParams = {
-    recipientEmail: createdPackage.recipient_email,
-    recipientName: createdPackage.recipient_name,
-    trackingUrl: `${tracking_base_url}${createdToken.token}`,
-    packageStatus: createdPackage.status,
-    estimatedDelivery: createdPackage.estimated_delivery,
-  };
+  await applyPackageStatusSideEffects(
+    [
+      {
+        packageId: createdPackage.id,
+        oldStatus: null,
+        newStatus: createdPackage.status,
+      },
+    ],
+    createdPackage.created_by
+  );
 
-  await sendPackageTrackingEmail(params);
   return createdPackage;
 }

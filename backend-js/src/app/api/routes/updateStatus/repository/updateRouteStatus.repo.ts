@@ -41,7 +41,7 @@ export async function migratePastPendingStopsIntoRoute(
      WHERE r.user_id = ?
        AND r.id <> ?
        AND r.route_date < CURRENT_DATE
-       AND p.status IN ('assigned', 'in_transit', 'undelivered')
+       AND p.status IN ('assigned', 'undelivered')
        AND NOT EXISTS (
          SELECT 1
          FROM route_stops target_rs

@@ -58,7 +58,7 @@ export async function updateRouteStatusService(
 
   await setRouteStatus(dto.routeId, dto.status);
 
-  if (route.status === ROUTE_STATUSES.planned) {
+  if (dto.status === ROUTE_STATUSES.in_progress) {
     await migratePastPendingStopsIntoRoute(route.user_id, route.id);
     const inTransitChanges = await setRoutePendingPackagesInTransit(route.id);
     await applyPackageStatusSideEffects(
@@ -67,8 +67,7 @@ export async function updateRouteStatusService(
         oldStatus: pkg.old_status,
         newStatus: PACKAGE_STATUSES.in_transit,
       })),
-      caller.sub,
-      { defaultDistributorId: route.user_id }
+      caller.sub
     );
   }
 
@@ -82,8 +81,7 @@ export async function updateRouteStatusService(
         oldStatus: pkg.old_status,
         newStatus: PACKAGE_STATUSES.undelivered,
       })),
-      caller.sub,
-      { defaultDistributorId: route.user_id }
+      caller.sub
     );
   }
 }
