@@ -48,7 +48,7 @@ SET @sergio_id       = 4;
 INSERT INTO users (id, name, email, password_hash, role, is_active, created_at) VALUES
   (@admin_id,        'Julen Ramos Tolosa',       'julenramostolosa@gmail.com',       @password_hash, 'admin',       TRUE, NOW() - INTERVAL 6 MONTH),
   (@alejandro_id,    'Alejandro Ariza Aguilar',  'alejandroarizaaguilar@gmail.com',  @password_hash, 'distributor', TRUE, NOW() - INTERVAL 4 MONTH),
-  (@julen_arruti_id, 'Julen Ramos Arruti',       'manielmaricon@gmail.com',           @password_hash, 'distributor', TRUE, NOW() - INTERVAL 3 MONTH),
+  (@julen_arruti_id, 'Julen Ramos Arruti',       'jramosarruti@gmail.com',           @password_hash, 'distributor', TRUE, NOW() - INTERVAL 3 MONTH),
   (@sergio_id,       'Sergio Rocha Tolosaldea',  'sergiotolosaldea@gmail.com',       @password_hash, 'admin',       TRUE, NOW() - INTERVAL 2 MONTH);
 
 -- ================================================================
