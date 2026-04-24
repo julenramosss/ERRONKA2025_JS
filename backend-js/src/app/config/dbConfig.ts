@@ -5,7 +5,6 @@ import {
   mysql_password,
   mysql_port,
   mysql_user,
-  mysql_ca_cert,
 } from "./envConfig";
 
 let pool: Pool | null = null;

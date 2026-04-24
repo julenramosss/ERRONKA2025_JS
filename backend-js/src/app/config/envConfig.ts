@@ -3,7 +3,6 @@ export const mysql_password = process.env.MYSQL_PASSWORD;
 export const mysql_host = process.env.MYSQL_HOST;
 export const mysql_port = Number(process.env.MYSQL_PORT ?? 3306);
 export const mysql_database = process.env.MYSQL_DATABASE;
-export const mysql_ca_cert = process.env.MYSQL_CA_CERT;
 
 export const resend_api_key = process.env.RESEND_API_KEY;
 
@@ -25,17 +24,17 @@ export const tracking_base_url =
   process.env.TRACKING_BASE_URL ??
   (isDev
     ? "http://localhost:80/tracking/"
-    : "https://tolosaerronka.com/tracking/");
+    : "https://tolosaerronka.es/tracking/");
 
 export const reset_expires_minutes = 15;
 export const reset_base_url =
   process.env.RESET_BASE_URL ??
   (isDev
     ? "http://localhost:3000/resetPassword"
-    : "https://tolosaerronka.com/resetPassword");
+    : "https://tolosaerronka.es/resetPassword");
 
 export const default_user_password =
   process.env.DEFAULT_USER_PASSWORD ??
   "lkasjdhAKJHSdIH23497gkG876876ad87a6daafaa";
 
-export const secure = isDev ? ", Secure; " : "";
+export const SECURE = isDev ? "" : "; Secure";

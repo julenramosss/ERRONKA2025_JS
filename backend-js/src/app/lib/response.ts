@@ -1,4 +1,4 @@
-import { secure } from "../config/envConfig";
+import { isDev } from "../config/envConfig";
 import {
   ValidationError,
   NotFoundError,
@@ -25,9 +25,12 @@ export const res = {
       headers: { "Content-Type": "application/json" },
     });
 
+    const sameSite = isDev ? "Lax" : "None";
+    const secureFlag = isDev ? "" : "; Secure";
+
     if (cookies) {
       cookies.forEach(({ name, value, httpOnly = false }) => {
-        const cookieStr = `${name}=${value}; Path=/; ${httpOnly ? "HttpOnly; " : ""}SameSite=None; Secure`;
+        const cookieStr = `${name}=${value}; Path=/; ${httpOnly ? "HttpOnly; " : ""}SameSite=${sameSite}${secureFlag}`;
         response.headers.append("Set-Cookie", cookieStr);
       });
     }
@@ -36,7 +39,7 @@ export const res = {
       deleteCookies.forEach((name) => {
         response.headers.append(
           "Set-Cookie",
-          `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=None; ${secure}`
+          `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=${sameSite}${secureFlag}`
         );
       });
     }
