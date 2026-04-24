@@ -1,0 +1,31 @@
+# Frontend App
+
+La app de usuario final está en `frontend-app/` y usa **Next.js 16 App Router** con React 19.
+
+## Estructura de rutas
+
+```
+app/
+  (auth)/       → /login y pantallas públicas
+  (main)/       → rutas protegidas (dashboard, paquetes, ruta, historial, ajustes)
+  (not-found)/  → 404 personalizado
+```
+
+## Stack
+
+- **TanStack Query v5** para fetching y caché de datos
+- **Tailwind CSS v4** para estilos (tokens en `globals.css`)
+- **React Joyride** para el tutorial interactivo de onboarding
+- **RouteGuard** — protección de rutas basada en JWT almacenado en `localStorage`
+
+## Organización de hooks
+
+```
+hooks/
+  auth/       → login, logout, register, changePassword
+  packages/   → listado, detalle, historial
+  routes/     → ruta activa del usuario
+  tracking/   → consulta pública de paquete por código
+```
+
+Todos los hooks usan `useQuery` / `useMutation` de TanStack Query con `queryKeys` centralizados en `query/keys/`.

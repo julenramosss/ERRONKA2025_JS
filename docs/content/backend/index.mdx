@@ -1,0 +1,33 @@
+# Backend API
+
+El backend de pakAG está construido con **Next.js 15 App Router** siguiendo una arquitectura en capas por endpoint:
+
+```
+src/app/api/{recurso}/{accion}/
+  dtos/        → interfaz + validateXxxDto(body: unknown)
+  repository/  → SQL con mysql2, prepared statements
+  service/     → lógica de negocio, sin SQL
+  route.ts     → orquestación, try/catch
+  types.ts     → tipos de dominio
+```
+
+## Convenciones
+
+- **Sin Zod**: validación manual en `dtos/` con funciones `validateXxxDto`
+- **Sin `any`**: TypeScript estricto en todo el proyecto
+- **Errores**: `ValidationError | NotFoundError | UnauthorizedError | ForbiddenError | ConflictError` desde `src/lib/errors.ts`
+- **SQL solo en repository**: nunca en `route.ts` ni en `service/`
+
+## Recursos disponibles
+
+| Recurso  | Ruta base       |
+| -------- | --------------- |
+| Auth     | `/api/auth`     |
+| Usuarios | `/api/users`    |
+| Paquetes | `/api/packages` |
+| Rutas    | `/api/routes`   |
+| Paradas  | `/api/stops`    |
+| Tracking | `/api/tracking` |
+| Logs     | `/api/logs`     |
+
+Consulta la [API_DOCS completa](https://github.com) para el detalle de cada endpoint.
