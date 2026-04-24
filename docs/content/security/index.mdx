@@ -1,0 +1,59 @@
+# Auth and Security
+
+## Access token flow
+
+- Backend issues JWT access token on login/refresh.
+- Frontend stores this token in client cookie (`access_token`) and sends it as Bearer header through Axios interceptor.
+- `RouteGuard` validates JWT expiration in browser before allowing protected navigation.
+
+## Refresh token cookie flow
+
+- Backend sets `refresh_token` as HTTP-only cookie through `res.ok(...cookies)`.
+- On refresh, backend revokes old token row and inserts a new refresh token record.
+- Logout revokes the current refresh token and clears cookie.
+
+## Frontend cookie behavior
+
+- Access token cookie: `SameSite=Strict`, `max-age=900`, `Secure` in production.
+- Refresh refresh-call requests are sent with `withCredentials: true`.
+
+## Backend cookie behavior
+
+`res.ok` applies:
+
+- `SameSite=Lax` in development
+- `SameSite=None; Secure` in production
+
+for cookies set/deleted by backend helper.
+
+## Protected and public routes
+
+### Public backend routes
+
+- `POST /api/auth/login`
+- `POST /api/auth/forgotPassword`
+- `PATCH /api/auth/changePwd`
+- `GET /api/tracking/:trackingToken`
+
+### Protected backend routes
+
+All remaining domain routes require bearer auth; many also restrict by role.
+
+## Role model
+
+- `admin`
+- `distributor`
+
+Role checks happen via `requireAuth(request, allowedRoles)` in route handlers.
+
+## Security notes
+
+- Refresh tokens persisted in `tokens` table with expiry and revocation flags.
+- Passwords are hashed using bcrypt helpers.
+- Forgot-password endpoint returns a neutral success message for unknown emails.
+
+## Known risks / TODOs
+
+- Hardcoded fallback secret/password values exist in backend env config (must override in production).
+- Activation URL currently derives from reset base URL (confirm intended product behavior).
+- Frontend-access token in non-HTTP-only cookie increases XSS exposure surface compared to server-only storage.

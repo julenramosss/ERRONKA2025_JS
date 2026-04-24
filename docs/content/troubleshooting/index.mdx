@@ -1,0 +1,59 @@
+# Troubleshooting
+
+## Missing environment variables
+
+Symptoms: startup errors, undefined key failures, DB connect failures.
+
+- Verify backend vars from `backend-js/.env.example`.
+- Verify frontend `NEXT_PUBLIC_API_BASE_URL` and HERE key.
+
+## API URL mismatch
+
+Symptoms: frontend 404/Network errors to wrong host.
+
+- Confirm runtime `API_BASE_URL` in `frontend-app/app/config/envConfig.ts`.
+
+## CORS/cookie/session issues
+
+Symptoms: repeated 401, refresh not restoring session.
+
+- Ensure requests are sent with credentials.
+- Ensure backend allows cross-origin credentials.
+- Ensure HTTPS in production for Secure cookie support.
+
+## JWT expiration loops
+
+Symptoms: user kicked to `/login` frequently.
+
+- Check access token max age (15m) and refresh interval (12m).
+- Inspect browser cookie storage and clock skew.
+
+## Refresh token not working
+
+- Confirm `refresh_token` cookie exists and is sent.
+- Confirm `/api/auth/refresh` isn’t blocked by CORS/proxy.
+- Confirm token row is not expired/revoked in DB.
+
+## MySQL connection errors
+
+- Check host/port/user/password/database env.
+- Validate network path from runtime to DB.
+- Validate SSL requirements vs current `ssl: { rejectUnauthorized: false }` config.
+
+## Resend/email errors
+
+- Confirm `RESEND_API_KEY` validity and sender domain (`no-reply@tolosaerronka.es`) configuration.
+
+## Google Directions/Geocoding errors
+
+- Confirm `GOOGLE_DIRECTIONS_API_KEY` is active for required APIs.
+- Check quota limits and billing status.
+
+## Next.js build errors
+
+- Run package-local build commands to isolate backend/frontend/docs issues.
+
+## Package manager issues
+
+- Use `pnpm` consistently in this monorepo.
+- Reinstall with `pnpm install` at root if lockfile/workspace drifts.

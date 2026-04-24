@@ -1,0 +1,40 @@
+# AI Documentation Workflow
+
+## Roles and collaboration model
+
+### Codex (primary documentation builder)
+
+- Scans repository and verifies technical claims against source files.
+- Builds and maintains docs architecture in `/docs`.
+- Produces comprehensive, structured technical pages.
+
+### Copilot (translation and small sections)
+
+- Translates English source into Spanish and Basque.
+- Handles small targeted expansions and formatting refinements.
+- Should not modify core technical claims without verification.
+
+### Claude (review and editorial QA)
+
+- Reviews correctness, coherence, and readability.
+- Flags gaps, contradictions, and missing references.
+- Recommends structural improvements for maintainability.
+
+## Non-negotiable rules
+
+- No AI agent should invent system behavior.
+- All uncertain areas must be explicitly marked as **Needs verification**.
+- Every technical statement should be traceable to current repository code.
+
+## Suggested handoff sequence
+
+1. Codex writes/updates English source pages.
+2. Claude reviews and requests corrections.
+3. Copilot translates dictionaries/content once source is stable.
+4. Codex performs final consistency pass and publishes.
+
+## Translation next steps (for Copilot)
+
+- Translate all strings in `docs/app/i18n/es.ts`.
+- Translate all strings in `docs/app/i18n/eus.ts`.
+- Optionally split content files by locale once internationalized routing is introduced.

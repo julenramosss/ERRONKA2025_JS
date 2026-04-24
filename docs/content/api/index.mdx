@@ -1,0 +1,80 @@
+# API Reference
+
+Base prefix in backend route handlers: `/api/*`.
+
+> [!NOTE]
+> This section is generated from backend `route.ts` handlers and frontend API clients. Where payload details are not explicit in client types, fields are marked **Needs verification**.
+
+## Auth endpoints
+
+| Method | Path | Purpose | Auth | Frontend usage |
+| --- | --- | --- | --- | --- |
+| POST | `/api/auth/login` | Authenticate and issue access+refresh tokens | Public | `auth-api.login` |
+| POST | `/api/auth/refresh` | Rotate refresh token and issue new access token | Refresh cookie | `auth-api.refresh`, Axios interceptor |
+| POST | `/api/auth/logout` | Revoke refresh token and clear cookie | Bearer | `auth-api.logout` |
+| GET | `/api/auth/me` | Current authenticated user profile | Bearer | `auth-api.getMe` |
+| POST | `/api/auth/forgotPassword` | Generate reset flow email | Public | `auth-api.forgotPassword` |
+| PATCH | `/api/auth/changePwd` | Validate or complete reset/activation token flow | Public token-based | Not directly typed in frontend app |
+
+## User endpoints
+
+| Method | Path | Purpose | Auth |
+| --- | --- | --- | --- |
+| POST | `/api/users/create` | Create user and trigger activation flow | Admin |
+| GET | `/api/users/list` | Paginated user listing | Admin |
+| GET | `/api/users/getById?id=` | User detail by id | Admin |
+| PATCH | `/api/users/update` | Update user | Admin |
+| DELETE | `/api/users/remove?id=` | Remove user (constraints apply) | Admin |
+| PATCH | `/api/users/changeMyPwd` | Change own password | Bearer |
+
+## Package endpoints
+
+| Method | Path | Purpose | Auth | Frontend usage |
+| --- | --- | --- | --- | --- |
+| POST | `/api/packages/create` | Create package/address/tracking token | Admin | No direct current client call |
+| GET | `/api/packages/list` | Paginated package list | Admin | No direct current client call |
+| GET | `/api/packages/getById?id=` | Package detail | Admin/Distributor | `packages-api.getPackageById` |
+| GET | `/api/packages/getMyPackages` | Distributor package list | Distributor | `packages-api.getMyPackages` |
+| PATCH | `/api/packages/update?id=` | Update package info and address | Admin | No direct current client call |
+| PATCH | `/api/packages/updateStatus` | Update one or many package statuses | Distributor | `packages-api.updatePackageStatus` |
+| DELETE | `/api/packages/delete?id=` | Delete package | Admin | No direct current client call |
+| GET | `/api/packages/getDailySummary` | Daily package summary metrics | Admin | No direct current client call |
+
+## Route and stop endpoints
+
+| Method | Path | Purpose | Auth | Frontend usage |
+| --- | --- | --- | --- | --- |
+| POST | `/api/routes/create` | Create optimized route for distributor/date | Admin | Not currently wired in frontend |
+| GET | `/api/routes/getByUserAndDate` | Route lookup for admin | Admin | Not currently wired in frontend |
+| GET | `/api/routes/getMyDaily` | Distributor daily route | Distributor | `routes-api.getMyDailyRoute` |
+| GET | `/api/routes/continueFromPast` | Find pending past route | Distributor | `routes-api.getPendingPastRoute` |
+| POST | `/api/routes/continueFromPast` | Continue route from past into today | Distributor | `routes-api.continueFromPast` |
+| PATCH | `/api/routes/updateStatus/:id` | Set route status (`in_progress` / `completed`) | Admin/Distributor (scoped) | `routes-api.updateRouteStatus` |
+| PATCH | `/api/stops/reorder` | Reorder stops in route | Admin | Not currently wired in frontend |
+| PATCH | `/api/stops/updateArrival` | Mark stop as arrived | Distributor | `routes-api.updateArrival` |
+
+## Logs and tracking endpoints
+
+| Method | Path | Purpose | Auth | Frontend usage |
+| --- | --- | --- | --- | --- |
+| GET | `/api/logs/listAll` | List package status logs | Admin | Not currently wired |
+| GET | `/api/logs/listByPackage` | Package log history | Admin/Distributor | `logs-api.getPackageLogs` |
+| GET | `/api/tracking/:trackingToken` | Public package tracking | Public token | `tracking-api.getTracking` |
+
+## Request and response notes
+
+### Known typed responses
+
+- Auth and user session: `app/utils/types/api/auth.types.ts`
+- Packages: `app/utils/types/api/package.types.ts`
+- Routes/stops: `app/utils/types/api/route.types.ts`
+- Logs: `app/utils/types/api/log.types.ts`
+- Tracking: `app/utils/types/api/tracking.types.ts`
+
+### Needs verification markers
+
+The following areas should be checked against integration tests or runtime captures:
+
+- Exact payload schema for admin-only endpoints not consumed by current frontend clients.
+- Error response payload variants for all endpoints beyond `{ error: string }` baseline.
+- Pagination defaults for list endpoints where not represented in frontend types.

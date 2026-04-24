@@ -1,0 +1,34 @@
+# Project Overview
+
+## What PakAG is
+
+PakAG is a delivery operations platform focused on package orchestration and delivery visibility. The system includes:
+
+- an internal operations app (frontend) for admins/distributors,
+- an API backend (business logic + data persistence), and
+- a public package-tracking endpoint.
+
+## Problem it solves
+
+PakAG centralizes package lifecycle management:
+
+- package creation and assignment,
+- route planning and stop progression,
+- delivery-state transitions and status history,
+- notification emails,
+- recipient-facing tracking.
+
+## Backend/frontend relationship
+
+- `frontend-app` consumes backend endpoints through Axios clients under `app/lib/api/*`.
+- `backend-js` exposes Next.js Route Handlers under `src/app/api/*` and enforces auth/roles with JWT bearer tokens.
+- Frontend keeps access tokens in a cookie; backend manages refresh token rotation via HTTP-only cookie.
+
+## Product actors
+
+- **Admin**: user/account management, package and route administration.
+- **Distributor**: daily route execution, status changes, delivery operations.
+- **Recipient**: package-tracking view (token-based, no account login).
+
+> [!WARNING]
+> Some UI labels are currently Basque in the frontend implementation. This docs site is intentionally in English for onboarding consistency.

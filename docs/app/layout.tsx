@@ -2,34 +2,34 @@ import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import "nextra-theme-docs/style.css";
+import "./pakag-theme.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { getDictionary } from "./i18n";
+
+const dict = getDictionary("en");
 
 export const metadata: Metadata = {
   title: {
-    template: "%s – pakAG Docs",
-    default: "pakAG Docs",
+    template: "%s · PakAG Docs",
+    default: dict.metadata.siteTitle,
   },
-  description:
-    "Documentación de pakAG — API backend, frontend app y arquitectura.",
+  description: dict.metadata.siteDescription,
 };
 
 const navbar = (
   <Navbar
     logo={
-      <span style={{ fontWeight: 800, letterSpacing: "-0.02em" }}>
-        pak<span style={{ color: "#a78bfa" }}>AG</span>{" "}
-        <span style={{ fontWeight: 400, color: "#6b7280" }}>docs</span>
+      <span className="pakag-logo">
+        <span className="pakag-logo__brand">Pak</span>
+        <span className="pakag-logo__accent">AG</span>
+        <span className="pakag-logo__docs">{dict.brand.docsLabel}</span>
       </span>
     }
   />
 );
 
-const footer = (
-  <Footer>
-    MIT {new Date().getFullYear()} © pakAG — Tolosako banaketa zerbitzua
-  </Footer>
-);
+const footer = <Footer>PakAG © {new Date().getFullYear()} · Internal engineering handbook</Footer>;
 
 export default async function RootLayout({
   children,
@@ -37,14 +37,20 @@ export default async function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html lang="es" dir="ltr" suppressHydrationWarning>
-      <Head />
+    <html lang="en" dir="ltr" suppressHydrationWarning>
+      <Head color={{ hue: 262, saturation: 77, lightness: 57 }}>
+        <meta name="theme-color" content="#7c3aed" />
+      </Head>
       <body>
         <Layout
           navbar={navbar}
           pageMap={await getPageMap()}
           footer={footer}
-          docsRepositoryBase="https://github.com/your-org/pakAG"
+          docsRepositoryBase="https://github.com/sergiotolosa04/ERRONKA_2025/tree/main/docs"
+          sidebar={{ defaultMenuCollapseLevel: 1, autoCollapse: true }}
+          toc={{ backToTop: true, title: dict.common.onThisPage }}
+          editLink={dict.common.editThisPage}
+          feedback={{ content: null }}
         >
           {children}
         </Layout>

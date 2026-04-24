@@ -1,33 +1,136 @@
-# Backend API
+# Backend Documentation
 
-El backend de pakAG está construido con **Next.js 15 App Router** siguiendo una arquitectura en capas por endpoint:
+## Tech stack
 
-```
-src/app/api/{recurso}/{accion}/
-  dtos/        → interfaz + validateXxxDto(body: unknown)
-  repository/  → SQL con mysql2, prepared statements
-  service/     → lógica de negocio, sin SQL
-  route.ts     → orquestación, try/catch
-  types.ts     → tipos de dominio
-```
+- Next.js Route Handlers (`src/app/api/*`)
+- TypeScript
+- MySQL via `mysql2/promise`
+- JWT (`jsonwebtoken`)
+- Email via Resend
+- Google Maps Directions + Geocoding
 
-## Convenciones
+## API route organization
 
-- **Sin Zod**: validación manual en `dtos/` con funciones `validateXxxDto`
-- **Sin `any`**: TypeScript estricto en todo el proyecto
-- **Errores**: `ValidationError | NotFoundError | UnauthorizedError | ForbiddenError | ConflictError` desde `src/lib/errors.ts`
-- **SQL solo en repository**: nunca en `route.ts` ni en `service/`
+Domain folders under `backend-js/src/app/api`:
 
-## Recursos disponibles
+- `auth`
+- `users`
+- `packages`
+- `routes`
+- `stops`
+- `logs`
+- `tracking`
 
-| Recurso  | Ruta base       |
-| -------- | --------------- |
-| Auth     | `/api/auth`     |
-| Usuarios | `/api/users`    |
-| Paquetes | `/api/packages` |
-| Rutas    | `/api/routes`   |
-| Paradas  | `/api/stops`    |
-| Tracking | `/api/tracking` |
-| Logs     | `/api/logs`     |
+Each use-case follows a layered pattern:
 
-Consulta la [API_DOCS completa](https://github.com) para el detalle de cada endpoint.
+- `route.ts` (transport)
+- `dto`/`dtos` (validation)
+- `service` (business logic)
+- `repository` (SQL access)
+
+## DTO validation pattern
+
+DTO modules validate query/body inputs before service execution and throw `ValidationError` when invalid. Route handlers centralize errors through `handleError` in `lib/response.ts`.
+
+## Service and repository patterns
+
+- Services coordinate rules, transitions, and side effects.
+- Repositories encapsulate SQL queries and return row-mapped objects.
+- Shared cross-domain behavior is extracted (for example package status side effects).
+
+## Error handling and response helpers
+
+- Custom errors: `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`.
+- `handleError(tag, error)` maps errors to HTTP status and consistent `{ error }` shape.
+- `res.ok` supports setting/deleting cookies.
+
+## Authentication and authorization
+
+- Access token: Bearer JWT required for protected endpoints.
+- `requireAuth(request, allowedRoles?)` verifies token and optional role constraints.
+- Roles are defined in `src/app/types/index.ts` as `admin` and `distributor`.
+
+## MySQL connection
+
+`connect()` lazily builds and caches a pool with connection limit 10. SSL is enabled with `rejectUnauthorized: false` in current implementation.
+
+## Email sending
+
+Resend client is used for:
+
+- account activation,
+- password reset,
+- login notifications,
+- package status emails (pending/assigned/in_transit/delivered/undelivered/failed).
+
+## Google Directions integration
+
+`mapsService.optimizeRoute`:
+
+- calls Google Directions with waypoints optimization,
+- computes ordered stops + ETA,
+- returns total duration and distance.
+
+`mapsService.geocodeAddress` converts textual address into coordinates for package creation/update flows.
+
+## Package status side effects
+
+`applyPackageStatusSideEffects` performs:
+
+1. log insertion into `package_status_logs`,
+2. tracking token lookup,
+3. distributor name lookup,
+4. status email dispatch to recipients.
+
+## Tracking links
+
+Tracking tokens are stored in `tokens` table with type `tracking_token`, linked to package, and used by public endpoint:
+
+- `GET /api/tracking/:trackingToken`
+
+## Reset password flow
+
+1. `POST /api/auth/forgotPassword` creates/revokes reset token and sends email.
+2. `PATCH /api/auth/changePwd`:
+   - with token only: validation check,
+   - with `newPassword`: updates password, activates user, revokes reset/activation tokens.
+
+## Account activation flow
+
+User creation triggers activation email generation through `sendActivationEmailService`. Activation token type is `activate_account_token` and is validated by the same `changePwd` token-verification mechanism.
+
+> [!WARNING]
+> Activation URL currently reuses `RESET_BASE_URL` in code. Keep this in mind when configuring email links.
+
+## Logs
+
+Status changes are written to `package_status_logs` and exposed through:
+
+- `GET /api/logs/listAll` (admin)
+- `GET /api/logs/listByPackage` (admin/distributor)
+
+## Routes/stops/packages domain flows
+
+### Route creation
+
+- Validates distributor user and one-route-per-day constraint.
+- Merges carryover packages.
+- Optimizes stop order via Google Directions.
+- Inserts route + route stops and updates package estimated delivery.
+
+### Route continuation from past
+
+- Finds latest pending past route.
+- Migrates pending stops to current-day route.
+- Moves pending package statuses to `in_transit` with side effects.
+
+### Stop operations
+
+- `PATCH /api/stops/reorder` (admin) updates stop order.
+- `PATCH /api/stops/updateArrival` (distributor) stamps `actual_arrival` for own stop.
+
+### Package operations
+
+- Create package + address + tracking token + initial log + tracking email.
+- Update package details/address and related side effects.
+- Distributor status transitions enforced with allowed-transition matrix and route-order constraints.

@@ -1,0 +1,50 @@
+# Monorepo Structure
+
+## Root layout
+
+The root workspace contains three packages declared in `pnpm-workspace.yaml`:
+
+- `backend-js`
+- `frontend-app`
+- `docs`
+
+## Root scripts
+
+From root `package.json`:
+
+- `pnpm install` installs backend and frontend dependencies via filters.
+- `pnpm backend:dev` runs backend on port `3001`.
+- `pnpm frontend:dev` runs frontend on port `3000`.
+- `pnpm docs:dev` runs docs on port `3002`.
+
+## Package responsibilities
+
+### `backend-js`
+
+- Next.js app used as API server via Route Handlers.
+- Domain modules under `src/app/api/{auth,users,packages,routes,stops,logs,tracking}`.
+- Shared infrastructure under `src/app/lib` and `src/app/config`.
+
+### `frontend-app`
+
+- Next.js App Router UI.
+- Route groups:
+  - `(auth)` for login,
+  - `(main)` for authenticated app pages,
+  - `(not-found)` for custom 404 route.
+- API integration through `app/lib/api`.
+
+### `docs`
+
+- Nextra documentation app.
+- Content pages under `docs/content`.
+- i18n dictionaries under `docs/app/i18n`.
+
+## Important configuration files
+
+- `pnpm-workspace.yaml`: workspace membership.
+- `backend-js/src/app/config/envConfig.ts`: backend env and defaults.
+- `backend-js/src/app/config/dbConfig.ts`: MySQL connection pool.
+- `frontend-app/app/config/envConfig.ts`: frontend API/HERE keys and constants.
+- `frontend-app/next.config.ts`: image host allowlist + allowed dev origins.
+- `docs/next.config.mjs`: Nextra integration.
