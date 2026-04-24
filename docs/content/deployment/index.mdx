@@ -1,0 +1,31 @@
+# Deployment
+
+## Backend deployment notes
+
+- Requires MySQL connectivity and all critical env vars.
+- Must set production `JWT_SECRET` and `DEFAULT_USER_PASSWORD` overrides.
+- Requires functional Resend API key for auth + package emails.
+- Requires Google API key for route creation/geocoding.
+
+## Frontend deployment notes
+
+- In production mode, API base URL falls back to `https://api.tolosaerronka.es/api`.
+- HERE maps key must be configured in `NEXT_PUBLIC_HERE_API_KEY`.
+- Frontend requests rely on cookies (`withCredentials: true`) for refresh flow.
+
+## API domain assumptions
+
+Frontend assumes backend is reachable with CORS/cookie-compatible settings from deployed frontend domain.
+
+## Cookie/SameSite/Secure implications
+
+- Backend refresh cookie: `SameSite=None; Secure` in production.
+- Frontend access cookie: `SameSite=Strict`, `Secure` in production.
+- If domains/subdomains are misconfigured, refresh flow may fail silently.
+
+## Known deployment pitfalls
+
+- CORS policy not allowing credentialed requests.
+- Inconsistent TLS setup causing Secure cookies not to persist.
+- API URL mismatch between frontend environment and backend host.
+- Missing Google/Resend secrets causing runtime failures in route creation/email dispatch.

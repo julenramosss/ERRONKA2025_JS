@@ -1,0 +1,72 @@
+# Domain Model
+
+## Users
+
+Core fields observed across repositories/types:
+
+- `id`, `name`, `email`, `password_hash`
+- `role` (`admin` or `distributor`)
+- `is_active`, `created_at`
+
+## Roles
+
+`admin` and `distributor` constants are shared in backend and frontend type systems.
+
+## Packages
+
+Package model includes recipient, assignment, status, weight/description, tracking code, timestamps, and related `address_id`.
+
+## Package statuses
+
+Defined lifecycle statuses:
+
+- `pending`
+- `assigned`
+- `in_transit`
+- `delivered`
+- `undelivered`
+- `failed`
+
+Transition checks are enforced in package status service.
+
+## Routes
+
+Routes represent distributor work plans for a specific `route_date` and status:
+
+- `planned`
+- `in_progress`
+- `completed`
+
+## Stops
+
+`route_stops` ties route and package with execution metadata:
+
+- `stop_order`
+- `estimated_arrival`
+- `actual_arrival`
+
+## Tokens
+
+`tokens` table stores multiple token types:
+
+- `refresh_token`
+- `tracking_token`
+- `reset_pwd_token`
+- `activate_account_token`
+
+Each token supports expiry/revocation semantics.
+
+## Tracking
+
+Tracking endpoint resolves package summary by valid tracking token and returns status/address/last update fields.
+
+## Email events
+
+Email events are triggered by auth and package status flows (activation, reset, login notices, package status updates).
+
+## Status logs
+
+`package_status_logs` captures package state transitions (`old_status`, `new_status`, actor, timestamp).
+
+> [!NOTE]
+> SQL schema migration files are not present in this repository snapshot, so table DDL is inferred from repository queries (**Needs verification** for exact column constraints/indexes).

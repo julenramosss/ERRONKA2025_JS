@@ -1,0 +1,49 @@
+# Contributing
+
+## Branching
+
+Follow repository branch policies and keep work scoped by package (`backend-js`, `frontend-app`, `docs`).
+
+## Safe development workflow
+
+1. Pull latest changes.
+2. Create focused branch.
+3. Implement minimal scoped changes.
+4. Run package-specific checks.
+5. Update docs in `/docs` for behavior changes.
+
+## Add a backend endpoint
+
+1. Create use-case folder in `backend-js/src/app/api/<domain>/<action>`.
+2. Add `dto`/`dtos` validation.
+3. Implement service rules.
+4. Implement repository queries.
+5. Add `route.ts` with `requireAuth` + `handleError`.
+6. Add/extend frontend API module and types if consumed by UI.
+
+## Add a frontend API call
+
+1. Add method to `app/lib/api/*-api.ts`.
+2. Add request/response types under `app/utils/types/api`.
+3. Add hook under `app/hooks/<domain>`.
+4. Add query keys/options if query-based.
+
+## Add a new page
+
+1. Create route in appropriate App Router group.
+2. Wire data with existing hooks/query patterns.
+3. Reuse palette/tokens from `globals.css`.
+4. Add loading/skeleton states where relevant.
+
+## Add a new docs language
+
+1. Create dictionary file in `docs/app/i18n/<locale>.ts`.
+2. Match `DocsDictionary` structure.
+3. Register locale in `docs/app/i18n/index.ts`.
+4. Add locale routing strategy (future enhancement).
+
+## Keep docs in sync with code
+
+- Update API reference after route additions/changes.
+- Update env page after config changes.
+- Mark uncertain areas as **Needs verification** instead of inventing behavior.

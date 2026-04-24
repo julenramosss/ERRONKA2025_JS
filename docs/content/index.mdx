@@ -1,19 +1,37 @@
-# pakAG — Documentación
+# PakAG Engineering Documentation
 
-Bienvenido a la documentación técnica de **pakAG**, el sistema de gestión y seguimiento de paquetes de Tolosa.
+Welcome to the technical handbook for **PakAG**, the package distribution and tracking platform in this monorepo.
 
-## Secciones
+> [!NOTE]
+> This documentation is generated from the actual repository structure under `backend-js` and `frontend-app` and is intended for onboarding new developers quickly.
 
-- **[Backend API](/backend)** — Endpoints REST, DTOs, servicios y repositorios (Next.js 15 + TypeScript + MySQL)
-- **[Frontend App](/frontend)** — Aplicación React con Next.js App Router, React Query y Tailwind v4
-- **[Arquitectura](/architecture)** — Estructura del monorepo, flujos y decisiones de diseño
-- **[Base de datos](/database)** — Schema SQL, tablas y relaciones
+## What you will find here
 
-## Stack
+- Complete architecture and codebase orientation.
+- Verified backend and frontend implementation patterns.
+- API and authentication flows.
+- Environment, deployment, troubleshooting, and contribution workflows.
+- AI collaboration rules for docs maintenance.
 
-| Capa            | Tecnología                                            |
-| --------------- | ----------------------------------------------------- |
-| Backend         | Next.js 15, TypeScript, MySQL2, JWT, Nodemailer       |
-| Frontend        | Next.js 16, React 19, TanStack Query, Tailwind CSS v4 |
-| Docs            | Nextra 4, Next.js 16                                  |
-| Package manager | pnpm (workspace monorepo)                             |
+## Quick links
+
+- [Project Overview](/project)
+- [Monorepo Structure](/monorepo)
+- [Local Setup](/setup)
+- [Backend Documentation](/backend)
+- [Frontend Documentation](/frontend)
+- [API Reference](/api)
+
+## High-level system diagram
+
+```mermaid
+flowchart LR
+  Admin[Admin users] --> FE[frontend-app\nNext.js App Router]
+  Distributor[Distributor users] --> FE
+  Recipient[Public recipient] --> Tracking[Tracking UI route]
+  FE -->|Axios + cookies| BE[backend-js\nNext.js Route Handlers]
+  Tracking -->|Public token endpoint| BE
+  BE --> DB[(MySQL)]
+  BE --> Resend[Resend Email API]
+  BE --> Google[Google Directions + Geocoding]
+```
