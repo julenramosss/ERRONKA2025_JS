@@ -19,5 +19,11 @@
     "nextra-theme-docs": "4.6.1",
     "react": "19.2.5",
     "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.0.0"
   }
 }

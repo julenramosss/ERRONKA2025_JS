@@ -46,7 +46,7 @@ export default async function RootLayout({
           navbar={navbar}
           pageMap={await getPageMap()}
           footer={footer}
-          docsRepositoryBase="https://github.com/sergiotolosa04/ERRONKA_2025/tree/main/docs"
+          docsRepositoryBase="https://github.com/ramistodev/ERRONKA2025_JS/tree/agents/docu/docs"
           sidebar={{ defaultMenuCollapseLevel: 1, autoCollapse: true }}
           toc={{ backToTop: true, title: dict.common.onThisPage }}
           editLink={dict.common.editThisPage}
