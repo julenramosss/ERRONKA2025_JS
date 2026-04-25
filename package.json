@@ -2,7 +2,6 @@
   "name": "mi-monorepo",
   "private": true,
   "scripts": {
-    "install": "pnpm --filter @repo/backend-js install && pnpm --filter @repo/frontend-app install",
     "backend:dev": "pnpm --filter @repo/backend-js dev -p 3001",
     "frontend:dev": "pnpm --filter @repo/frontend-app dev -p 3000",
     "docs:dev": "pnpm --filter @repo/docs dev"
