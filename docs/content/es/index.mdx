@@ -1,0 +1,37 @@
+# Documentación de Ingeniería PakAG
+
+Bienvenido al manual técnico de **PakAG**, la plataforma de distribución y seguimiento de paquetes en este monorepo.
+
+> [!NOTE]
+> Esta documentación se genera a partir de la estructura real del repositorio bajo `backend-js` y `frontend-app` y está destinada a incorporar nuevos desarrolladores rápidamente.
+
+## Qué encontrarás aquí
+
+- Orientación completa de la arquitectura y el código.
+- Patrones de implementación verificados de backend y frontend.
+- Flujos de API y autenticación.
+- Flujos de entorno, despliegue, resolución de problemas y contribución.
+- Reglas de colaboración con IA para el mantenimiento de la documentación.
+
+## Accesos rápidos
+
+- [Visión general del proyecto](/es/project)
+- [Estructura del monorepo](/es/monorepo)
+- [Configuración local](/es/setup)
+- [Documentación del backend](/es/backend)
+- [Documentación del frontend](/es/frontend)
+- [Referencia de API](/es/api)
+
+## Diagrama del sistema de alto nivel
+
+```mermaid
+flowchart LR
+  Admin[Usuarios admin] --> FE[frontend-app\nNext.js App Router]
+  Distributor[Usuarios distribuidores] --> FE
+  Recipient[Destinatario público] --> Tracking[Ruta de seguimiento]
+  FE -->|Axios + cookies| BE[backend-js\nNext.js Route Handlers]
+  Tracking -->|Endpoint de token público| BE
+  BE --> DB[(MySQL)]
+  BE --> Resend[Resend Email API]
+  BE --> Google[Google Directions + Geocoding]
+```

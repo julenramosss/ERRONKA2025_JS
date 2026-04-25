@@ -1,0 +1,34 @@
+# Visión general del proyecto
+
+## Qué es PakAG
+
+PakAG es una plataforma de operaciones de entrega centrada en la orquestación de paquetes y la visibilidad de las entregas. El sistema incluye:
+
+- una aplicación de operaciones interna (frontend) para administradores y distribuidores,
+- un backend API (lógica de negocio + persistencia de datos), y
+- un endpoint público de seguimiento de paquetes.
+
+## Problema que resuelve
+
+PakAG centraliza la gestión del ciclo de vida de los paquetes:
+
+- creación y asignación de paquetes,
+- planificación de rutas y progresión de paradas,
+- transiciones de estado de entrega e historial de estados,
+- correos electrónicos de notificación,
+- seguimiento para el destinatario.
+
+## Relación backend/frontend
+
+- `frontend-app` consume los endpoints del backend mediante clientes Axios en `app/lib/api/*`.
+- `backend-js` expone Next.js Route Handlers en `src/app/api/*` y aplica autenticación/roles con tokens JWT Bearer.
+- El frontend guarda los tokens de acceso en una cookie; el backend gestiona la rotación del token de refresco mediante cookie HTTP-only.
+
+## Actores del producto
+
+- **Admin**: gestión de usuarios/cuentas, administración de paquetes y rutas.
+- **Distribuidor**: ejecución de la ruta diaria, cambios de estado, operaciones de entrega.
+- **Destinatario**: vista de seguimiento de paquetes (basada en token, sin inicio de sesión).
+
+> [!WARNING]
+> Algunos textos de la interfaz están actualmente en euskara en la implementación del frontend. Este sitio de documentación está intencionalmente en el idioma seleccionado para facilitar la incorporación de nuevos desarrolladores.

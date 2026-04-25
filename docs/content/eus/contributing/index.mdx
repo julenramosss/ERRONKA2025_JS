@@ -1,0 +1,49 @@
+# Nola lagundu
+
+## Adarrak
+
+Jarraitu biltegiko adar-politikak eta mantendu lana pakete bakoitzaren arabera mugatuta (`backend-js`, `frontend-app`, `docs`).
+
+## Garapen-fluxu segurua
+
+1. Azken aldaketak jaitsi.
+2. Adar zentratua sortu.
+3. Aldaketa minimo eta mugatuak inplementatu.
+4. Pakete-espezifikoko egiaztapenak exekutatu.
+5. Portaera-aldaketentzako dokumentazioa eguneratu `/docs`-n.
+
+## Backend endpoint bat gehitu
+
+1. Erabilera-kasuaren karpeta sortu `backend-js/src/app/api/<domeinua>/<ekintza>`-n.
+2. `dto`/`dtos` balioztatze gehitu.
+3. Zerbitzu-arauak inplementatu.
+4. Biltegi-kontsultak inplementatu.
+5. `route.ts` gehitu `requireAuth` + `handleError`-rekin.
+6. Frontend API modulua eta motak gehitu/zabaldu UIs kontsumitzen badu.
+
+## Frontend API dei bat gehitu
+
+1. Metodoa gehitu `app/lib/api/*-api.ts`-ri.
+2. Eskaera/erantzun motak gehitu `app/utils/types/api`-n.
+3. Hookea gehitu `app/hooks/<domeinua>`-n.
+4. Kontsulta-gakoak/aukerak gehitu query-oinarritua bada.
+
+## Orrialde berri bat gehitu
+
+1. Ibilbidea sortu App Router talde egokian.
+2. Datuak lotu lehendik dauden hooks/query-ereduekin.
+3. `globals.css`-ko paleta/tokenak berrerabili.
+4. Karga/eskeletoaren egoerak gehitu behar den lekuan.
+
+## Dokumentazioari hizkuntza berri bat gehitu
+
+1. Hiztegi-fitxategia sortu `docs/app/i18n/<locale>.ts`-n.
+2. `DocsDictionary` egitura bete.
+3. Locale erregistratu `docs/app/i18n/index.ts`-n.
+4. MDX eduki-itzulpenak gehitu `docs/content/<locale>/`-n.
+
+## Dokumentazioa kodeekin sinkronizatuta mantendu
+
+- API erreferentzia eguneratu ibilbideak gehitu/aldatu ondoren.
+- Ingurune-orria eguneratu konfigurazio-aldaketen ondoren.
+- Ziurgabeak diren alderdiak **Egiaztapena behar du** gisa markatu portaera asmatu beharrean.

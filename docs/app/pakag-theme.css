@@ -3,6 +3,7 @@
   --x-color-primary-700: #6d28d9;
   --x-color-primary-800: #5b21b6;
   --x-color-primary-900: #3d2960;
+  scroll-behavior: smooth;
 }
 
 .pakag-logo {

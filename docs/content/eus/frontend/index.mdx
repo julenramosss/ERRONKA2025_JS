@@ -1,0 +1,97 @@
+# Frontend dokumentazioa
+
+## Teknologia-pila
+
+- Next.js App Router
+- React 19
+- TanStack React Query
+- Axios
+- Tailwind CSS v4
+- HERE Maps integrazioa
+- `boneyard-js` eskeletoaren osagaiak
+
+## Aplikazioaren egitura
+
+Karpeta nagusiak `frontend-app/app`-n:
+
+- `(auth)` ibilbide-taldea: saioa hasteko esperientzia.
+- `(main)` ibilbide-taldea: autentifikatutako panel-fluxuak.
+- `lib/api`: Axios bezeroak eta API laguntzaileak.
+- `hooks`: domeinuz query/mutation hookak.
+- `providers`: React Query eta tutorial hornitzaileak.
+- `utils/types/api`: idatzitako erantzun eta eskaera-kontratuak.
+
+## Layout eta hornitzaileak
+
+`app/layout.tsx`-k edukia honakoekin inguratzen du:
+
+- `AppProviders` → `ReactQueryProvider`
+- `RouteGuard` (autentifikazio-atea)
+
+`(main)/layout.tsx`-k gehitzen ditu:
+
+- `SessionKeepAlive` (atzeko planoko saio-freskatzeko kontsulta)
+- `PreferencesSync`
+- `AsideMenu` + `Header` + footer
+- `TutorialProvider`
+
+## React Query erabilera
+
+- Kontsulta-gakoak `app/query/keys/*`-n antolatuta.
+- Kontsulta-aukerak `app/query/options/*`-n.
+- HTTP egoera ez-errepikakorretarako lehenetsitako saiakerak desgaituta (400/401/403/404/409).
+
+## Axios API bezeroa
+
+`apiClient` konfigurazioak honakoak ditu:
+
+- `withCredentials: true`.
+- `Authorization: Bearer <access_token>` injektatzeko eskaera-interceptora.
+- `401`-ean freskatzen duen erantzun-interceptora (login/refresh/forgot-password/tracking kenduta), behin errepikatzen du eta hutsegiteetan tokena garbitzen du.
+
+## Autentifikazio-tokenaren biltegiratzea
+
+- Frontend-ak sarbide-tokena `access_token` cookiean gordetzen du (`SameSite=Strict`, `max-age=15m`).
+- Freskatze-tokena backend-ek kudeatutako HTTP-only cookie-n gelditzen da.
+
+## Freskatze-tokenaren fluxua
+
+- Atzeko planoko freskatze-kontsulta (`refreshTokenQueryOptions`) 12 minuturo exekutatzen da.
+- Axios interceptora freskatze bat abiarazten du ustekabeko 401 batean eta jatorrizko eskera behin errepikatzen du.
+
+## RouteGuard portaera
+
+- Ibilbide publikoen zerrendan gaur egun `/login` bakarrik dago.
+- Erabiltzaileak token baliodunik gabe babestutako ibilbide batera iristen bada, aplikazioa `/login`-era berbideratzen du.
+- Erabiltzaileak token balioduna badu eta `/login`-era sartzen bada, aplikazioa `/`-ra berbideratzen du.
+
+## Orrialde/pantaila nagusiak
+
+- `/dashboard`: profil-laburpena, estatistikak, hurrengo entregatze-planak, mapa-panela.
+- `/myPackages`: zerrenda/sare-ikuspegiak eta iragazketa.
+- `/myPackages/[packageId]`: pakete-xehetasuna eta log-historia.
+- `/myRoute`: eguneroko ibilbide-exekuzioa, aurrerapena, geralekuak, mapa.
+- `/history`: pakete-jardueren analisi historikoa.
+- `/settings`: profil/segurtasun/itxura kontrolak.
+- `/login`: autentifikazioa + pasahitz ahaztua modala.
+
+## Hookak eta API moduluak
+
+Hookak domeinuz taldekatuta daude:
+
+- `hooks/auth/*`
+- `hooks/packages/*`
+- `hooks/routes/*`
+- `hooks/tracking/*`
+
+API moduluak:
+
+- `lib/api/auth-api.ts`
+- `lib/api/packages-api.ts`
+- `lib/api/routes-api.ts`
+- `lib/api/logs-api.ts`
+- `lib/api/tracking-api.ts`
+
+## Motak
+
+API eredu kanonikoak `app/utils/types/api/*.ts`-n daude.

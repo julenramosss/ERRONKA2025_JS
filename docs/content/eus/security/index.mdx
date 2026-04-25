@@ -1,0 +1,59 @@
+# Autentikazioa eta segurtasuna
+
+## Sarbide-tokenaren fluxua
+
+- Backend-ak JWT sarbide-tokena emiten du saioa hastean/freskatzerakoan.
+- Frontend-ak token hau bezero-cookiean gordetzen du (`access_token`) eta Bearer header gisa bidaltzen du Axios interceptoraren bidez.
+- `RouteGuard`-ek JWT iraungitzea balioztatzen du nabigatzailean babestutako nabigazioa baimentzeko aurretik.
+
+## Freskatze-token cookiearen fluxua
+
+- Backend-ak `refresh_token` ezartzen du HTTP-only cookie gisa `res.ok(...cookies)`-ren bidez.
+- Freskatzerakoan, backend-ak token-errenkada zaharra errebokatu eta freskatze-token erregistro berri bat txertatzen du.
+- Saioa ixteak uneko freskatze-tokena errebokatu eta cookiea garbitzen du.
+
+## Frontend-eko cookie portaera
+
+- Sarbide-token cookiea: `SameSite=Strict`, `max-age=900`, `Secure` produkzioan.
+- Freskatzeko dei-eskaerak `withCredentials: true`-rekin bidaltzen dira.
+
+## Backend-eko cookie portaera
+
+`res.ok`-ek ezartzen du:
+
+- `SameSite=Lax` garapenean
+- `SameSite=None; Secure` produkzioan
+
+backend laguntzaileak ezarritako/ezabatutako cookietarako.
+
+## Babestutako eta ibilbide publikoak
+
+### Backend ibilbide publikoak
+
+- `POST /api/auth/login`
+- `POST /api/auth/forgotPassword`
+- `PATCH /api/auth/changePwd`
+- `GET /api/tracking/:trackingToken`
+
+### Backend ibilbide babestuak
+
+Gainerako domeinu-ibilbide guztiek bearer autentifikazioa behar dute; askok rolaren arabera ere murrizten dute.
+
+## Rol-eredua
+
+- `admin`
+- `distributor`
+
+Rol-egiaztapenak `requireAuth(request, allowedRoles)`-ren bidez egiten dira route handler-etan.
+
+## Segurtasun-oharrak
+
+- Freskatze-tokenak `tokens` taulan iraunkortzen dira iraungitzea eta errebokatzeko flag-ekin.
+- Pasahitzak bcrypt laguntzaileekin hasheatzen dira.
+- Pasahitz-ahaztua endpoint-ak erantzun neutro bat itzultzen du ezezagunak diren emailentzat.
+
+## Arrisku ezagunak / TODOs
+
+- Hardcodetutako fallback sekretu/pasahitz balioak daude backend env konfigurazioan (produkzioan gainidatzi behar dira).
+- Aktibatze-URLa oraindik berrezartzeko oinarri URLtik eratorria da (espero den produktu-portaera berretsi).
+- Frontend-eko sarbide-tokena ez-HTTP-only cookiean egoteak XSS esposizio-gainazala handitzen du zerbitzari-soilik biltegiratzearekiko alderatuta.

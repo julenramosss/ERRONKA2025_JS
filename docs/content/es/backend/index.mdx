@@ -1,0 +1,100 @@
+# Documentación del backend
+
+## Stack tecnológico
+
+- Next.js Route Handlers (`src/app/api/*`)
+- TypeScript
+- MySQL mediante `mysql2/promise`
+- JWT (`jsonwebtoken`)
+- Email mediante Resend
+- Google Maps Directions + Geocoding
+
+## Organización de rutas API
+
+Carpetas de dominio en `backend-js/src/app/api`:
+
+- `auth`
+- `users`
+- `packages`
+- `routes`
+- `stops`
+- `logs`
+- `tracking`
+
+Cada caso de uso sigue un patrón por capas:
+
+- `route.ts` (transporte)
+- `dto`/`dtos` (validación)
+- `service` (lógica de negocio)
+- `repository` (acceso SQL)
+
+## Patrón de validación DTO
+
+Los módulos DTO validan las entradas de query/body antes de ejecutar el servicio y lanzan `ValidationError` cuando son inválidas. Los manejadores de ruta centralizan los errores mediante `handleError` en `lib/response.ts`.
+
+## Patrones de servicio y repositorio
+
+- Los servicios coordinan reglas, transiciones y efectos secundarios.
+- Los repositorios encapsulan consultas SQL y devuelven objetos mapeados del dominio.
+- El comportamiento compartido entre dominios se extrae (por ejemplo, efectos secundarios del estado del paquete).
+
+## Manejo de errores y helpers de respuesta
+
+- Errores personalizados: `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`.
+- `handleError(tag, error)` mapea errores a estado HTTP y una forma consistente `{ error }`.
+- `res.ok` permite establecer/eliminar cookies.
+
+## Autenticación y autorización
+
+- Token de acceso: JWT Bearer requerido para endpoints protegidos.
+- `requireAuth(request, allowedRoles?)` verifica el token y restricciones de rol opcionales.
+- Los roles se definen en `src/app/types/index.ts` como `admin` y `distributor`.
+
+## Conexión MySQL
+
+`connect()` construye y almacena en caché de forma perezosa un pool con límite de 10 conexiones. SSL está habilitado con `rejectUnauthorized: false` en la implementación actual.
+
+## Envío de emails
+
+El cliente Resend se usa para:
+
+- activación de cuentas,
+- restablecimiento de contraseña,
+- notificaciones de inicio de sesión,
+- emails de estado de paquetes (pending/assigned/in_transit/delivered/undelivered/failed).
+
+## Integración con Google Directions
+
+`mapsService.optimizeRoute`:
+
+- llama a Google Directions con optimización de waypoints,
+- calcula paradas ordenadas + ETA,
+- devuelve duración y distancia totales.
+
+`mapsService.geocodeAddress` convierte una dirección textual en coordenadas para los flujos de creación/actualización de paquetes.
+
+## Efectos secundarios del estado del paquete
+
+`applyPackageStatusSideEffects` realiza:
+
+1. inserción de log en `package_status_logs`,
+2. búsqueda del token de seguimiento,
+3. búsqueda del nombre del distribuidor,
+4. envío del email de estado al destinatario.
+
+## Enlace de seguimiento
+
+Los tokens de seguimiento se almacenan en la tabla `tokens` con tipo `tracking_token`, vinculados al paquete, y utilizados por el endpoint público:
+
+- `GET /api/tracking/:trackingToken`
+
+## Flujo de restablecimiento de contraseña
+
+1. `POST /api/auth/forgotPassword` crea/revoca el token de reset y envía el email.
+2. `PATCH /api/auth/changePwd`:
+   - solo con token: comprobación de validación,
+   - con `newPassword`: actualiza la contraseña, activa el usuario, revoca los tokens de reset/activación.
+
+## Flujo de activación de cuenta
+
+La creación de usuario dispara la generación del email de activación mediante `sendActivationEmailService`. El tipo de token de activación es `activate_account_token` y es validado por el mismo mecanismo de verificación de tokens de `changePwd`.

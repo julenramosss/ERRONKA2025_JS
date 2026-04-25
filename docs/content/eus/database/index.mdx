@@ -1,0 +1,29 @@
+# Datu-basea
+
+PakAG-k **MySQL** erabiltzen du (`pakAG_db` eskema). Eskema osoa `schema.sql`-n dago monorepo-aren sustraian.
+
+## Taula nagusiak
+
+| Taula                    | Deskribapena                                         |
+| ------------------------ | ---------------------------------------------------- |
+| `users`                  | Sistemaren erabiltzaileak (banatzaileak eta adminak) |
+| `packages`               | Uneko egoerarekin erregistratutako paketeak          |
+| `routes`                 | Banatzaileei esleituako banaketa-ibilbideak          |
+| `stops`                  | Ibilbide bakoitzeko geralekuak                       |
+| `package_status_history` | Pakete bakoitzeko egoera-aldaketen historia          |
+| `logs`                   | Sistemaren ekintza garrantzitsuen loga               |
+
+## Pakete baten egoerak
+
+```
+PENDING → ASSIGNED → IN_TRANSIT → DELIVERED
+                              ↘ UNDELIVERED
+                              ↘ FAILED
+```
+
+## SQL konbentzioak
+
+- Kontsulta guztiek **prepared statements** erabiltzen dituzte (mysql2 `?` lekuzorrotzak)
+- ID-ak: `INT AUTO_INCREMENT PRIMARY KEY`
+- Timestamps-ak: `DATETIME DEFAULT CURRENT_TIMESTAMP`
+- Ezabaketa bigunak: ez dira erabiltzen — `package_status_history`-n gordetzen dira erregistro historikoak

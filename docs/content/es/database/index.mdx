@@ -1,0 +1,29 @@
+# Base de datos
+
+PakAG usa **MySQL** (esquema `pakAG_db`). El esquema completo está en `schema.sql` en la raíz del monorepo.
+
+## Tablas principales
+
+| Tabla                    | Descripción                                    |
+| ------------------------ | ---------------------------------------------- |
+| `users`                  | Usuarios del sistema (distribuidores y admins) |
+| `packages`               | Paquetes registrados con estado actual         |
+| `routes`                 | Rutas de reparto asignadas a distribuidores    |
+| `stops`                  | Paradas dentro de cada ruta                    |
+| `package_status_history` | Historial de cambios de estado por paquete     |
+| `logs`                   | Log de acciones relevantes del sistema         |
+
+## Estados de un paquete
+
+```
+PENDING → ASSIGNED → IN_TRANSIT → DELIVERED
+                              ↘ UNDELIVERED
+                              ↘ FAILED
+```
+
+## Convenciones SQL
+
+- Todas las consultas usan **prepared statements** (placeholders `?` de mysql2)
+- IDs: `INT AUTO_INCREMENT PRIMARY KEY`
+- Timestamps: `DATETIME DEFAULT CURRENT_TIMESTAMP`
+- Soft deletes: no se usan — los registros históricos se mantienen en `package_status_history`

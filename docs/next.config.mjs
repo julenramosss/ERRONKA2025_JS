@@ -1,9 +1,16 @@
 import nextra from "nextra";
 
 const withNextra = nextra({
-  // Nextra-specific options
+  defaultShowCopyCode: true,
+  search: {
+    codeblocks: false,
+  },
+  contentDirBasePath: "/",
 });
 
 export default withNextra({
-  // Regular Next.js options
+  i18n: {
+    locales: ["en", "es", "eus"],
+    defaultLocale: "en",
+  },
 });

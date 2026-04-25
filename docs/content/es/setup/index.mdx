@@ -1,0 +1,47 @@
+# Configuración local
+
+## Requisitos previos
+
+- Node.js 20+
+- pnpm 10+
+- Instancia de base de datos MySQL accesible desde el backend
+- Clave API de Resend y clave de Google APIs para paridad completa de funciones
+
+## Instalar dependencias
+
+Desde la raíz del repositorio:
+
+```bash
+pnpm install
+```
+
+## Ejecutar el backend localmente
+
+```bash
+pnpm backend:dev
+```
+
+URL base esperada: `http://localhost:3001/api`.
+
+## Ejecutar el frontend localmente
+
+```bash
+pnpm frontend:dev
+```
+
+URL base esperada: `http://localhost:3000`.
+
+## Ejecutar la documentación localmente
+
+```bash
+pnpm docs:dev
+```
+
+URL base esperada: `http://localhost:3002`.
+
+## Problemas habituales de inicio
+
+- Variables de entorno del backend faltantes (MySQL/claves).
+- La URL base de la API del frontend no apunta al backend.
+- Cookies bloqueadas por el navegador o la configuración de seguridad.
+- Discrepancia SSL/proxy de MySQL para base de datos local.

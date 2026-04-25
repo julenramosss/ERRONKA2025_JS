@@ -16,9 +16,11 @@ export interface DocsDictionary {
     environment: string;
     backend: string;
     frontend: string;
+    architecture: string;
     apiReference: string;
     authSecurity: string;
     domainModel: string;
+    database: string;
     deployment: string;
     troubleshooting: string;
     contributing: string;
@@ -56,9 +58,11 @@ export const en: DocsDictionary = {
     environment: "Environment Variables",
     backend: "Backend",
     frontend: "Frontend",
+    architecture: "Architecture",
     apiReference: "API Reference",
     authSecurity: "Auth & Security",
     domainModel: "Domain Model",
+    database: "Database",
     deployment: "Deployment",
     troubleshooting: "Troubleshooting",
     contributing: "Contributing",

@@ -1,27 +1,12 @@
-import { generateStaticParamsFor, importPage } from "nextra/pages";
-import { useMDXComponents } from "../../mdx-components";
+import { redirect } from "next/navigation";
 
-export const generateStaticParams = generateStaticParamsFor("mdxPath");
-
-export async function generateMetadata(props: {
-  params: Promise<{ mdxPath: string[] }>;
-}) {
-  const params = await props.params;
-  const { metadata } = await importPage(params.mdxPath);
-  return metadata;
-}
-
-const { wrapper: Wrapper } = useMDXComponents();
-
+// Redirect root-level paths to the default locale.
+// The proxy.ts middleware handles this for most cases;
+// this is a fallback for static/direct access.
 export default async function Page(props: {
-  params: Promise<{ mdxPath: string[] }>;
+  params: Promise<{ mdxPath?: string[] }>;
 }) {
-  const params = await props.params;
-  const result = await importPage(params.mdxPath);
-  const { default: MDXContent, ...rest } = result;
-  return (
-    <Wrapper {...rest}>
-      <MDXContent {...props} params={params} />
-    </Wrapper>
-  );
+  const { mdxPath } = await props.params;
+  const path = mdxPath?.length ? `/${mdxPath.join("/")}` : "";
+  redirect(`/en${path}`);
 }

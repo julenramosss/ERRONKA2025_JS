@@ -1,0 +1,37 @@
+# Arkitektura
+
+PakAG **pnpm monorepo** bat da hiru paketerekin:
+
+```
+ERRONKA2025_JS/
+  backend-js/    → @repo/backend-js  (REST API)
+  frontend-app/  → @repo/frontend-app (Next.js App)
+  docs/          → @repo/docs        (Dokumentazio hau)
+  schema.sql     → Datu-basearen eskema
+```
+
+## Datuen fluxua
+
+```
+Bezeroa (frontend-app)
+  → REST API (backend-js /api/*)
+    → Service (logika)
+      → Repository (SQL / mysql2)
+        → MySQL (pakAG_db)
+```
+
+## Geruzen arteko komunikazioa
+
+- **route.ts**: Request jasotzen du, DTO-rekin balioztatzen du, service-a deitzen du, Response itzultzen du
+- **service**: logika soila, HTTP eta SQL menpetasunik gabe
+- **repository**: prepared statements soilik, domeinu-motak itzultzen ditu
+
+## Autentikazioa
+
+JWT `HS256`-rekin sinatuta. Tokena `Authorization: Bearer <token>` headerrean doa.  
+`src/lib/jwt.ts` middleware-ak payload-a egiaztatu eta erauzten du babestutako eskaera bakoitzean.
+
+## Emailak
+
+Resend-ek HTML template propioak ditu (kanpoko liburutegirik gabe). Templateak  
+`src/app/lib/email/templates/`-n daude eta pakete-egoeraren jarraipenarekin diseinu erantzunkorra dute.

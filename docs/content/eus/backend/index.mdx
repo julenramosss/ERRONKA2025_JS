@@ -1,0 +1,100 @@
+# Backend dokumentazioa
+
+## Teknologia-pila
+
+- Next.js Route Handlers (`src/app/api/*`)
+- TypeScript
+- MySQL `mysql2/promise`-ren bidez
+- JWT (`jsonwebtoken`)
+- Emaila Resend-en bidez
+- Google Maps Directions + Geocoding
+
+## API ibilbide-antolaketa
+
+Domeinu-karpetak `backend-js/src/app/api`-n:
+
+- `auth`
+- `users`
+- `packages`
+- `routes`
+- `stops`
+- `logs`
+- `tracking`
+
+Erabilera-kasu bakoitzak geruza-eredu bat jarraitzen du:
+
+- `route.ts` (garraioa)
+- `dto`/`dtos` (baliozkotzea)
+- `service` (negozio-logika)
+- `repository` (SQL sarbidea)
+
+## DTO balidazio-eredua
+
+DTO moduluek query/body sarrerak balioztatzen dituzte zerbitzua exekutatu aurretik eta `ValidationError` botatzern dute baliogabeak direnean. Ibilbide-kudeatzaileek erroreak zentralizatzen dituzte `handleError` bidez `lib/response.ts`-n.
+
+## Zerbitzu eta biltegi-ereduak
+
+- Zerbitzuek arauak, trantsizioak eta alboko efektuak koordinatzen dituzte.
+- Biltegiek SQL kontsultak enkapsulatu eta domeinu-mapaturiko objektuak itzultzen dituzte.
+- Domeinu arteko portaera partekatua erauzten da (adibidez, pakete-egoeraren alboko efektuak).
+
+## Errore-kudeaketa eta erantzun-laguntzaileak
+
+- Errore pertsonalizatuak: `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`.
+- `handleError(tag, error)`-k erroreak HTTP egoerara eta `{ error }` forma koherentera mapeatzen ditu.
+- `res.ok`-ek cookieak ezarri/ezabatzea onartzen du.
+
+## Autentikazioa eta baimena
+
+- Sarbide-tokena: JWT Bearer babesten diren endpoint-etarako beharrezkoa.
+- `requireAuth(request, allowedRoles?)`-k tokena eta rol-murrizketak egiaztatu.
+- Rolak `src/app/types/index.ts`-n daude definituta `admin` eta `distributor` gisa.
+
+## MySQL konexioa
+
+`connect()`-k 10 konexio-mugarekin pool bat eraikitzen eta cachean gordetzen du. SSL gaituta dago `rejectUnauthorized: false`-rekin uneko inplementazioan.
+
+## Emailak bidaltzea
+
+Resend bezeroa hau erabiltzeko da:
+
+- kontuaren aktibatzea,
+- pasahitza berrezartzea,
+- saioa hasteko jakinarazpenak,
+- pakete-egoera emailak (pending/assigned/in_transit/delivered/undelivered/failed).
+
+## Google Directions integrazioa
+
+`mapsService.optimizeRoute`:
+
+- Google Directions deitzen du waypoint-optimizazioarekin,
+- ordenatutako geralekuak + ETA kalkulatzen ditu,
+- iraupen eta distantzia osoak itzultzen ditu.
+
+`mapsService.geocodeAddress`-ek testu-helbide bat koordenatutan bihurtzen du pakete sortzeko/eguneratzeko fluxuetarako.
+
+## Pakete-egoeraren alboko efektuak
+
+`applyPackageStatusSideEffects`-ek egiten du:
+
+1. `package_status_logs`-era log txertatzea,
+2. jarraipen-tokenaren bilaketa,
+3. banatzailearen izenaren bilaketa,
+4. egoera-emaila hartzaileari bidali.
+
+## Jarraipen-estekak
+
+Jarraipen-tokenak `tokens` taulan gordetzen dira `tracking_token` motarekin, paketeari lotuta, eta endpoint publiko honek erabiltzen ditu:
+
+- `GET /api/tracking/:trackingToken`
+
+## Pasahitza berrezartzeko fluxua
+
+1. `POST /api/auth/forgotPassword`-ek berrezartzeko tokena sortu/errebokatu eta emaila bidaltzen du.
+2. `PATCH /api/auth/changePwd`:
+   - token soilarekin: balioztatze-egiaztapena,
+   - `newPassword`-rekin: pasahitza eguneratzen du, erabiltzailea aktibatzen du, berrezartzeko/aktibatzeko tokenak errebokatu.
+
+## Kontua aktibatzeko fluxua
+
+Erabiltzaile-sorkerak aktibatze-emaila sortzen du `sendActivationEmailService`-ren bidez. Aktibatzeko token-mota `activate_account_token` da eta `changePwd`-ren token-egiaztapen mekanismo berak balioztatzen du.

@@ -1,0 +1,97 @@
+# Documentación del frontend
+
+## Stack tecnológico
+
+- Next.js App Router
+- React 19
+- TanStack React Query
+- Axios
+- Tailwind CSS v4
+- Integración con mapas HERE
+- Componentes de esqueleto `boneyard-js`
+
+## Estructura de la aplicación
+
+Carpetas principales en `frontend-app/app`:
+
+- `(auth)` grupo de rutas: experiencia de inicio de sesión.
+- `(main)` grupo de rutas: flujos del panel autenticado.
+- `lib/api`: clientes Axios y helpers de API.
+- `hooks`: hooks de query/mutation por dominio.
+- `providers`: React Query y proveedores de tutorial.
+- `utils/types/api`: contratos de respuesta y solicitud tipados.
+
+## Layout y proveedores
+
+`app/layout.tsx` envuelve el contenido con:
+
+- `AppProviders` → `ReactQueryProvider`
+- `RouteGuard` (barrera de autenticación)
+
+`(main)/layout.tsx` añade:
+
+- `SessionKeepAlive` (query de refresco de sesión en segundo plano)
+- `PreferencesSync`
+- `AsideMenu` + `Header` + footer
+- `TutorialProvider`
+
+## Uso de React Query
+
+- Claves de query organizadas en `app/query/keys/*`.
+- Opciones de query en `app/query/options/*`.
+- Reintentos predeterminados deshabilitados para los estados HTTP no reintentables comunes (400/401/403/404/409).
+
+## Cliente Axios API
+
+La configuración de `apiClient` incluye:
+
+- `withCredentials: true`.
+- Interceptor de solicitud que inyecta `Authorization: Bearer <access_token>`.
+- Interceptor de respuesta que refresca en `401` (excepto login/refresh/forgot-password/tracking), reintenta una vez y limpia el token en caso de fallo.
+
+## Almacenamiento del token de autenticación
+
+- El frontend guarda el token de acceso en la cookie `access_token` (`SameSite=Strict`, `max-age=15m`).
+- El token de refresco permanece gestionado en el backend como cookie HTTP-only.
+
+## Flujo del token de refresco
+
+- La query de refresco en segundo plano (`refreshTokenQueryOptions`) se ejecuta cada 12 minutos.
+- El interceptor Axios dispara el refresco ante un 401 inesperado y repite la solicitud original una vez.
+
+## Comportamiento de RouteGuard
+
+- La lista de rutas públicas actualmente incluye solo `/login`.
+- Si el usuario accede a una ruta protegida sin token válido, la aplicación redirige a `/login`.
+- Si el usuario tiene token válido y accede a `/login`, la aplicación redirige a `/`.
+
+## Páginas/pantallas principales
+
+- `/dashboard`: resumen del perfil, estadísticas, próximas entregas, panel de mapa.
+- `/myPackages`: vistas de lista/cuadrícula y filtrado.
+- `/myPackages/[packageId]`: detalle del paquete e historial de logs.
+- `/myRoute`: vista de ejecución de ruta diaria, progreso, paradas, mapa.
+- `/history`: análisis histórico de actividad de paquetes.
+- `/settings`: controles de perfil/seguridad/apariencia.
+- `/login`: autenticación + modal de contraseña olvidada.
+
+## Hooks y módulos API
+
+Los hooks están agrupados por dominio:
+
+- `hooks/auth/*`
+- `hooks/packages/*`
+- `hooks/routes/*`
+- `hooks/tracking/*`
+
+Módulos API:
+
+- `lib/api/auth-api.ts`
+- `lib/api/packages-api.ts`
+- `lib/api/routes-api.ts`
+- `lib/api/logs-api.ts`
+- `lib/api/tracking-api.ts`
+
+## Tipos
+
+Los modelos API canónicos están en `app/utils/types/api/*.ts`.

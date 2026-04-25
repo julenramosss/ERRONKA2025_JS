@@ -1,0 +1,59 @@
+# Arazoak konpontzea
+
+## Ingurune-aldagaiak falta
+
+Sintomak: abiatzeko erroreak, gako-definitu gabeko hutsegiteak, DB konexio-hutsegiteak.
+
+- Backend aldagaiak egiaztatu `backend-js/.env.example`-tik.
+- Frontend `NEXT_PUBLIC_API_BASE_URL` eta HERE gakoa egiaztatu.
+
+## API URL desegokitasuna
+
+Sintomak: frontend 404/Sare-erroreak host okerrari.
+
+- Exekuzio-denboran `API_BASE_URL` berretsi `frontend-app/app/config/envConfig.ts`-n.
+
+## CORS/cookie/saio arazoak
+
+Sintomak: 401 errepikakorra, freskatze-ak saioa berreskuratzen ez.
+
+- Eskaerak kredentzial-rekin bidaltzen direla ziurtatu.
+- Backend-ak jatorri arteko kredentzialak onartzen dituela ziurtatu.
+- Produkzioan HTTPS ziurtatu Secure cookie onarpenerako.
+
+## JWT iraungitzeko begiztak
+
+Sintomak: erabiltzailea `/login`-era maiz bidal.
+
+- Sarbide-token gehienezko adina (15m) eta freskatze-tartea (12m) egiaztatu.
+- Nabigatzailearen cookie biltegiratzea eta erloju-desfasea aztertu.
+
+## Freskatze-tokena ez dabil
+
+- `refresh_token` cookiea existitzen dela eta bidaltzen dela berretsi.
+- `/api/auth/refresh` CORS/proxy-ak blokeatuta ez dagoela berretsi.
+- Token-errenkada ez dagoela iraungituta/errebokaturik DB-an berretsi.
+
+## MySQL konexio-erroreak
+
+- Host/portua/erabiltzailea/pasahitza/datu-basea env egiaztatu.
+- Exekuzio-denboratik DB-ra sareko bidea balioztatui.
+- SSL eskakizunak uneko `ssl: { rejectUnauthorized: false }` konfigurazioarekin alderatu.
+
+## Resend/email erroreak
+
+- `RESEND_API_KEY` balizkotasuna eta igorlearen domeinuaren konfigurazioa (`no-reply@tolosaerronka.es`) berretsi.
+
+## Google Directions/Geocoding erroreak
+
+- `GOOGLE_DIRECTIONS_API_KEY` beharrezko APIetarako aktibo dagoela berretsi.
+- Kuota-mugak eta fakturatze-egoera egiaztatu.
+
+## Next.js build-erroreak
+
+- Pakete-tokiko build komandoak exekutatu backend/frontend/docs arazoak isolatzeko.
+
+## Pakete-kudeatzailearen arazoak
+
+- `pnpm` erabili koherenteki monorepo honetan.
+- Lockfile/workspace desbideratu bada `pnpm install`-ekin berrinstalatu sustraian.

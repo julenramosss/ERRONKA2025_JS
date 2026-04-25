@@ -1,0 +1,34 @@
+# Proiektuaren ikuspegi orokorra
+
+## PakAG zer den
+
+PakAG pakete-orkestrazioan eta entrega-ikusgarritasunean zentratutako entrega-eragiketarako plataforma bat da. Sistemak honako hauek ditu:
+
+- barne-eragiketen aplikazio bat (frontend) administratzaile eta banatzaileentzat,
+- API backend bat (negozio-logika + datuen iraunkortasuna), eta
+- pakete-jarraipen endpoint publiko bat.
+
+## Konpontzen duen arazoa
+
+PakAG paketeen bizitza-zikloaren kudeaketa zentralizatzen du:
+
+- paketeak sortu eta esleitzea,
+- ibilbideen planifikazioa eta geralekuen aurrerapena,
+- entrega-egoeraren trantsizioak eta egoera-historia,
+- jakinarazpen-emailak,
+- hartzailearen pakete-jarraipena.
+
+## Backend/frontend erlazioa
+
+- `frontend-app`-ek backend-eko endpoint-ak kontsumitzen ditu `app/lib/api/*`-ko Axios bezeroetan.
+- `backend-js`-k Next.js Route Handlers zabaltzen ditu `src/app/api/*`-n eta autentifikazioa/rolak aplikatzen ditu JWT Bearer tokenekin.
+- Frontend-ak sarbide-tokenak cookie batean gordetzen ditu; backend-ak freskatze-tokenaren errotazioa kudeatzen du HTTP-only cookie bidez.
+
+## Produktuaren aktore nagusiak
+
+- **Admin**: erabiltzaile/kontu kudeaketa, pakete eta ibilbide administrazioa.
+- **Banatzailea**: eguneroko ibilbidearen exekuzioa, egoera-aldaketak, entrega-eragiketak.
+- **Hartzailea**: pakete-jarraipen ikuspegia (token-oinarritua, saioa hasteko konturik gabe).
+
+> [!WARNING]
+> UI etiketa batzuk euskaraz daude uneko frontend inplementazioan. Dokumentazio-gune hau aukeratutako hizkuntzan dago garatzaile berriak azkar txertatzeko.
