@@ -1,0 +1,62 @@
+# API erreferentzia
+
+Backend route handler-etako oinarri-aurrizkia: `/api/*`.
+
+> [!NOTE]
+> Atal hau backend `route.ts` kudeatzaileetatik eta frontend API bezeroengandik sortzen da. Frontend mota-sistemetan espresuki adierazita ez dauden payload xehetasunak **Egiaztapena behar du** gisa markatuta daude.
+
+## Autentifikazio endpoint-ak
+
+| Metodoa | Ibilbidea                  | Helburua                                                           | Autentifikazioa              | Frontend erabilera                        |
+| ------- | -------------------------- | ------------------------------------------------------------------ | ---------------------------- | ----------------------------------------- |
+| POST    | `/api/auth/login`          | Autentifikatu eta sarbide+freskatze tokenak eman                   | Publikoa                     | `auth-api.login`                          |
+| POST    | `/api/auth/refresh`        | Freskatze-tokena biratu eta sarbide-token berria eman              | Freskatze-cookiea            | `auth-api.refresh`, Axios interceptora    |
+| POST    | `/api/auth/logout`         | Freskatze-tokena errebokatu eta cookiea garbitu                    | Bearer                       | `auth-api.logout`                         |
+| GET     | `/api/auth/me`             | Uneko autentifikatutako erabiltzailearen profila                   | Bearer                       | `auth-api.getMe`                          |
+| POST    | `/api/auth/forgotPassword` | Berrezartzeko fluxuaren emaila sortu                               | Publikoa                     | `auth-api.forgotPassword`                 |
+| PATCH   | `/api/auth/changePwd`      | Berrezartzeko/aktibatzeko token-fluxua balioztatzen edo osatzen du | Token-oinarritutako publikoa | Frontend aplikazioan zuzenean idatzita ez |
+
+## Erabiltzaile endpoint-ak
+
+| Metodoa | Ibilbidea                | Helburua                                          | Autentifikazioa |
+| ------- | ------------------------ | ------------------------------------------------- | --------------- |
+| POST    | `/api/users/create`      | Erabiltzailea sortu eta aktibatze-fluxua abiarazi | Admin           |
+| GET     | `/api/users/list`        | Orrikaturiko erabiltzaile-zerrenda                | Admin           |
+| GET     | `/api/users/getById?id=` | Erabiltzailearen xehetasunak id-aren arabera      | Admin           |
+| PATCH   | `/api/users/update`      | Erabiltzailea eguneratu                           | Admin           |
+| DELETE  | `/api/users/remove?id=`  | Erabiltzailea ezabatu (murrizketekin)             | Admin           |
+| PATCH   | `/api/users/changeMyPwd` | Norbere pasahitza aldatu                          | Bearer          |
+
+## Pakete endpoint-ak
+
+| Metodoa | Ibilbidea                       | Helburua                                      | Autentifikazioa   | Frontend erabilera                 |
+| ------- | ------------------------------- | --------------------------------------------- | ----------------- | ---------------------------------- |
+| POST    | `/api/packages/create`          | Paketea/helbidea/jarraipen-tokena sortu       | Admin             | Uneko bezeroen deirik gabe         |
+| GET     | `/api/packages/list`            | Orrikaturiko pakete-zerrenda                  | Admin             | Uneko bezeroen deirik gabe         |
+| GET     | `/api/packages/getById?id=`     | Paketearen xehetasunak                        | Admin/Banatzailea | `packages-api.getPackageById`      |
+| GET     | `/api/packages/getMyPackages`   | Banatzailearen pakete-zerrenda                | Banatzailea       | `packages-api.getMyPackages`       |
+| PATCH   | `/api/packages/update?id=`      | Paketearen informazioa eta helbidea eguneratu | Admin             | Uneko bezeroen deirik gabe         |
+| PATCH   | `/api/packages/updateStatus`    | Pakete bat edo gehiagoren egoera eguneratu    | Banatzailea       | `packages-api.updatePackageStatus` |
+| DELETE  | `/api/packages/delete?id=`      | Paketea ezabatu                               | Admin             | Uneko bezeroen deirik gabe         |
+| GET     | `/api/packages/getDailySummary` | Eguneroko pakete-laburpen metrikak            | Admin             | Uneko bezeroen deirik gabe         |
+
+## Ibilbide eta geraleku endpoint-ak
+
+| Metodoa | Ibilbidea                      | Helburua                                              | Autentifikazioa              | Frontend erabilera               |
+| ------- | ------------------------------ | ----------------------------------------------------- | ---------------------------- | -------------------------------- |
+| POST    | `/api/routes/create`           | Banatzaileentzako/datarako ibilbide optimizatua sortu | Admin                        | Oraindik frontend-era lotuta ez  |
+| GET     | `/api/routes/getByUserAndDate` | Admin-eko ibilbide-bilaketa                           | Admin                        | Oraindik frontend-era lotuta ez  |
+| GET     | `/api/routes/getMyDaily`       | Banatzailearen eguneroko ibilbidea                    | Banatzailea                  | `routes-api.getMyDailyRoute`     |
+| GET     | `/api/routes/continueFromPast` | Iraganeko ibilbide pendientea bilatu                  | Banatzailea                  | `routes-api.getPendingPastRoute` |
+| POST    | `/api/routes/continueFromPast` | Iraganeko ibilbidea gaurko egunean jarraitu           | Banatzailea                  | `routes-api.continueFromPast`    |
+| PATCH   | `/api/routes/updateStatus/:id` | Ibilbide-egoera ezarri (`in_progress` / `completed`)  | Admin/Banatzailea (mugatuta) | `routes-api.updateRouteStatus`   |
+| PATCH   | `/api/stops/reorder`           | Ibilbideko geralekuak berordenatu                     | Admin                        | Oraindik frontend-era lotuta ez  |
+| PATCH   | `/api/stops/updateArrival`     | Geralekua iritsita bezala markatu                     | Banatzailea                  | `routes-api.updateArrival`       |
+
+## Log eta jarraipen endpoint-ak
+
+| Metodoa | Ibilbidea                      | Helburua                       | Autentifikazioa   | Frontend erabilera         |
+| ------- | ------------------------------ | ------------------------------ | ----------------- | -------------------------- |
+| GET     | `/api/logs/listAll`            | Pakete-egoera logak zerrendatu | Admin             | Oraindik lotuta ez         |
+| GET     | `/api/logs/listByPackage`      | Paketearen log-historia        | Admin/Banatzailea | `logs-api.getPackageLogs`  |
+| GET     | `/api/tracking/:trackingToken` | Paketearen jarraipen publikoa  | Token publikoa    | `tracking-api.getTracking` |

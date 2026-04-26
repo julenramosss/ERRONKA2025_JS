@@ -1,0 +1,34 @@
+# Flujo de trabajo de documentación con IA
+
+## Roles y modelo de colaboración
+
+### Codex (constructor principal de documentación)
+
+- Escanea el repositorio y verifica afirmaciones técnicas contra los archivos fuente.
+- Construye y mantiene la arquitectura de documentación en `/docs`.
+- Produce páginas técnicas completas y estructuradas.
+
+### Copilot (traducción y secciones pequeñas)
+
+- Traduce el inglés fuente al español y al euskara.
+- Gestiona expansiones pequeñas y refinamientos de formato.
+- No debe modificar afirmaciones técnicas básicas sin verificación.
+
+### Claude (revisión y control de calidad editorial)
+
+- Revisa la corrección, coherencia y legibilidad.
+- Señala lagunas, contradicciones y referencias faltantes.
+- Recomienda mejoras estructurales para la mantenibilidad.
+
+## Reglas no negociables
+
+- Ningún agente IA debe inventar comportamiento del sistema.
+- Todas las áreas inciertas deben marcarse explícitamente como **Requiere verificación**.
+- Cada afirmación técnica debe ser rastreable al código actual del repositorio.
+
+## Secuencia de traspaso sugerida
+
+1. Codex escribe/actualiza las páginas fuente en inglés.
+2. Claude revisa y solicita correcciones.
+3. Copilot traduce los diccionarios/contenido una vez que la fuente es estable.
+4. Codex realiza el pase final de consistencia y publica.

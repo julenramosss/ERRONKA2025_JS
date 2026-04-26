@@ -1,0 +1,72 @@
+# Domeinu-eredua
+
+## Erabiltzaileak
+
+Biltegi/motetan ikusitako oinarrizko eremuak:
+
+- `id`, `name`, `email`, `password_hash`
+- `role` (`admin` edo `distributor`)
+- `is_active`, `created_at`
+
+## Rolak
+
+`admin` eta `distributor` konstanteak backend eta frontend mota-sistemetan partekatzen dira.
+
+## Paketeak
+
+Pakete-ereduak honakoak ditu: hartzailea, esleipena, egoera, pisua/deskribapena, jarraipen-kodea, timestamps eta erlazionatutako `address_id`.
+
+## Pakete-egoerak
+
+Definitutako bizitza-zikloaren egoerak:
+
+- `pending`
+- `assigned`
+- `in_transit`
+- `delivered`
+- `undelivered`
+- `failed`
+
+Trantsizio-egiaztapenak pakete-egoeraren zerbitzuan aplikatzen dira.
+
+## Ibilbideak
+
+Ibilbideek banatzailearen lan-planak adierazten dituzte `route_date` eta egoera zehatz baterako:
+
+- `planned`
+- `in_progress`
+- `completed`
+
+## Geralekuak
+
+`route_stops`-ek ibilbidea eta paketea lotzen ditu exekuzio-metadatuekin:
+
+- `stop_order`
+- `estimated_arrival`
+- `actual_arrival`
+
+## Tokenak
+
+`tokens` taulak token-mota ugari gordetzen ditu:
+
+- `refresh_token`
+- `tracking_token`
+- `reset_pwd_token`
+- `activate_account_token`
+
+Token bakoitzak iraungitzeko/errebokatzeko semantikak onartzen ditu.
+
+## Jarraipena
+
+Jarraipen endpoint-ak pakete-laburpena ebazten du jarraipen-token baliodunaren bidez eta egoera/helbide/azken eguneratze eremuak itzultzen ditu.
+
+## Email-gertaerak
+
+Email-gertaerak autentifikazio eta pakete-egoera fluxuek abiarazten dituzte (aktibatzea, berrezartzea, saioa hasteko abisoak, pakete-egoera eguneratzeak).
+
+## Egoera-logak
+
+`package_status_logs`-ek pakete-egoeraren trantsizioak jasotzen ditu (`old_status`, `new_status`, aktorea, timestamp-a).
+
+> [!NOTE]
+> SQL eskema-migrazioen fitxategiak ez daude biltegiaren argazki honetan, beraz, taula DDLa biltegi-kontsultetatik inferitzen da (**Egiaztapena behar du** zutabe murrizketak/indizeak egiaztatzeko).

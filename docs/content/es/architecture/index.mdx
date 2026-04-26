@@ -1,0 +1,37 @@
+# Arquitectura
+
+PakAG es un **monorepo pnpm** con tres paquetes:
+
+```
+ERRONKA2025_JS/
+  backend-js/    → @repo/backend-js  (API REST)
+  frontend-app/  → @repo/frontend-app (App Next.js)
+  docs/          → @repo/docs        (Esta documentación)
+  schema.sql     → Esquema de la base de datos
+```
+
+## Flujo de datos
+
+```
+Cliente (frontend-app)
+  → API REST (backend-js /api/*)
+    → Service (lógica)
+      → Repository (SQL / mysql2)
+        → MySQL (pakAG_db)
+```
+
+## Comunicación entre capas
+
+- **route.ts**: recibe Request, valida con DTO, llama al service, devuelve Response
+- **service**: lógica pura, sin dependencias de HTTP ni SQL
+- **repository**: solo prepared statements, devuelve tipos de dominio
+
+## Autenticación
+
+JWT firmado con `HS256`. El token va en el header `Authorization: Bearer <token>`.  
+El middleware `src/lib/jwt.ts` verifica y extrae el payload en cada request protegida.
+
+## Emails
+
+Resend con templates HTML propios (sin librería externa). Los templates están en  
+`src/app/lib/email/templates/` e incluyen diseño responsive con seguimiento del estado del paquete.

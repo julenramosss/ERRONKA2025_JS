@@ -1,0 +1,49 @@
+# Cómo contribuir
+
+## Ramas
+
+Siga las políticas de ramas del repositorio y mantenga el trabajo acotado por paquete (`backend-js`, `frontend-app`, `docs`).
+
+## Flujo de desarrollo seguro
+
+1. Obtener los últimos cambios.
+2. Crear rama enfocada.
+3. Implementar cambios mínimos y acotados.
+4. Ejecutar comprobaciones específicas del paquete.
+5. Actualizar la documentación en `/docs` para cambios de comportamiento.
+
+## Añadir un endpoint de backend
+
+1. Crear la carpeta del caso de uso en `backend-js/src/app/api/<dominio>/<accion>`.
+2. Añadir validación `dto`/`dtos`.
+3. Implementar las reglas del servicio.
+4. Implementar las consultas del repositorio.
+5. Añadir `route.ts` con `requireAuth` + `handleError`.
+6. Añadir/extender el módulo API del frontend y los tipos si lo consume la UI.
+
+## Añadir una llamada API al frontend
+
+1. Añadir método a `app/lib/api/*-api.ts`.
+2. Añadir tipos de solicitud/respuesta en `app/utils/types/api`.
+3. Añadir hook en `app/hooks/<dominio>`.
+4. Añadir claves/opciones de query si es basado en query.
+
+## Añadir una nueva página
+
+1. Crear ruta en el grupo App Router apropiado.
+2. Conectar datos con los hooks/patrones de query existentes.
+3. Reutilizar la paleta/tokens de `globals.css`.
+4. Añadir estados de carga/skeleton donde corresponda.
+
+## Añadir un nuevo idioma a la documentación
+
+1. Crear el archivo de diccionario en `docs/app/i18n/<locale>.ts`.
+2. Cumplir la estructura `DocsDictionary`.
+3. Registrar el locale en `docs/app/i18n/index.ts`.
+4. Añadir las traducciones de contenido MDX en `docs/content/<locale>/`.
+
+## Mantener la documentación sincronizada con el código
+
+- Actualizar la referencia de API tras añadir/modificar rutas.
+- Actualizar la página de entorno tras cambios de configuración.
+- Marcar las áreas inciertas como **Requiere verificación** en lugar de inventar comportamiento.

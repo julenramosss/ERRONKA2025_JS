@@ -1,0 +1,37 @@
+# PakAG Ingeniaritza Dokumentazioa
+
+Ongi etorri **PakAG**-ren eskuliburu teknikora, monorepo honetan dagoen pakete-banaketa eta -jarraipen plataformarena.
+
+> [!NOTE]
+> Dokumentazio hau `backend-js` eta `frontend-app` azpiko benetako biltegiaren egituratik sortzen da eta garatzaile berriak azkar txertatzeko diseinatua dago.
+
+## Zer aurkituko duzu hemen
+
+- Arkitekturaren eta kode-basearen orientabide osoa.
+- Egiaztaturiko backend eta frontend inplementazio-ereduak.
+- API eta autentikazio-fluxuak.
+- Ingurunea, hedapena, arazoak konpontzeko eta ekarpenerako fluxuak.
+- IA lankidetzarako arauak dokumentazioaren mantentzerako.
+
+## Esteka azkarrak
+
+- [Proiektuaren ikuspegi orokorra](/eus/project)
+- [Monorepoaren egitura](/eus/monorepo)
+- [Tokiko konfigurazioa](/eus/setup)
+- [Backend dokumentazioa](/eus/backend)
+- [Frontend dokumentazioa](/eus/frontend)
+- [API erreferentzia](/eus/api)
+
+## Sistemaren goi-mailako diagrama
+
+```mermaid
+flowchart LR
+  Admin[Admin erabiltzaileak] --> FE[frontend-app\nNext.js App Router]
+  Distributor[Banatzaile erabiltzaileak] --> FE
+  Recipient[Hartzaile publikoa] --> Tracking[Jarraipen UI ibilbidea]
+  FE -->|Axios + cookieak| BE[backend-js\nNext.js Route Handlers]
+  Tracking -->|Token endpoint publikoa| BE
+  BE --> DB[(MySQL)]
+  BE --> Resend[Resend Email API]
+  BE --> Google[Google Directions + Geocoding]
+```

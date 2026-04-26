@@ -1,0 +1,42 @@
+# Ingurune-aldagaiak
+
+## Backend aldagaiak (`backend-js/src/app/config/envConfig.ts`)
+
+| Aldagaia                    | Beharrezkoa                                      | Lehenetsita                          | Oharrak                                                                  |
+| --------------------------- | ------------------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------ |
+| `MYSQL_USER`                | Bai                                              | bat ere ez                           | DB erabiltzailea.                                                        |
+| `MYSQL_PASSWORD`            | Bai                                              | bat ere ez                           | DB pasahitza (sekretua).                                                 |
+| `MYSQL_HOST`                | Bai                                              | bat ere ez                           | DB hosta.                                                                |
+| `MYSQL_PORT`                | Ez                                               | `3306`                               | DB portua.                                                               |
+| `MYSQL_DATABASE`            | Bai                                              | bat ere ez                           | DB eskema.                                                               |
+| `RESEND_API_KEY`            | Bai (email funtzioetarako)                       | bat ere ez                           | Saioa hasteko/berrezartzeko/aktibatzeko/egoera emailetarako beharrezkoa. |
+| `GOOGLE_DIRECTIONS_API_KEY` | Bai                                              | bat ere ez                           | Ibilbide-optimizaziorako eta geocoding-erako erabilia.                   |
+| `JWT_SECRET`                | **Ez kodean, baina produkzioan ezarri behar da** | hardcodetutako fallback katea        | Garapen fallback-a dago; produkzioak gainidatzi behar du.                |
+| `JWT_ACCESS_EXPIRES_IN`     | Ez                                               | `15m`                                | Sarbide-tokenaren TTL.                                                   |
+| `JWT_REFRESH_EXPIRES_DAYS`  | Ez                                               | `7`                                  | Freskatze-tokenaren TTL.                                                 |
+| `TRACKING_EXPIRES_DAYS`     | Ez                                               | `30`                                 | Jarraipen-tokenaren TTL.                                                 |
+| `TRACKING_BASE_URL`         | Ez                                               | localhost/prod URLa moduaren arabera | Jarraipen email-esteketan erabilia.                                      |
+| `RESET_BASE_URL`            | Ez                                               | localhost/prod URLa moduaren arabera | Berrezartzeko/aktibatzeko esteketan erabilia.                            |
+| `DEFAULT_USER_PASSWORD`     | **Ez kodean, baina segurtasun-sentikorra**       | hardcodetutako fallback katea        | Sortutako erabiltzaileen hazi-pasahitza; gainidatzi behar da.            |
+
+> [!WARNING]
+> `JWT_SECRET` eta `DEFAULT_USER_PASSWORD`-k hardcodetutako fallback-ak dituzte iturri-kodean. Garapen-soiltzat hartu eta produkzioan berehala gainidatzi.
+
+## Frontend aldagaiak (`frontend-app/app/config/envConfig.ts`)
+
+| Aldagaia                   | Beharrezkoa    | Lehenetsita | Oharrak                                         |
+| -------------------------- | -------------- | ----------- | ----------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | Bai garapenean | bat ere ez  | API oinarri-URLa tokiko/garapen frontend-erako. |
+| `NEXT_PUBLIC_HERE_API_KEY` | Bai            | bat ere ez  | HERE mapa integrazioaren gakoa.                 |
+
+Frontend-ak `https://api.tolosaerronka.es/api` produkzio API oinarri-URLa hardcodeata du `NODE_ENV=production` denean.
+
+## Segurtasun-sentikorrak diren aldagaiak
+
+- Backend: `MYSQL_PASSWORD`, `RESEND_API_KEY`, `GOOGLE_DIRECTIONS_API_KEY`, `JWT_SECRET`, `DEFAULT_USER_PASSWORD`.
+- Frontend: aldagai publikoak bezeroan agertzen dira diseinuz; ez jarri sekretoak `NEXT_PUBLIC_*`-n.
+
+## Egiaren iturria
+
+- `backend-js/.env.example` erreferentzia-hazia da.
+- Benetako produkzio-balioak hedatze-plataformaren sekretuek eman beharko dituzte.

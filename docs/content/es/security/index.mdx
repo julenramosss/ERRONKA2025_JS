@@ -1,0 +1,59 @@
+# Autenticación y seguridad
+
+## Flujo del token de acceso
+
+- El backend emite un token JWT de acceso al hacer login/refresh.
+- El frontend almacena este token en una cookie de cliente (`access_token`) y lo envía como header Bearer mediante el interceptor Axios.
+- `RouteGuard` valida la expiración del JWT en el navegador antes de permitir la navegación protegida.
+
+## Flujo de la cookie de token de refresco
+
+- El backend establece `refresh_token` como cookie HTTP-only mediante `res.ok(...cookies)`.
+- Al refrescar, el backend revoca la fila del token antiguo e inserta un nuevo registro de token de refresco.
+- El logout revoca el token de refresco actual y limpia la cookie.
+
+## Comportamiento de las cookies en el frontend
+
+- Cookie de token de acceso: `SameSite=Strict`, `max-age=900`, `Secure` en producción.
+- Las solicitudes de refresco se envían con `withCredentials: true`.
+
+## Comportamiento de las cookies en el backend
+
+`res.ok` aplica:
+
+- `SameSite=Lax` en desarrollo
+- `SameSite=None; Secure` en producción
+
+para las cookies establecidas/eliminadas por el helper del backend.
+
+## Rutas protegidas y públicas
+
+### Rutas públicas del backend
+
+- `POST /api/auth/login`
+- `POST /api/auth/forgotPassword`
+- `PATCH /api/auth/changePwd`
+- `GET /api/tracking/:trackingToken`
+
+### Rutas protegidas del backend
+
+Todas las demás rutas de dominio requieren auth bearer; muchas también restringen por rol.
+
+## Modelo de roles
+
+- `admin`
+- `distributor`
+
+Las comprobaciones de rol se realizan mediante `requireAuth(request, allowedRoles)` en los route handlers.
+
+## Notas de seguridad
+
+- Los tokens de refresco se persisten en la tabla `tokens` con expiración y flags de revocación.
+- Las contraseñas se hashean con helpers bcrypt.
+- El endpoint de contraseña olvidada devuelve un mensaje de éxito neutral para emails desconocidos.
+
+## Riesgos conocidos / TODOs
+
+- Existen valores de secreto/contraseña de fallback hardcodeados en la configuración de env del backend (deben sobreescribirse en producción).
+- La URL de activación actualmente se deriva de la URL base de reset (confirmar comportamiento de producto esperado).
+- El token de acceso del frontend en una cookie no HTTP-only aumenta la superficie de exposición a XSS comparado con el almacenamiento solo en el servidor.

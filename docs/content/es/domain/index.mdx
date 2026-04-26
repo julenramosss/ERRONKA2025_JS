@@ -1,0 +1,72 @@
+# Modelo de dominio
+
+## Usuarios
+
+Campos principales observados en repositorios/tipos:
+
+- `id`, `name`, `email`, `password_hash`
+- `role` (`admin` o `distributor`)
+- `is_active`, `created_at`
+
+## Roles
+
+Las constantes `admin` y `distributor` se comparten en los sistemas de tipos del backend y del frontend.
+
+## Paquetes
+
+El modelo de paquete incluye destinatario, asignación, estado, peso/descripción, código de seguimiento, timestamps y `address_id` relacionado.
+
+## Estados de paquete
+
+Estados del ciclo de vida definidos:
+
+- `pending`
+- `assigned`
+- `in_transit`
+- `delivered`
+- `undelivered`
+- `failed`
+
+Las comprobaciones de transición se aplican en el servicio de estado de paquete.
+
+## Rutas
+
+Las rutas representan planes de trabajo del distribuidor para una `route_date` y estado específicos:
+
+- `planned`
+- `in_progress`
+- `completed`
+
+## Paradas
+
+`route_stops` vincula la ruta y el paquete con metadatos de ejecución:
+
+- `stop_order`
+- `estimated_arrival`
+- `actual_arrival`
+
+## Tokens
+
+La tabla `tokens` almacena múltiples tipos de token:
+
+- `refresh_token`
+- `tracking_token`
+- `reset_pwd_token`
+- `activate_account_token`
+
+Cada token soporta semánticas de expiración/revocación.
+
+## Seguimiento
+
+El endpoint de seguimiento resuelve el resumen del paquete por token de seguimiento válido y devuelve los campos de estado/dirección/última actualización.
+
+## Eventos de email
+
+Los eventos de email son disparados por los flujos de autenticación y estado de paquete (activación, reset, avisos de inicio de sesión, actualizaciones de estado de paquete).
+
+## Logs de estado
+
+`package_status_logs` captura las transiciones de estado del paquete (`old_status`, `new_status`, actor, timestamp).
+
+> [!NOTE]
+> Los archivos de migración del esquema SQL no están presentes en este snapshot del repositorio, por lo que el DDL de tablas se infiere de las consultas del repositorio (**Requiere verificación** para restricciones/índices exactos de columnas).

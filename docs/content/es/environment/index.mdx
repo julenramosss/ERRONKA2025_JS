@@ -1,0 +1,42 @@
+# Variables de entorno
+
+## Variables del backend (`backend-js/src/app/config/envConfig.ts`)
+
+| Variable                    | Requerida                                           | Por defecto                    | Notas                                                              |
+| --------------------------- | --------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------ |
+| `MYSQL_USER`                | Sí                                                  | ninguno                        | Usuario de la base de datos.                                       |
+| `MYSQL_PASSWORD`            | Sí                                                  | ninguno                        | Contraseña de la base de datos (secreta).                          |
+| `MYSQL_HOST`                | Sí                                                  | ninguno                        | Host de la base de datos.                                          |
+| `MYSQL_PORT`                | No                                                  | `3306`                         | Puerto de la base de datos.                                        |
+| `MYSQL_DATABASE`            | Sí                                                  | ninguno                        | Esquema de la base de datos.                                       |
+| `RESEND_API_KEY`            | Sí (para funciones de email)                        | ninguno                        | Necesario para emails de inicio de sesión/reset/activación/estado. |
+| `GOOGLE_DIRECTIONS_API_KEY` | Sí                                                  | ninguno                        | Usado para optimización de rutas y geocodificación.                |
+| `JWT_SECRET`                | **No en código, pero debe definirse en producción** | cadena de fallback hardcodeada | Existe fallback de desarrollo; producción debe sobreescribirlo.    |
+| `JWT_ACCESS_EXPIRES_IN`     | No                                                  | `15m`                          | TTL del token de acceso.                                           |
+| `JWT_REFRESH_EXPIRES_DAYS`  | No                                                  | `7`                            | TTL del token de refresco.                                         |
+| `TRACKING_EXPIRES_DAYS`     | No                                                  | `30`                           | TTL del token de seguimiento.                                      |
+| `TRACKING_BASE_URL`         | No                                                  | URL localhost/prod según modo  | Usado en los enlaces de email de seguimiento.                      |
+| `RESET_BASE_URL`            | No                                                  | URL localhost/prod según modo  | Usado en los enlaces de reset/activación.                          |
+| `DEFAULT_USER_PASSWORD`     | **No en código, pero sensible a la seguridad**      | cadena de fallback hardcodeada | Contraseña semilla para usuarios creados; debe sobreescribirse.    |
+
+> [!WARNING]
+> `JWT_SECRET` y `DEFAULT_USER_PASSWORD` incluyen fallbacks hardcodeados en el código fuente. Trátelos como exclusivos de desarrollo y sobreescriba inmediatamente en producción.
+
+## Variables del frontend (`frontend-app/app/config/envConfig.ts`)
+
+| Variable                   | Requerida        | Por defecto | Notas                                                 |
+| -------------------------- | ---------------- | ----------- | ----------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL` | Sí en desarrollo | ninguno     | URL base de la API para el frontend local/desarrollo. |
+| `NEXT_PUBLIC_HERE_API_KEY` | Sí               | ninguno     | Clave de integración de mapas HERE.                   |
+
+El frontend tiene hardcodeada la URL base de producción `https://api.tolosaerronka.es/api` cuando `NODE_ENV=production`.
+
+## Variables sensibles a la seguridad
+
+- Backend: `MYSQL_PASSWORD`, `RESEND_API_KEY`, `GOOGLE_DIRECTIONS_API_KEY`, `JWT_SECRET`, `DEFAULT_USER_PASSWORD`.
+- Frontend: las variables públicas quedan expuestas en el lado cliente por diseño; no colocar secretos en `NEXT_PUBLIC_*`.
+
+## Fuente de verdad
+
+- `backend-js/.env.example` es la referencia inicial.
+- Los valores reales de producción deben ser suministrados por los secretos de la plataforma de despliegue.

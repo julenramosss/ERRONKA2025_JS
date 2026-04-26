@@ -1,0 +1,116 @@
+# Frontend Documentation
+
+## Tech stack
+
+- Next.js App Router
+- React 19
+- TanStack React Query
+- Axios
+- Tailwind CSS v4
+- HERE Maps integration
+- `boneyard-js` skeleton loader components
+
+## App structure
+
+Main folders under `frontend-app/app`:
+
+- `(auth)` route group: login experience.
+- `(main)` route group: authenticated dashboard flows.
+- `lib/api`: Axios clients and API helpers.
+- `hooks`: query/mutation hooks by domain.
+- `providers`: React Query and tutorial providers.
+- `utils/types/api`: typed response and request contracts.
+
+## Layout and providers
+
+`app/layout.tsx` wraps content with:
+
+- `AppProviders` → `ReactQueryProvider`
+- `RouteGuard` (auth gate)
+
+`(main)/layout.tsx` adds:
+
+- `SessionKeepAlive` (refresh session background query)
+- `PreferencesSync`
+- `AsideMenu` + `Header` + footer
+- `TutorialProvider`
+
+## React Query usage
+
+- Query keys organized in `app/query/keys/*`.
+- Query options in `app/query/options/*`.
+- Default retries disabled for common non-retriable HTTP statuses (400/401/403/404/409).
+
+## Axios API client
+
+`apiClient` setup includes:
+
+- `withCredentials: true`.
+- request interceptor injecting `Authorization: Bearer <access_token>`.
+- response interceptor that refreshes on `401` (except login/refresh/forgot-password/tracking endpoints), retries once, and clears token on failure.
+
+## Auth token storage
+
+- Frontend stores access token in cookie key `access_token` (`SameSite=Strict`, `max-age=15m`).
+- Refresh token remains backend-managed HTTP-only cookie.
+
+## Refresh-token flow
+
+- Background refresh query (`refreshTokenQueryOptions`) runs every 12 minutes.
+- Axios interceptor triggers refresh on unexpected 401 and replays original request once.
+
+## RouteGuard behavior
+
+- Public route list currently includes only `/login`.
+- If user hits protected route without valid token, app redirects to `/login`.
+- If user has valid token and accesses `/login`, app redirects to `/`.
+
+## Main pages/screens
+
+- `/dashboard`: profile summary, stats, next deliveries, map panel.
+- `/myPackages`: list/grid views and filtering.
+- `/myPackages/[packageId]`: package detail and logs history.
+- `/myRoute`: daily route execution view, progress, stops, map.
+- `/history`: historical package activity analytics.
+- `/settings`: profile/security/appearance controls.
+- `/login`: authentication + forgot password modal.
+
+## Hooks and API modules
+
+Hooks are grouped by domain:
+
+- `hooks/auth/*`
+- `hooks/packages/*`
+- `hooks/routes/*`
+- `hooks/tracking/*`
+
+API modules:
+
+- `lib/api/auth-api.ts`
+- `lib/api/packages-api.ts`
+- `lib/api/routes-api.ts`
+- `lib/api/logs-api.ts`
+- `lib/api/tracking-api.ts`
+
+## Types
+
+Canonical API models are in `app/utils/types/api/*.ts`.
+
+## Styling approach and PakAG identity
+
+`app/globals.css` defines the PakAG palette and semantic tokens (deep purple surfaces, violet accents, status colors). The docs theme in `/docs` intentionally mirrors this palette.
+
+## Skeleton/loading strategy
+
+Pages use `Skeleton` wrapper components with domain-specific loader components (e.g., dashboard, my-route, history loaders).
+
+## Tracking UI
+
+Frontend includes tracking API client (`tracking-api.ts`) and `TRACKING_PATH_PREFIX` constants. Public tracking behavior uses backend `/api/tracking/:trackingToken` endpoint.
+
+## Dashboard/distributor/admin flows
+
+Current frontend route set is distributor-oriented (dashboard, myPackages, myRoute, history, settings). Admin capabilities are primarily exposed through backend APIs and may require separate UI surfaces.
+
+> [!NOTE]
+> Admin-facing web screens are not clearly present in `frontend-app/app` routes and should be treated as **Needs verification** for product scope completeness.

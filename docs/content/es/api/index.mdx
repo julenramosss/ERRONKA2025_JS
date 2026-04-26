@@ -1,0 +1,80 @@
+# Referencia de API
+
+Prefijo base en los route handlers del backend: `/api/*`.
+
+> [!NOTE]
+> Esta sección se genera a partir de los manejadores `route.ts` del backend y los clientes API del frontend. Los campos de payload que no están explicitados en los tipos del cliente se marcan como **Requiere verificación**.
+
+## Endpoints de autenticación
+
+| Método | Ruta                       | Propósito                                                  | Auth                    | Uso en frontend                           |
+| ------ | -------------------------- | ---------------------------------------------------------- | ----------------------- | ----------------------------------------- |
+| POST   | `/api/auth/login`          | Autenticar y emitir tokens de acceso+refresco              | Público                 | `auth-api.login`                          |
+| POST   | `/api/auth/refresh`        | Rotar el token de refresco y emitir nuevo token de acceso  | Cookie de refresco      | `auth-api.refresh`, interceptor Axios     |
+| POST   | `/api/auth/logout`         | Revocar token de refresco y limpiar cookie                 | Bearer                  | `auth-api.logout`                         |
+| GET    | `/api/auth/me`             | Perfil del usuario autenticado actual                      | Bearer                  | `auth-api.getMe`                          |
+| POST   | `/api/auth/forgotPassword` | Generar email de flujo de reset                            | Público                 | `auth-api.forgotPassword`                 |
+| PATCH  | `/api/auth/changePwd`      | Validar o completar el flujo de reset/activación por token | Público basado en token | No tipado directamente en la app frontend |
+
+## Endpoints de usuarios
+
+| Método | Ruta                     | Propósito                                    | Auth   |
+| ------ | ------------------------ | -------------------------------------------- | ------ |
+| POST   | `/api/users/create`      | Crear usuario y disparar flujo de activación | Admin  |
+| GET    | `/api/users/list`        | Listado de usuarios paginado                 | Admin  |
+| GET    | `/api/users/getById?id=` | Detalle de usuario por id                    | Admin  |
+| PATCH  | `/api/users/update`      | Actualizar usuario                           | Admin  |
+| DELETE | `/api/users/remove?id=`  | Eliminar usuario (con restricciones)         | Admin  |
+| PATCH  | `/api/users/changeMyPwd` | Cambiar contraseña propia                    | Bearer |
+
+## Endpoints de paquetes
+
+| Método | Ruta                            | Propósito                                      | Auth               | Uso en frontend                    |
+| ------ | ------------------------------- | ---------------------------------------------- | ------------------ | ---------------------------------- |
+| POST   | `/api/packages/create`          | Crear paquete/dirección/token de seguimiento   | Admin              | Sin llamada de cliente actual      |
+| GET    | `/api/packages/list`            | Lista de paquetes paginada                     | Admin              | Sin llamada de cliente actual      |
+| GET    | `/api/packages/getById?id=`     | Detalle del paquete                            | Admin/Distribuidor | `packages-api.getPackageById`      |
+| GET    | `/api/packages/getMyPackages`   | Lista de paquetes del distribuidor             | Distribuidor       | `packages-api.getMyPackages`       |
+| PATCH  | `/api/packages/update?id=`      | Actualizar información y dirección del paquete | Admin              | Sin llamada de cliente actual      |
+| PATCH  | `/api/packages/updateStatus`    | Actualizar el estado de uno o varios paquetes  | Distribuidor       | `packages-api.updatePackageStatus` |
+| DELETE | `/api/packages/delete?id=`      | Eliminar paquete                               | Admin              | Sin llamada de cliente actual      |
+| GET    | `/api/packages/getDailySummary` | Métricas de resumen diario de paquetes         | Admin              | Sin llamada de cliente actual      |
+
+## Endpoints de rutas y paradas
+
+| Método | Ruta                           | Propósito                                               | Auth                         | Uso en frontend                      |
+| ------ | ------------------------------ | ------------------------------------------------------- | ---------------------------- | ------------------------------------ |
+| POST   | `/api/routes/create`           | Crear ruta optimizada para distribuidor/fecha           | Admin                        | No conectado actualmente en frontend |
+| GET    | `/api/routes/getByUserAndDate` | Búsqueda de ruta para admin                             | Admin                        | No conectado actualmente en frontend |
+| GET    | `/api/routes/getMyDaily`       | Ruta diaria del distribuidor                            | Distribuidor                 | `routes-api.getMyDailyRoute`         |
+| GET    | `/api/routes/continueFromPast` | Buscar ruta pasada pendiente                            | Distribuidor                 | `routes-api.getPendingPastRoute`     |
+| POST   | `/api/routes/continueFromPast` | Continuar ruta pasada en el día de hoy                  | Distribuidor                 | `routes-api.continueFromPast`        |
+| PATCH  | `/api/routes/updateStatus/:id` | Establecer estado de ruta (`in_progress` / `completed`) | Admin/Distribuidor (acotado) | `routes-api.updateRouteStatus`       |
+| PATCH  | `/api/stops/reorder`           | Reordenar paradas en la ruta                            | Admin                        | No conectado actualmente en frontend |
+| PATCH  | `/api/stops/updateArrival`     | Marcar parada como llegada                              | Distribuidor                 | `routes-api.updateArrival`           |
+
+## Endpoints de logs y seguimiento
+
+| Método | Ruta                           | Propósito                         | Auth               | Uso en frontend            |
+| ------ | ------------------------------ | --------------------------------- | ------------------ | -------------------------- |
+| GET    | `/api/logs/listAll`            | Listar logs de estado de paquetes | Admin              | No conectado actualmente   |
+| GET    | `/api/logs/listByPackage`      | Historial de logs del paquete     | Admin/Distribuidor | `logs-api.getPackageLogs`  |
+| GET    | `/api/tracking/:trackingToken` | Seguimiento público de paquetes   | Token público      | `tracking-api.getTracking` |
+
+## Notas de solicitud y respuesta
+
+### Respuestas tipadas conocidas
+
+- Auth y sesión de usuario: `app/utils/types/api/auth.types.ts`
+- Paquetes: `app/utils/types/api/package.types.ts`
+- Rutas/paradas: `app/utils/types/api/route.types.ts`
+- Logs: `app/utils/types/api/log.types.ts`
+- Seguimiento: `app/utils/types/api/tracking.types.ts`
+
+### Marcadores de "Requiere verificación"
+
+Las siguientes áreas deben revisarse contra pruebas de integración o capturas en tiempo de ejecución:
+
+- Esquema exacto de payload para endpoints exclusivos de admin no consumidos por los clientes actuales del frontend.
+- Variantes de payload de respuesta de error para todos los endpoints más allá del base `{ error: string }`.
+- Valores predeterminados de paginación para endpoints de lista donde no están representados en los tipos del frontend.

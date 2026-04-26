@@ -1,0 +1,31 @@
+# Hedapena
+
+## Backend hedatze-oharrak
+
+- MySQL konektagarritasuna eta ingurune-aldagai kritiko guztiak behar ditu.
+- `JWT_SECRET` eta `DEFAULT_USER_PASSWORD`-ren produkzio-gainidazketak ezarri behar dira.
+- Auth eta pakete emailetarako Resend API gako funtzional bat behar du.
+- Ibilbide-sorrerako eta geocoding-erako Google API gakoa behar du.
+
+## Frontend hedatze-oharrak
+
+- Produkzio moduan, API oinarri-URLa `https://api.tolosaerronka.es/api`-ra erortzen da.
+- HERE maps gakoa `NEXT_PUBLIC_HERE_API_KEY`-n konfiguratu behar da.
+- Frontend-eko eskaerak cookietan oinarritzen dira (`withCredentials: true`) freskatze-fluxurako.
+
+## API domeinu-suposizioak
+
+Frontend-ak backend-a eskuragarri dela suposatzen du CORS/cookie-bateragarri ezarpenekin hedatutako frontend-domeionetik.
+
+## Cookie/SameSite/Secure inplikazioak
+
+- Backend-eko freskatze-cookiea: `SameSite=None; Secure` produkzioan.
+- Frontend-eko sarbide-cookiea: `SameSite=Strict`, `Secure` produkzioan.
+- Domeinuak/azpidominuak gaizki konfiguratuta badaude, freskatze-fluxua isiltasunez huts egin dezake.
+
+## Hedatze-arazo ezagunak
+
+- CORS politikak kredentzialak dituzten eskaerak ez du onartzen.
+- SSL konfigurazio inkoherenteak Secure cookieak irauten ez uzten.
+- Frontend inguruneko eta backend hostetako API URL desegokitasuna.
+- Google/Resend sekretuen falta ibilbide-sortze/email-bidaltze denbora-exekuzioan hutsegiteei eragiten die.

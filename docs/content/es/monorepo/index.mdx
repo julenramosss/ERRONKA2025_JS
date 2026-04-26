@@ -1,0 +1,50 @@
+# Estructura del monorepo
+
+## Disposición raíz
+
+El workspace raíz contiene tres paquetes declarados en `pnpm-workspace.yaml`:
+
+- `backend-js`
+- `frontend-app`
+- `docs`
+
+## Scripts raíz
+
+Desde el `package.json` raíz:
+
+- `pnpm install` instala las dependencias de backend y frontend mediante filtros.
+- `pnpm backend:dev` ejecuta el backend en el puerto `3001`.
+- `pnpm frontend:dev` ejecuta el frontend en el puerto `3000`.
+- `pnpm docs:dev` ejecuta la documentación en el puerto `3002`.
+
+## Responsabilidades de cada paquete
+
+### `backend-js`
+
+- Aplicación Next.js utilizada como servidor API mediante Route Handlers.
+- Módulos de dominio en `src/app/api/{auth,users,packages,routes,stops,logs,tracking}`.
+- Infraestructura compartida en `src/app/lib` y `src/app/config`.
+
+### `frontend-app`
+
+- Interfaz de usuario Next.js App Router.
+- Grupos de rutas:
+  - `(auth)` para el inicio de sesión,
+  - `(main)` para las páginas de la aplicación autenticada,
+  - `(not-found)` para la ruta 404 personalizada.
+- Integración de API mediante `app/lib/api`.
+
+### `docs`
+
+- Aplicación de documentación Nextra.
+- Páginas de contenido en `docs/content`.
+- Diccionarios i18n en `docs/app/i18n`.
+
+## Archivos de configuración importantes
+
+- `pnpm-workspace.yaml`: pertenencia al workspace.
+- `backend-js/src/app/config/envConfig.ts`: env del backend y valores por defecto.
+- `backend-js/src/app/config/dbConfig.ts`: pool de conexión MySQL.
+- `frontend-app/app/config/envConfig.ts`: claves API/HERE del frontend y constantes.
+- `frontend-app/next.config.ts`: lista de hosts de imagen permitidos y orígenes de desarrollo permitidos.
+- `docs/next.config.mjs`: integración con Nextra.

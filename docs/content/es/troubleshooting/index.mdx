@@ -1,0 +1,59 @@
+# Solución de problemas
+
+## Variables de entorno faltantes
+
+Síntomas: errores al arrancar, fallos de clave indefinida, fallos de conexión a DB.
+
+- Verificar las variables del backend desde `backend-js/.env.example`.
+- Verificar `NEXT_PUBLIC_API_BASE_URL` del frontend y la clave HERE.
+
+## Discrepancia de URL de API
+
+Síntomas: errores 404/Red del frontend al host incorrecto.
+
+- Confirmar el `API_BASE_URL` en tiempo de ejecución en `frontend-app/app/config/envConfig.ts`.
+
+## Problemas de CORS/cookie/sesión
+
+Síntomas: 401 repetidos, el refresco no restaura la sesión.
+
+- Asegurarse de que las solicitudes se envíen con credenciales.
+- Asegurarse de que el backend permita credenciales cross-origin.
+- Asegurarse de HTTPS en producción para soporte de cookie Secure.
+
+## Bucles de expiración JWT
+
+Síntomas: el usuario es expulsado a `/login` con frecuencia.
+
+- Comprobar la duración máxima del token de acceso (15m) y el intervalo de refresco (12m).
+- Inspeccionar el almacenamiento de cookies del navegador y el desfase de reloj.
+
+## Token de refresco no funciona
+
+- Confirmar que la cookie `refresh_token` existe y se envía.
+- Confirmar que `/api/auth/refresh` no está bloqueado por CORS/proxy.
+- Confirmar que la fila del token no está expirada/revocada en la DB.
+
+## Errores de conexión MySQL
+
+- Comprobar env de host/puerto/usuario/contraseña/base de datos.
+- Validar la ruta de red desde el tiempo de ejecución a la DB.
+- Validar los requisitos SSL frente a la configuración actual `ssl: { rejectUnauthorized: false }`.
+
+## Errores de Resend/email
+
+- Confirmar la validez de `RESEND_API_KEY` y la configuración del dominio del remitente (`no-reply@tolosaerronka.es`).
+
+## Errores de Google Directions/Geocoding
+
+- Confirmar que `GOOGLE_DIRECTIONS_API_KEY` está activa para las APIs requeridas.
+- Comprobar los límites de cuota y el estado de facturación.
+
+## Errores de build de Next.js
+
+- Ejecutar los comandos de build del paquete local para aislar los problemas de backend/frontend/docs.
+
+## Problemas con el gestor de paquetes
+
+- Usar `pnpm` de forma consistente en este monorepo.
+- Reinstalar con `pnpm install` en la raíz si el lockfile/workspace diverge.

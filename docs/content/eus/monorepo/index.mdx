@@ -1,0 +1,50 @@
+# Monorepoaren egitura
+
+## Sustraiaren diseinua
+
+Sustraiaren workspace-ak hiru pakete ditu `pnpm-workspace.yaml`-en adierazita:
+
+- `backend-js`
+- `frontend-app`
+- `docs`
+
+## Sustraiaren scriptak
+
+Sustraiaren `package.json`-etik:
+
+- `pnpm install`-ek backend eta frontend dependentziak instalatzen ditu iragazkien bidez.
+- `pnpm backend:dev`-ek backend-a `3001` portuan exekutatzen du.
+- `pnpm frontend:dev`-ek frontend-a `3000` portuan exekutatzen du.
+- `pnpm docs:dev`-ek dokumentazioa `3002` portuan exekutatzen du.
+
+## Pakete-erantzukizunak
+
+### `backend-js`
+
+- Next.js aplikazioa Route Handlers bidez API zerbitzari gisa erabilia.
+- Domeinu-moduluak `src/app/api/{auth,users,packages,routes,stops,logs,tracking}`-n.
+- Azpiegitura partekatua `src/app/lib` eta `src/app/config`-n.
+
+### `frontend-app`
+
+- Next.js App Router UI.
+- Ibilbide-taldeak:
+  - `(auth)` saioa hasteko,
+  - `(main)` autentifikatutako aplikazio-orrialdeentzat,
+  - `(not-found)` 404 ibilbide pertsonalizaturako.
+- API integrazioa `app/lib/api`-ren bidez.
+
+### `docs`
+
+- Nextra dokumentazio-aplikazioa.
+- Eduki-orriak `docs/content`-en.
+- i18n hiztegiak `docs/app/i18n`-n.
+
+## Konfigurazio-fitxategi garrantzitsuak
+
+- `pnpm-workspace.yaml`: workspace-ko kidetasuna.
+- `backend-js/src/app/config/envConfig.ts`: backend env eta lehenetsitako balioak.
+- `backend-js/src/app/config/dbConfig.ts`: MySQL konexio-puula.
+- `frontend-app/app/config/envConfig.ts`: frontend API/HERE gakoak eta konstanteak.
+- `frontend-app/next.config.ts`: irudi-host baimenduen zerrenda eta garapen-jatorri onartuak.
+- `docs/next.config.mjs`: Nextra integrazioa.

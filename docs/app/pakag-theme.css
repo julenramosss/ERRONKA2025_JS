@@ -1,0 +1,35 @@
+:root {
+  --x-color-primary-600: #7c3aed;
+  --x-color-primary-700: #6d28d9;
+  --x-color-primary-800: #5b21b6;
+  --x-color-primary-900: #3d2960;
+  scroll-behavior: smooth;
+}
+
+.pakag-logo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pakag-logo__brand {
+  color: #f5f3ff;
+}
+
+.pakag-logo__accent {
+  color: #a78bfa;
+}
+
+.pakag-logo__docs {
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #a89dc4;
+}
+
+.nextra-nav-container,
+.nextra-sidebar-footer {
+  border-color: #3d3358 !important;
+}

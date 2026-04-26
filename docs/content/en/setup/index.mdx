@@ -1,0 +1,47 @@
+# Local Setup
+
+## Prerequisites
+
+- Node.js 20+
+- pnpm 10+
+- MySQL database instance reachable by backend
+- Resend API key and Google APIs key for full feature parity
+
+## Install dependencies
+
+From repo root:
+
+```bash
+pnpm install
+```
+
+## Run backend locally
+
+```bash
+pnpm backend:dev
+```
+
+Expected endpoint base: `http://localhost:3001/api`.
+
+## Run frontend locally
+
+```bash
+pnpm frontend:dev
+```
+
+Expected UI base: `http://localhost:3000`.
+
+## Run docs locally
+
+```bash
+pnpm docs:dev
+```
+
+Expected docs base: `http://localhost:3002`.
+
+## Common startup issues
+
+- Missing backend env variables (MySQL/keys).
+- Frontend API base URL not pointing to backend.
+- Cookies blocked by browser/security settings.
+- MySQL SSL/proxy mismatch for local DB.

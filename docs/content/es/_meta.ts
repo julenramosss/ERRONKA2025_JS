@@ -1,0 +1,18 @@
+export default {
+  index: { title: "Inicio", type: "page" },
+  project: { title: "Visión general del proyecto" },
+  monorepo: { title: "Estructura del monorepo" },
+  setup: { title: "Configuración local" },
+  environment: { title: "Variables de entorno" },
+  backend: { title: "Backend" },
+  frontend: { title: "Frontend" },
+  architecture: { title: "Arquitectura" },
+  api: { title: "Referencia de API" },
+  security: { title: "Autenticación y seguridad" },
+  domain: { title: "Modelo de dominio" },
+  database: { title: "Base de datos" },
+  deployment: { title: "Despliegue" },
+  troubleshooting: { title: "Solución de problemas" },
+  contributing: { title: "Cómo contribuir" },
+  "ai-workflow": { title: "Flujo de trabajo de documentación con IA" },
+};

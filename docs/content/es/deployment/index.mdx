@@ -1,0 +1,31 @@
+# Despliegue
+
+## Notas de despliegue del backend
+
+- Requiere conectividad MySQL y todas las variables de entorno críticas.
+- Se deben definir las sobreescrituras de producción de `JWT_SECRET` y `DEFAULT_USER_PASSWORD`.
+- Requiere una clave API de Resend funcional para emails de autenticación y paquetes.
+- Requiere clave de Google API para la creación de rutas y geocodificación.
+
+## Notas de despliegue del frontend
+
+- En modo producción, la URL base de la API cae en `https://api.tolosaerronka.es/api`.
+- La clave HERE Maps debe estar configurada en `NEXT_PUBLIC_HERE_API_KEY`.
+- Las solicitudes del frontend dependen de cookies (`withCredentials: true`) para el flujo de refresco.
+
+## Supuestos de dominio API
+
+El frontend asume que el backend es accesible con configuración CORS/cookie compatible desde el dominio del frontend desplegado.
+
+## Implicaciones de Cookie/SameSite/Secure
+
+- Cookie de refresco del backend: `SameSite=None; Secure` en producción.
+- Cookie de acceso del frontend: `SameSite=Strict`, `Secure` en producción.
+- Si los dominios/subdominios están mal configurados, el flujo de refresco puede fallar silenciosamente.
+
+## Problemas conocidos de despliegue
+
+- La política CORS no permite solicitudes con credenciales.
+- Configuración TLS inconsistente que impide que las cookies Secure persistan.
+- Discrepancia de URL de API entre el entorno del frontend y el host del backend.
+- Falta de secretos de Google/Resend que causa fallos en tiempo de ejecución en la creación de rutas/envío de emails.

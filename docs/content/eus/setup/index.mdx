@@ -1,0 +1,47 @@
+# Tokiko konfigurazioa
+
+## Aurrebaldintzak
+
+- Node.js 20+
+- pnpm 10+
+- Backend-etik eskuragarri den MySQL datu-base instantzia
+- Funtzio-parekotasun osoa izateko Resend API gakoa eta Google APIs gakoa
+
+## Dependentziak instalatu
+
+Biltegiko sustaitik:
+
+```bash
+pnpm install
+```
+
+## Backend-a tokian exekutatu
+
+```bash
+pnpm backend:dev
+```
+
+Espero den endpoint oinarria: `http://localhost:3001/api`.
+
+## Frontend-a tokian exekutatu
+
+```bash
+pnpm frontend:dev
+```
+
+Espero den UI oinarria: `http://localhost:3000`.
+
+## Dokumentazioa tokian exekutatu
+
+```bash
+pnpm docs:dev
+```
+
+Espero den dokumentazio oinarria: `http://localhost:3002`.
+
+## Abio-arazo arruntak
+
+- Backend ingurune-aldagaiak falta (MySQL/gakoak).
+- Frontend API oinarri-URLa ez da backend-era zuzentzen.
+- Cookieak blokeatuta daude nabigatzaileak edo segurtasun-ezarpenak direla eta.
+- MySQL SSL/proxy desegokitasuna tokiko datu-basean.
