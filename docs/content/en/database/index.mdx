@@ -1,29 +1,197 @@
-# Base de datos
+# Database
 
-pakAG usa **MySQL** (esquema `pakAG_db`). El schema completo está en `schema.sql` en la raíz del monorepo.
+pakAG uses **MySQL** (database name `erronka` per `schema.sql`; `.env.example` documents it as `pakag` — see Known risks below).
 
-## Tablas principales
+Schema source of truth: [`schema.sql`](https://github.com) at the monorepo root.
 
-| Tabla                    | Descripción                                |
-| ------------------------ | ------------------------------------------ |
-| `users`                  | Usuarios del sistema (deliverers y admins) |
-| `packages`               | Paquetes registrados con estado actual     |
-| `routes`                 | Rutas de reparto asignadas a deliverers    |
-| `stops`                  | Paradas dentro de cada ruta                |
-| `package_status_history` | Historial de cambios de estado por paquete |
-| `logs`                   | Log de acciones relevantes del sistema     |
+## Tables
 
-## Estados de un paquete
+### `addresses`
+
+Geocoded delivery addresses. Created by the package creation flow (Google Geocoding API).
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `street` | `VARCHAR(255)` | |
+| `city` | `VARCHAR(100)` | |
+| `postal_code` | `VARCHAR(20)` | |
+| `country` | `VARCHAR(100)` | Default `'España'` |
+| `latitude` | `DECIMAL(10,7)` | Geocoded by Google API |
+| `longitude` | `DECIMAL(10,7)` | Geocoded by Google API |
+| `created_at` | `TIMESTAMP` | |
+
+> [!NOTE]
+> SQL queries alias `latitude`/`longitude` to `lat`/`lng` in TypeScript types. Column names in DB differ from field names in frontend types.
+
+---
+
+### `users`
+
+System users: admins and distributors.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `name` | `VARCHAR(150)` | |
+| `email` | `VARCHAR(255) UNIQUE` | |
+| `password_hash` | `VARCHAR(255)` | bcrypt |
+| `role` | `ENUM('admin','distributor')` | Default `'distributor'` |
+| `is_active` | `BOOLEAN` | Default `TRUE`. New users created inactive via the activation flow |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | Auto-updated on row change |
+
+---
+
+### `packages`
+
+Core domain entity. Represents a parcel to be delivered.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `tracking_code` | `VARCHAR(50) UNIQUE` | Short human-readable code, e.g. `PAK-20260001` |
+| `recipient_name` | `VARCHAR(150)` | |
+| `recipient_email` | `VARCHAR(255)` | Receives status notification emails |
+| `weight_kg` | `DECIMAL(6,3)` | |
+| `description` | `TEXT NULL` | Optional |
+| `status` | `ENUM(...)` | See state machine below |
+| `estimated_delivery` | `DATE NULL` | Set by route creation; updated when route is optimized |
+| `address_id` | `INT UNSIGNED` | FK → `addresses.id` |
+| `assigned_to` | `INT UNSIGNED NULL` | FK → `users.id`. `ON DELETE SET NULL` |
+| `created_by` | `INT UNSIGNED` | FK → `users.id` |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | |
+
+**Package status state machine**
 
 ```
-PENDING → ASSIGNED → IN_TRANSIT → DELIVERED
-                              ↘ UNDELIVERED
-                              ↘ FAILED
+pending → assigned → in_transit → delivered
+                             ↘ undelivered
+                             ↘ failed
 ```
 
-## Convenciones SQL
+Each transition triggers a log entry in `package_status_logs` and an email to the recipient. See [Domain Model](/en/domain) for full side-effect table.
 
-- Todos los queries usan **prepared statements** (mysql2 `?` placeholders)
-- IDs: `INT AUTO_INCREMENT PRIMARY KEY`
-- Timestamps: `DATETIME DEFAULT CURRENT_TIMESTAMP`
-- Soft deletes: no se usan — los registros históricos se mantienen en `package_status_history`
+---
+
+### `tokens`
+
+Single table for all token types in the system.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `token` | `VARCHAR(512) UNIQUE` | Opaque token value (32-byte hex or JWT string) |
+| `type` | `ENUM(...)` | `refresh_token`, `tracking_token`, `reset_pwd_token`, `activate_account_token` |
+| `user_id` | `INT UNSIGNED NULL` | FK → `users.id`. Set for `refresh_token`; `ON DELETE CASCADE` |
+| `package_id` | `INT UNSIGNED NULL` | FK → `packages.id`. Set for `tracking_token`; `ON DELETE CASCADE` |
+| `expires_at` | `TIMESTAMP` | |
+| `revoked` | `BOOLEAN` | Default `FALSE`. Revoked on use or logout |
+| `created_at` | `TIMESTAMP` | |
+
+Token lifetimes (configured via env):
+- `refresh_token`: `JWT_REFRESH_EXPIRES_DAYS` (default 7 days)
+- `tracking_token`: `TRACKING_EXPIRES_DAYS` (default 30 days)
+- `reset_pwd_token` / `activate_account_token`: 24 hours (hardcoded)
+
+---
+
+### `package_status_logs`
+
+Full history of every package status change.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `package_id` | `INT UNSIGNED` | FK → `packages.id`. `ON DELETE CASCADE` |
+| `old_status` | `ENUM NULL` | `NULL` for the initial status assignment |
+| `new_status` | `ENUM` | |
+| `changed_by` | `INT UNSIGNED` | FK → `users.id` |
+| `notes` | `TEXT NULL` | |
+| `changed_at` | `TIMESTAMP` | |
+
+---
+
+### `routes`
+
+One delivery route per distributor per calendar day (enforced by unique constraint).
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `user_id` | `INT UNSIGNED` | FK → `users.id` (must be `distributor`) |
+| `route_date` | `DATE` | |
+| `status` | `ENUM('planned','in_progress','completed')` | Default `'planned'` |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | |
+
+**Unique constraint**: `(user_id, route_date)` — one route per distributor per day.
+
+---
+
+### `route_stops`
+
+Individual stops within a route. One stop = one package delivery.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `route_id` | `INT UNSIGNED` | FK → `routes.id`. `ON DELETE CASCADE` |
+| `package_id` | `INT UNSIGNED` | FK → `packages.id`. `ON DELETE CASCADE` |
+| `stop_order` | `SMALLINT` | Optimized by Google Directions API |
+| `estimated_arrival` | `TIME NULL` | Calculated at route creation |
+| `actual_arrival` | `TIME NULL` | Set when distributor marks arrival |
+| `created_at` | `TIMESTAMP` | |
+
+**Unique constraint**: `(route_id, stop_order)` — no two stops share the same order in a route.
+
+---
+
+## Relationships
+
+```
+users ─── packages (assigned_to, created_by)
+users ─── routes (user_id)
+users ─── package_status_logs (changed_by)
+users ─── tokens (user_id)
+
+packages ─── addresses (address_id)
+packages ─── route_stops (package_id)
+packages ─── package_status_logs (package_id)
+packages ─── tokens (package_id, for tracking_token)
+
+routes ─── route_stops (route_id)
+```
+
+---
+
+## Indexes
+
+```sql
+CREATE INDEX idx_packages_status      ON packages (status);
+CREATE INDEX idx_packages_assigned_to ON packages (assigned_to);
+CREATE INDEX idx_packages_created_at  ON packages (created_at);
+CREATE INDEX idx_tokens_type_expires  ON tokens (type, expires_at, revoked);
+CREATE INDEX idx_logs_package_date    ON package_status_logs (package_id, changed_at);
+CREATE INDEX idx_routes_date          ON routes (route_date);
+```
+
+---
+
+## SQL conventions
+
+- All queries use **prepared statements** (`mysql2` `?` placeholders). No string concatenation.
+- IDs: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`.
+- Timestamps: `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`.
+- No soft deletes on `packages` — historical state is preserved in `package_status_logs`.
+- `addresses` are not deleted when a package is deleted (**Needs verification** — no `ON DELETE CASCADE` on the `packages.address_id` FK).
+
+---
+
+## Known risks
+
+| Risk | Detail |
+| --- | --- |
+| DB name inconsistency | `schema.sql` creates DB as `erronka`; `.env.example` documents `MYSQL_DATABASE=pakag`. Verify which name is used in production before migrating. |
+| No startup validation | `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` env vars can be `undefined` at startup without an error. The pool fails silently at first query. |

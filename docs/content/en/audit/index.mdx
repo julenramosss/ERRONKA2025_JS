@@ -1,0 +1,73 @@
+# Docs Audit
+
+This page tracks the current state of the documentation site: what was verified, what is still unconfirmed, known risks, and architecture decisions for future maintainers.
+
+## What was verified
+
+The following claims were cross-referenced against the actual codebase under `backend-js/`, `frontend-app/`, and `docs/`:
+
+- **Monorepo structure**: three packages (`backend-js`, `frontend-app`, `docs`) under pnpm workspaces. Verified from `pnpm-workspace.yaml`.
+- **Backend endpoint inventory**: all endpoints in the API reference were verified against `backend-js/src/app/api/*/route.ts` files.
+- **Auth flows**: access token (Bearer JWT, 15 min) + refresh token (HTTP-only cookie, 7 days) confirmed from `backend-js/src/app/lib/jwt.ts` and `backend-js/src/app/config/envConfig.ts`.
+- **Package state machine**: `pending → assigned → in_transit → delivered | undelivered | failed` confirmed from `backend-js/src/app/types/index.ts`.
+- **Email side effects on status change**: confirmed from `backend-js/src/app/lib/packageStatus/packageStatusSideEffects.service.ts`.
+- **Token types**: `refresh_token`, `tracking_token`, `reset_pwd_token`, `activate_account_token` confirmed from `backend-js/src/app/types/index.ts`.
+- **Database name inconsistency**: `schema.sql` creates database as `erronka`; `backend-js/.env.example` documents it as `pakag`. Marked as **Needs verification** in environment docs.
+- **Google Directions origin**: coordinates hardcoded in `backend-js/src/app/api/routes/create/service/create.service.ts` — confirmed risk documented in security and environment pages.
+- **Frontend API client file paths**: all `app/lib/api/*` paths are referenced as documented; exact TypeScript type locations are verified from `app/utils/types/api/`.
+
+## What is still unverified (Needs verification)
+
+The following items could not be confirmed without access to a running environment or full integration test:
+
+- Exact request/response payload schemas for admin-only endpoints that the current frontend does not call (`/api/packages/create`, `/api/packages/update`, `/api/routes/create`, etc.).
+- Pagination defaults for list endpoints (`/api/packages/list`, `/api/users/list`, `/api/logs/listAll`).
+- Error response variants beyond `{ error: string }` — full error shape per status code.
+- Production domain and CORS configuration (documented as risk, not confirmed).
+- Activation URL: docs note it reuses `RESET_BASE_URL`; exact behavior in a live environment is unverified.
+- Frontend admin-facing UI screens: some screen locations referenced in domain/frontend pages could not be pinned to specific file paths.
+
+## Known risks
+
+| Severity | Risk | Reference |
+| --- | --- | --- |
+| High | `JWT_SECRET` has a hardcoded fallback in `envConfig.ts` — if not set in production, the fallback is publicly visible in the repo | Security page, CLAUDE.md §4.2 |
+| High | `DEFAULT_USER_PASSWORD` has the same hardcoded fallback problem | Security page, CLAUDE.md §4.3 |
+| Medium | `handleError` forwards internal error messages to HTTP responses in 500 cases | CLAUDE.md §4.5 |
+| Medium | Rate limiting packages installed (`@upstash/ratelimit`) but not implemented | CLAUDE.md §7.2 |
+| Low | MySQL env vars are not validated at startup — silent failures possible | CLAUDE.md §4.4 |
+| Low | `GOOGLE_DIRECTIONS_API_KEY` uses TypeScript `!` assertion without a startup guard | CLAUDE.md §4.10 |
+
+## Docs site architecture decisions
+
+- **Custom layout** — the docs do not use `nextra-theme-docs` layout. Instead, a fully custom sidebar, header, and content layout is implemented in `docs/app/[lang]/layout.tsx`. This was chosen to allow full design control.
+- **Locale routing** — locale is the first URL segment (`/en/`, `/es/`, `/eus/`). Middleware at `docs/middleware.ts` redirects locale-less paths to `/en/`.
+- **Search** — implemented as a static client-side page-title search via `DocsSearch.tsx`. No full-text index. Ctrl+K / Cmd+K opens the search modal.
+- **Table of contents** — `PageToc.tsx` reads DOM headings after mount (scoped to `.docs-content`). Headings get stable IDs from the `slugify` function in `mdx-components.tsx`.
+- **Mobile TOC** — `MobilePageTools.tsx` renders a button below the header that opens a bottom drawer with the TOC and a shortcut to search.
+- **i18n** — dictionaries live in `docs/app/i18n/`. Adding a new nav item requires updating `DocsDictionary` interface and all three locale files.
+- **MDX heading IDs** — `h2`, `h3`, `h4` MDX components are overridden in `docs/mdx-components.tsx` to auto-generate `id` attributes via `slugify`.
+
+## Build and search status
+
+| Feature | Status |
+| --- | --- |
+| Root `/` redirect to `/en` | Working via `docs/app/page.tsx` + middleware |
+| Locale-prefixed routing | Working — `/en/`, `/es/`, `/eus/` |
+| Locale fallback (e.g. `/backend` → `/en/backend`) | Working via `docs/middleware.ts` |
+| Per-page TOC (desktop) | Working — right-side sticky via `PageToc.tsx` |
+| Per-page TOC (mobile) | Working — bottom drawer via `MobilePageTools.tsx` |
+| Ctrl+K search | Working — static title search via `DocsSearch.tsx` |
+| Heading anchor links | Working — IDs generated via `slugify` in `mdx-components.tsx` |
+| Code block copy button | Working — via `CodeBlock.tsx` |
+| Mobile sidebar | Working — via `MobileMenu.tsx` |
+| View transitions | Working — CSS view transitions on page navigation |
+
+## How future agents should update docs
+
+1. **Adding a new backend endpoint**: update `docs/content/en/api/index.mdx`. Add request/response examples. Verify from the actual `route.ts` and `dtos/` files. Mark anything unverified with `> [!NOTE] Needs verification`.
+2. **Adding a new frontend page or hook**: update `docs/content/en/frontend/index.mdx`.
+3. **Adding a new doc section**: create `docs/content/en/{section}/index.mdx` and `docs/content/en/{section}/_meta.ts`. Add the section to `docs/content/en/_meta.ts`. Add a nav item in `docs/app/[lang]/layout.tsx` and update all three i18n dictionaries.
+4. **Creating ES/EUS counterparts**: create the content files under `docs/content/es/` and `docs/content/eus/`. If full translation is not complete, add a translated header and mark the page as pending.
+5. **Fixing a broken link**: all internal links should be locale-prefixed (e.g. `/en/setup`). Locale-less links also work via middleware redirect, but explicit locale links are preferred.
+6. **Keeping docs truthful**: never document behavior that cannot be verified from the codebase. Use `> [!NOTE]` callouts with "Needs verification" for anything uncertain.

@@ -19,17 +19,20 @@ export function LocaleSwitcher({ currentLocale }: { currentLocale: string }) {
   }
 
   return (
-    <select
-      value={currentLocale}
-      onChange={(e) => handleChange(e.target.value)}
-      className="bg-bg-surface border border-border text-text-secondary text-xs rounded-md px-2 py-1 focus:outline-none focus:border-border-focus cursor-pointer hover:border-border-focus transition-colors"
-      aria-label="Select language"
-    >
+    <div className="flex items-center gap-1" aria-label="Select language">
       {locales.map(({ code, label }) => (
-        <option key={code} value={code}>
+        <button
+          key={code}
+          onClick={() => handleChange(code)}
+          className={`px-2 py-1 text-xs rounded-md border transition-colors cursor-pointer ${
+            currentLocale === code
+              ? "bg-accent-subtle border-border-focus text-accent-light"
+              : "bg-bg-surface border-border text-text-secondary hover:border-border-focus hover:text-text-primary"
+          }`}
+        >
           {label}
-        </option>
+        </button>
       ))}
-    </select>
+    </div>
   );
 }

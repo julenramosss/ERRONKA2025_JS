@@ -56,14 +56,6 @@ export function proxy(request: NextRequest) {
   const origin = request.headers.get("origin");
   const pathname = request.nextUrl.pathname;
 
-  console.log(
-    "[PROXY]",
-    request.method,
-    pathname,
-    "| Origin:",
-    origin || "null"
-  );
-
   // Handle CORS preflight requests
   if (request.method === "OPTIONS") {
     const response = new NextResponse(null, { status: 204 });

@@ -129,39 +129,6 @@ button {
   cursor: pointer;
 }
 
-/* ─── Forms ──────────────────────────────────────────────────────────────── */
-/* input,
-textarea,
-select {
-  background: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-normal);
-  border-radius: var(--r-md);
-  padding: 0.5rem 0.75rem;
-  font-family: var(--ff-sans);
-  font-size: 0.875rem;
-  outline: none;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-  width: 100%;
-}
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: var(--border-focus);
-  box-shadow: var(--sh-glow-sm);
-}
-input::placeholder,
-textarea::placeholder {
-  color: var(--text-disabled);
-}
-label {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-} */
-
 /* ─── Animations off preference ──────────────────────────────────────────── */
 html[data-animations="off"] *,
 html[data-animations="off"] *::before,

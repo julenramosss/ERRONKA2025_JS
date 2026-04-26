@@ -1,59 +1,185 @@
 # Troubleshooting
 
-## Missing environment variables
+## Backend won't start
 
-Symptoms: startup errors, undefined key failures, DB connect failures.
+**Symptom**: `Error: Cannot find module '@/app/...'` or similar on `pnpm backend:dev`.
 
-- Verify backend vars from `backend-js/.env.example`.
-- Verify frontend `NEXT_PUBLIC_API_BASE_URL` and HERE key.
+**Cause**: Path aliases not resolved or `tsconfig.json` paths not matching.
 
-## API URL mismatch
+**Fix**: Verify `tsconfig.json` at `backend-js/` has `"@/*": ["./src/*"]` under `compilerOptions.paths`. If missing, check that `backend-js/tsconfig.json` extends the correct base.
 
-Symptoms: frontend 404/Network errors to wrong host.
+---
 
-- Confirm runtime `API_BASE_URL` in `frontend-app/app/config/envConfig.ts`.
+## Missing or undefined environment variables
 
-## CORS/cookie/session issues
+**Symptom**: `undefined` values in logs, DB connect errors, email send errors, JWT errors like `secretOrPrivateKey must have a value`.
 
-Symptoms: repeated 401, refresh not restoring session.
+**Fix**:
+1. Copy `.env.example` to `.env.local` in `backend-js/`.
+2. Fill in all values — do not leave anything as-is from the example.
+3. Restart the dev server after changes.
 
-- Ensure requests are sent with credentials.
-- Ensure backend allows cross-origin credentials.
-- Ensure HTTPS in production for Secure cookie support.
+Critical vars that have hardcoded fallbacks (unsafe in prod, but will silently work in dev):
+- `JWT_SECRET` — uses known fallback if unset
+- `DEFAULT_USER_PASSWORD` — uses known fallback if unset
 
-## JWT expiration loops
+Vars with no fallback that will crash at runtime:
+- `RESEND_API_KEY` — email send will fail
+- `GOOGLE_DIRECTIONS_API_KEY` — geocoding and route optimization will fail
+- MySQL vars — DB pool will fail at first query
 
-Symptoms: user kicked to `/login` frequently.
+---
 
-- Check access token max age (15m) and refresh interval (12m).
-- Inspect browser cookie storage and clock skew.
+## Database connection errors
 
-## Refresh token not working
+**Symptom**: `ECONNREFUSED`, `ER_ACCESS_DENIED_ERROR`, or `Unknown database` at runtime.
 
-- Confirm `refresh_token` cookie exists and is sent.
-- Confirm `/api/auth/refresh` isn’t blocked by CORS/proxy.
-- Confirm token row is not expired/revoked in DB.
+**Checklist**:
+1. MySQL server is running on `MYSQL_HOST:MYSQL_PORT`.
+2. `MYSQL_USER` / `MYSQL_PASSWORD` credentials are correct.
+3. The database exists. `schema.sql` creates it as `erronka` — run `CREATE DATABASE IF NOT EXISTS erronka` if needed.
+4. `MYSQL_DATABASE` env var matches the actual database name (`erronka` vs `pakag` — they differ between `schema.sql` and `.env.example`).
+5. SSL setting: `backend-js/src/app/config/dbConfig.ts` sets `ssl: { rejectUnauthorized: false }`. If your MySQL instance requires a specific cert, adjust this.
 
-## MySQL connection errors
+---
 
-- Check host/port/user/password/database env.
-- Validate network path from runtime to DB.
-- Validate SSL requirements vs current `ssl: { rejectUnauthorized: false }` config.
+## TypeScript check fails (`tsc --noEmit` errors)
 
-## Resend/email errors
+**Symptom**: Type errors when running `pnpm tsc --noEmit` in `backend-js/`.
 
-- Confirm `RESEND_API_KEY` validity and sender domain (`no-reply@tolosaerronka.es`) configuration.
+**Common causes and fixes**:
 
-## Google Directions/Geocoding errors
+| Error | Fix |
+| --- | --- |
+| `Property 'X' does not exist on type 'Y'` | Check that the DTO interface and the types file are in sync |
+| `Argument of type 'any' is not assignable` | No `any` allowed — add an explicit interface |
+| `Cannot find module '@/app/...'` | Check `tsconfig.json` paths |
+| Type error in `route.ts` | Verify `requireAuth` return type is used correctly |
 
-- Confirm `GOOGLE_DIRECTIONS_API_KEY` is active for required APIs.
-- Check quota limits and billing status.
+---
 
-## Next.js build errors
+## 401 on every request after login
 
-- Run package-local build commands to isolate backend/frontend/docs issues.
+**Symptom**: Login succeeds (returns `access_token`), but subsequent API calls return 401.
 
-## Package manager issues
+**Checklist**:
+1. The frontend is storing the access token correctly in the `access_token` cookie.
+2. The Axios request interceptor is reading from the cookie and setting `Authorization: Bearer <token>`.
+3. The token isn't expired — access token lifetime is 15 minutes.
+4. The backend is on a different origin — check CORS config and `withCredentials: true`.
 
-- Use `pnpm` consistently in this monorepo.
-- Reinstall with `pnpm install` at root if lockfile/workspace drifts.
+---
+
+## Refresh token not working / user repeatedly kicked to login
+
+**Symptom**: User is logged out after 15 minutes despite `SessionKeepAlive` being active.
+
+**Checklist**:
+1. Open DevTools → Application → Cookies. Confirm `refresh_token` cookie exists with `HttpOnly` flag.
+2. Confirm `POST /api/auth/refresh` is not blocked by CORS. In dev, backend must allow the frontend origin with `credentials: true`.
+3. Confirm the refresh token row is not revoked/expired in the `tokens` table.
+4. Check clock skew — if server time and client time differ by more than the token lifetime, tokens may appear expired immediately.
+5. Confirm `withCredentials: true` is set in the Axios client.
+
+---
+
+## CORS errors
+
+**Symptom**: `Access-Control-Allow-Origin` header missing, preflight fails.
+
+**Fix**: In `backend-js/next.config.ts` (or equivalent CORS middleware), ensure:
+- The frontend origin is allowed explicitly (not `*` when using credentials).
+- `Access-Control-Allow-Credentials: true` is set.
+- Preflight `OPTIONS` requests return 200.
+
+In production, both apps must be on HTTPS for `SameSite=None; Secure` cookies to work.
+
+---
+
+## Email not sent after package creation / status change
+
+**Symptom**: No email arrives, but the operation succeeds.
+
+**Checklist**:
+1. `RESEND_API_KEY` is set and valid.
+2. The sender domain (`no-reply@tolosaerronka.es`) is verified in Resend.
+3. Check Resend dashboard for send failures or bounces.
+4. Status change emails are conditional — only specific transitions trigger emails. See [Domain Model](/en/domain) for the email trigger table.
+
+---
+
+## Route creation fails (Google Maps error)
+
+**Symptom**: `POST /api/routes/create` returns 500 or an error related to Directions API.
+
+**Checklist**:
+1. `GOOGLE_DIRECTIONS_API_KEY` is set and the key has **Directions API** and **Geocoding API** enabled in Google Cloud Console.
+2. Billing is active on the Google Cloud project.
+3. The API key has no IP/referer restriction that blocks the backend server IP.
+4. Package addresses were geocoded successfully on creation — if `latitude`/`longitude` are 0 or NULL, geocoding failed at package creation time.
+
+---
+
+## Geocoding returns wrong location
+
+**Symptom**: Package appears at wrong coordinates on the map.
+
+**Cause**: Google Geocoding matched a different address, or the address is ambiguous.
+
+**Fix**: Check the package's `addresses` row in the DB. Correct `latitude`/`longitude` manually if needed via a direct DB update (no endpoint currently exposes raw coordinate editing).
+
+---
+
+## Route optimization exceeds max stops
+
+**Symptom**: Route creation is rejected even with fewer packages than expected.
+
+**Cause**: The route service adds **carryover packages** (assigned packages from previous days for the same distributor) to the stop list automatically. Total stops are capped at 20.
+
+**Fix**: Reduce `package_ids` in the request to leave room for carryover, or clear the distributor's backlog first.
+
+---
+
+## Package status log missing after update
+
+**Symptom**: `GET /api/logs/listByPackage` returns no logs after `updateStatus` call.
+
+**Cause**: Log insertion happens in `packageStatusSideEffects.service.ts`. If it throws and is caught silently, the status update may succeed but no log is written.
+
+**Fix**: Check backend console for errors from `[packageStatusSideEffects]`. Verify DB constraints allow the log insert (e.g., `changed_by` user exists).
+
+---
+
+## Frontend build fails
+
+**Symptom**: `pnpm frontend:dev` errors with TypeScript or module errors.
+
+**Fix**:
+```bash
+# From monorepo root:
+pnpm install                    # re-sync workspace deps
+pnpm --filter @repo/frontend-app tsc --noEmit  # isolate TS errors
+```
+
+---
+
+## Docs site search not finding a page
+
+**Symptom**: Ctrl+K search returns no results for a known page.
+
+**Cause**: Search is static and based on `navItems` titles in `docs/app/[lang]/layout.tsx`. If you add a new page without adding it to `navItems`, it won't appear in search.
+
+**Fix**: Add the new page to `navItems` in `layout.tsx` and update all three i18n dictionaries. See [Docs Audit](/en/audit) for the full procedure.
+
+---
+
+## pnpm version conflicts
+
+**Symptom**: `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND` or workspace script not found.
+
+**Fix**:
+```bash
+pnpm install   # from monorepo root
+```
+
+All workspace package commands must be run from the monorepo root using `-filter` flags or the root-level scripts in `package.json`.

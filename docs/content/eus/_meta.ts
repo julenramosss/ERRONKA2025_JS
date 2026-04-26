@@ -15,4 +15,5 @@ export default {
   troubleshooting: { title: "Arazoak konpontzea" },
   contributing: { title: "Nola lagundu" },
   "ai-workflow": { title: "AI dokumentazio fluxua" },
+  audit: { title: "Dokumentazio ikuskaritza" },
 };

@@ -9,6 +9,9 @@ const withNextra = nextra({
 });
 
 export default withNextra({
+  experimental: {
+    viewTransition: true,
+  },
   i18n: {
     locales: ["en", "es", "eus"],
     defaultLocale: "en",

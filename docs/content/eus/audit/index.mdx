@@ -1,0 +1,39 @@
+# Dokumentazio ikuskaritza
+
+Orrialde honek dokumentazio-gunearen egungo egoera erregistratzen du: zer egiaztatu den, zer oraindik ez den baieztatuta, arrisku ezagunak eta etorkizuneko mantentzegileen arkitektura-erabakiak.
+
+> [!NOTE]
+> Ingelesezko bertsioa egia-iturri nagusia da eta osatuena. Ikusi [ingelesezko bertsioa](/en/audit) xehetasun guztietarako.
+
+## Zer egiaztatu den
+
+- Monorepoaren egitura (`pnpm-workspace.yaml`)
+- Backend endpoint-en inbentarioa (`route.ts` fitxategietatik egiaztatuta)
+- Autentikazio-fluxuak (JWT + HTTP-only cookiea)
+- Pakete-estatuen makina
+- Email albo-efektuak egoera-aldaketetan
+- Token motak
+
+## Zer egiaztatu behar den oraindik
+
+- Soilik administratzaileentzako endpoint-en eskaera/erantzun eskema zehatzak
+- Zerrendatze endpoint-en orrikatze lehenetsiak
+- Ekoizpeneko domeinu eta CORS konfigurazioa
+
+## Arrisku ezagunak
+
+| Larritasuna | Arriskua |
+| --- | --- |
+| Altua | `JWT_SECRET` biltegian ikusgai dagoen fallback hardcodeatu batekin |
+| Altua | `DEFAULT_USER_PASSWORD` arazo berdinarekin |
+| Ertaina | `handleError`-k barne errore-mezuak bidaltzen ditu 500 erantzunetan |
+
+## Dokumentazio-gunearen arkitektura erabakiak
+
+- Layout guztiz pertsonalizatua (ez `nextra-theme-docs`)
+- Lokale-bidezko bideratzea (`/en/`, `/es/`, `/eus/`)
+- Middleware-ak lokalerik gabeko bideak `/en/`-ra bideratzen ditu
+- Bilaketa estatikoa orrialde-izenburuetan (Ctrl+K)
+- Edukien taula DOM-etik sortua
+
+Ikusi [ingelesezko bertsioa](/en/audit) erabaki bakoitzaren deskribapen osoa lortzeko.

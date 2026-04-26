@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Icons } from "./components/icons";
+import { Icons } from "./components/Icons";
+// import { Icons } from "@repo/frontend-app/app/components/icons";
 
 export default function NotFound() {
   const router = useRouter();

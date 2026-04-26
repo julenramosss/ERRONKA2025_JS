@@ -12,7 +12,8 @@ export async function generateMetadata(props: {
   return metadata;
 }
 
-const Wrapper = useMDXComponents().wrapper as React.ComponentType<React.PropsWithChildren>;
+const Wrapper = useMDXComponents()
+  .wrapper as React.ComponentType<React.PropsWithChildren>;
 
 export default async function Page(props: {
   params: Promise<{ lang: string; mdxPath: string[] }>;

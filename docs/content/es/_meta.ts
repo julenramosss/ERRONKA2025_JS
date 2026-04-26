@@ -15,4 +15,5 @@ export default {
   troubleshooting: { title: "Solución de problemas" },
   contributing: { title: "Cómo contribuir" },
   "ai-workflow": { title: "Flujo de trabajo de documentación con IA" },
+  audit: { title: "Auditoría de la documentación" },
 };

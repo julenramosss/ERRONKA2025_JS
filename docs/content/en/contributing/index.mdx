@@ -1,49 +1,282 @@
-# Contributing
+# Contributing and Developer Recipes
 
-## Branching
+Step-by-step guides for the most common development tasks in this monorepo. All recipes follow the conventions described in [Architecture](/en/architecture) and [Backend](/en/backend).
 
-Follow repository branch policies and keep work scoped by package (`backend-js`, `frontend-app`, `docs`).
+## General workflow
 
-## Safe development workflow
+1. Pull latest changes from `main`.
+2. Create a branch scoped to the package you are changing (`backend/`, `frontend/`, `docs/`).
+3. Implement changes following the conventions below.
+4. Run `tsc --noEmit` in the affected package before committing.
+5. Update docs in `/docs/content/en/` for any behavior changes.
 
-1. Pull latest changes.
-2. Create focused branch.
-3. Implement minimal scoped changes.
-4. Run package-specific checks.
-5. Update docs in `/docs` for behavior changes.
+---
 
-## Add a backend endpoint
+## Recipe: Add a backend endpoint
 
-1. Create use-case folder in `backend-js/src/app/api/<domain>/<action>`.
-2. Add `dto`/`dtos` validation.
-3. Implement service rules.
-4. Implement repository queries.
-5. Add `route.ts` with `requireAuth` + `handleError`.
-6. Add/extend frontend API module and types if consumed by UI.
+Reference implementation: `backend-js/src/app/api/users/create/`.
 
-## Add a frontend API call
+### 1 — Create the folder structure
 
-1. Add method to `app/lib/api/*-api.ts`.
-2. Add request/response types under `app/utils/types/api`.
-3. Add hook under `app/hooks/<domain>`.
-4. Add query keys/options if query-based.
+```
+backend-js/src/app/api/<domain>/<action>/
+  dtos/
+    <action>.dto.ts
+  repository/
+    <action>.repo.ts
+  service/
+    <action>.service.ts
+  route.ts
+  types.ts
+```
 
-## Add a new page
+Folder name convention: `dtos/` (plural). No exceptions.
 
-1. Create route in appropriate App Router group.
-2. Wire data with existing hooks/query patterns.
-3. Reuse palette/tokens from `globals.css`.
-4. Add loading/skeleton states where relevant.
+### 2 — Define domain types (`types.ts`)
 
-## Add a new docs language
+```ts
+export interface CreateFooDto {
+  name: string;
+  // ... validated fields
+}
 
-1. Create dictionary file in `docs/app/i18n/<locale>.ts`.
-2. Match `DocsDictionary` structure.
-3. Register locale in `docs/app/i18n/index.ts`.
-4. Add locale routing strategy (future enhancement).
+export interface FooRow {
+  id: number;
+  name: string;
+  created_at: string;
+}
+```
 
-## Keep docs in sync with code
+### 3 — Write the DTO validator (`dtos/<action>.dto.ts`)
 
-- Update API reference after route additions/changes.
-- Update env page after config changes.
-- Mark uncertain areas as **Needs verification** instead of inventing behavior.
+```ts
+import { isString } from "@/app/lib/dto";
+import { ValidationError } from "@/app/lib/errors";
+import { CreateFooDto } from "../types";
+
+export function validateCreateFooDto(body: unknown): CreateFooDto {
+  if (!body || typeof body !== "object") {
+    throw new ValidationError("Invalid request body");
+  }
+  const { name } = body as Record<string, unknown>;
+  if (!isString(name)) throw new ValidationError("name is required");
+  return { name: name as string };
+}
+```
+
+Rules:
+- Function name: `validateXxxDto(body: unknown): XxxDto`.
+- No SQL calls inside DTOs.
+- Use guards from `src/app/lib/dto.ts`: `isString`, `isEmail`, `isNumber`, `isBoolean`, `isUserRole`, `isPackageValidStatus`.
+- Throw `ValidationError` for invalid input.
+
+### 4 — Write the repository (`repository/<action>.repo.ts`)
+
+```ts
+import { connect } from "@/app/config/dbConfig";
+import { ResultSetHeader } from "mysql2";
+import { FooRow } from "../types";
+
+export async function insertFoo(name: string): Promise<number> {
+  const db = await connect();
+  const [result] = await db.execute<ResultSetHeader>(
+    "INSERT INTO foos (name) VALUES (?)",
+    [name]
+  );
+  return result.insertId;
+}
+
+export async function findFooById(id: number): Promise<FooRow | null> {
+  const db = await connect();
+  const [rows] = await db.query<(FooRow & import("mysql2").RowDataPacket)[]>(
+    "SELECT id, name, created_at FROM foos WHERE id = ?",
+    [id]
+  );
+  return rows[0] ?? null;
+}
+```
+
+Rules:
+- Only SQL here. No business logic.
+- Always use prepared statements (`?` placeholders).
+- Never call the repository from `route.ts` directly — go through the service.
+
+### 5 — Write the service (`service/<action>.service.ts`)
+
+```ts
+import { NotFoundError } from "@/app/lib/errors";
+import { insertFoo, findFooById } from "../repository/<action>.repo";
+import { CreateFooDto, FooRow } from "../types";
+
+export async function createFooService(dto: CreateFooDto): Promise<FooRow> {
+  const id = await insertFoo(dto.name);
+  const foo = await findFooById(id);
+  if (!foo) throw new NotFoundError("Foo not created");
+  return foo;
+}
+```
+
+Rules:
+- Business logic only. No SQL.
+- Throw errors from `src/app/lib/errors.ts`.
+
+### 6 — Write the route handler (`route.ts`)
+
+```ts
+import { requireAuth } from "@/app/lib/jwt";
+import { handleError, res } from "@/app/lib/response";
+import { validateCreateFooDto } from "./dtos/<action>.dto";
+import { createFooService } from "./service/<action>.service";
+import { USER_ROLES } from "@/app/types";
+
+export async function POST(request: Request) {
+  try {
+    const auth = requireAuth(request, [USER_ROLES.admin]);
+    const body = await request.json();
+    const dto = validateCreateFooDto(body);
+    const result = await createFooService(dto);
+    return res.created(result);
+  } catch (error) {
+    return handleError("[POST /api/<domain>/<action>]", error);
+  }
+}
+```
+
+Rules:
+- `requireAuth` → `validateDto` → `service` → `res.xxx`.
+- No SQL, no business logic.
+- Always pass the endpoint label to `handleError`.
+
+### 7 — Update docs
+
+Add the new endpoint to `docs/content/en/api/index.mdx` under the appropriate group. Include request body and response shape. Mark anything unverified with `> [!NOTE] Needs verification`.
+
+---
+
+## Recipe: Add a frontend API call
+
+Reference: `frontend-app/app/lib/api/auth-api.ts`.
+
+### 1 — Add request/response types
+
+Create or update `frontend-app/app/utils/types/api/<domain>.types.ts`:
+
+```ts
+export interface CreateFooRequest { name: string }
+export interface CreateFooResponse { id: number; name: string; created_at: string }
+```
+
+### 2 — Add the API function
+
+In `frontend-app/app/lib/api/<domain>-api.ts`:
+
+```ts
+import { apiClient } from "./helpers/client";
+import type { CreateFooRequest, CreateFooResponse } from "../../utils/types/api/foo.types";
+
+export async function createFoo(payload: CreateFooRequest): Promise<CreateFooResponse> {
+  const response = await apiClient.post<CreateFooResponse>("/foos/create", payload);
+  return response.data;
+}
+```
+
+### 3 — Add a React Query hook
+
+In `frontend-app/app/hooks/<domain>/use<Action>.ts`:
+
+```ts
+import { useMutation } from "@tanstack/react-query";
+import { createFoo } from "../../lib/api/foo-api";
+
+export function useCreateFoo() {
+  return useMutation({ mutationFn: createFoo });
+}
+```
+
+For queries (GET), add a query key in `app/query/keys/` and options in `app/query/options/` following the existing pattern.
+
+---
+
+## Recipe: Add a frontend page
+
+### 1 — Create the page file
+
+In the appropriate App Router group under `frontend-app/app/`:
+- Authenticated pages go in `(main)/(pages)/<page-name>/page.tsx`.
+- Auth pages go in `(auth)/`.
+
+### 2 — Wire data
+
+Use existing hooks from `app/hooks/`. Add a new hook if needed (see above).
+
+### 3 — Add loading state
+
+Add a skeleton loader component at `(main)/(pages)/<page-name>/components/loaders/<Page>.loader.tsx` following the `boneyard-js` `Skeleton` pattern used in existing pages.
+
+### 4 — Add to sidebar navigation
+
+If the page should appear in the aside menu, add it to the `MenuOptions` component in `(main)/components/AsideMenu/components/MenuOptions.tsx`.
+
+---
+
+## Recipe: Add a new docs section (EN + ES + EUS)
+
+### 1 — Create content files
+
+```
+docs/content/en/<section>/index.mdx
+docs/content/en/<section>/_meta.ts
+docs/content/es/<section>/index.mdx
+docs/content/es/<section>/_meta.ts
+docs/content/eus/<section>/index.mdx
+docs/content/eus/<section>/_meta.ts
+```
+
+`_meta.ts` minimal shape:
+```ts
+export default { index: { title: "Section Title" } };
+```
+
+### 2 — Register in root `_meta.ts`
+
+Add `<section>: { title: "..." }` to `docs/content/en/_meta.ts`, `docs/content/es/_meta.ts`, and `docs/content/eus/_meta.ts`.
+
+### 3 — Add nav item
+
+In `docs/app/[lang]/layout.tsx`, add to `navItems`:
+```ts
+{ href: "/<section>", label: nav.<sectionKey> },
+```
+
+### 4 — Add i18n strings
+
+In `docs/app/i18n/en.ts`, add `<sectionKey>: "Section Title"` to `navigation` in both the `DocsDictionary` interface and the `en` object. Repeat for `es.ts` and `eus.ts`.
+
+### 5 — Write content
+
+Write English first. For ES and EUS, either write full translations or add a summary + note linking to the EN version:
+
+```mdx
+> [!NOTE]
+> The English version is the authoritative source. See [English version](/en/<section>) for full details.
+```
+
+---
+
+## Recipe: Add a new supported locale
+
+1. Create `docs/app/i18n/<locale>.ts` matching the full `DocsDictionary` interface.
+2. Register the locale in `docs/app/i18n/index.ts` in the `getDictionary` function.
+3. Add `<locale>` to `SUPPORTED_LOCALES` in `docs/middleware.ts`.
+4. Add `<locale>` to `generateStaticParams` in `docs/app/[lang]/[[...mdxPath]]/page.tsx` if used.
+5. Create `docs/content/<locale>/` with all section content files.
+
+---
+
+## Keeping docs truthful
+
+- **Never document behavior you haven't verified from the source code.**
+- Use `> [!NOTE] Needs verification` for anything uncertain.
+- After adding an endpoint: verify its request/response against the actual `route.ts` and `dtos/` files, then update `docs/content/en/api/index.mdx`.
+- After changing environment vars: update `docs/content/en/environment/index.mdx`.
+- After changing the DB schema: update `docs/content/en/database/index.mdx`.

@@ -1,80 +1,521 @@
 # API Reference
 
-Base prefix in backend route handlers: `/api/*`.
+Base URL for all endpoints: `/api/*` (backend-js, port 3001 in development).
+
+All authenticated endpoints require `Authorization: Bearer <access_token>` header except where noted. Errors always return `{ "error": "message string" }`.
 
 > [!NOTE]
-> This section is generated from backend `route.ts` handlers and frontend API clients. Where payload details are not explicit in client types, fields are marked **Needs verification**.
+> Request and response shapes verified from DTO source files, repository types, and frontend client types. Pagination defaults and admin-only endpoint responses marked **Needs verification** where not covered by frontend clients.
+
+## Error response format
+
+All endpoints return structured errors:
+
+```json
+{ "error": "Human-readable error message" }
+```
+
+HTTP status codes used: `400` (validation), `401` (unauthenticated), `403` (forbidden role), `404` (not found), `409` (conflict), `500` (server error).
 
 ## Auth endpoints
 
-| Method | Path | Purpose | Auth | Frontend usage |
-| --- | --- | --- | --- | --- |
-| POST | `/api/auth/login` | Authenticate and issue access+refresh tokens | Public | `auth-api.login` |
-| POST | `/api/auth/refresh` | Rotate refresh token and issue new access token | Refresh cookie | `auth-api.refresh`, Axios interceptor |
-| POST | `/api/auth/logout` | Revoke refresh token and clear cookie | Bearer | `auth-api.logout` |
-| GET | `/api/auth/me` | Current authenticated user profile | Bearer | `auth-api.getMe` |
-| POST | `/api/auth/forgotPassword` | Generate reset flow email | Public | `auth-api.forgotPassword` |
-| PATCH | `/api/auth/changePwd` | Validate or complete reset/activation token flow | Public token-based | Not directly typed in frontend app |
+### POST `/api/auth/login`
 
-## User endpoints
+Public. Authenticates user, issues access token and sets refresh token cookie.
 
-| Method | Path | Purpose | Auth |
+**Request body**
+```json
+{ "email": "user@example.com", "password": "secret" }
+```
+
+**Response `200`**
+```json
+{
+  "user": {
+    "id": 1,
+    "name": "Maria García",
+    "email": "user@example.com",
+    "role": "distributor",
+    "is_active": true
+  },
+  "access_token": "<JWT>"
+}
+```
+
+Sets `Set-Cookie: refresh_token=...; HttpOnly; SameSite=Lax` (dev) / `SameSite=None; Secure` (prod).
+
+---
+
+### POST `/api/auth/refresh`
+
+Uses refresh token cookie. Rotates the token and issues new access token.
+
+**Request**: no body, cookie sent automatically.
+
+**Response `200`**
+```json
+{ "access_token": "<new JWT>" }
+```
+
+Sets new `refresh_token` cookie. Old token is revoked.
+
+---
+
+### POST `/api/auth/logout`
+
+Revokes the current refresh token and clears cookie.
+
+**Request**: no body.
+
+**Response `200`**
+```json
+{ "message": "Logged out" }
+```
+
+---
+
+### GET `/api/auth/me`
+
+Returns the authenticated user's profile. Requires Bearer token.
+
+**Response `200`**
+```json
+{
+  "id": 1,
+  "name": "Maria García",
+  "email": "user@example.com",
+  "role": "distributor",
+  "is_active": true,
+  "created_at": "2025-01-15T10:30:00.000Z"
+}
+```
+
+---
+
+### POST `/api/auth/forgotPassword`
+
+Public. Triggers password reset email. Always returns success to avoid email enumeration.
+
+**Request body**
+```json
+{ "email": "user@example.com" }
+```
+
+**Response `200`**
+```json
+{ "message": "If that email is registered, a reset link has been sent." }
+```
+
+---
+
+### PATCH `/api/auth/changePwd`
+
+Public token-based endpoint. Has two modes depending on body content.
+
+**Mode 1 — verify token only** (no `new_password`):
+```json
+{ "reset_pwd_token": "<token>" }
+```
+Response `200`: `{ "valid": true }`
+
+**Mode 2 — set new password**:
+```json
+{ "reset_pwd_token": "<token>", "new_password": "newSecret123" }
+```
+Response `200`: `{ "message": "Password changed successfully" }`
+
+`new_password` must be at least 6 characters. Token is revoked after use.
+
+---
+
+### POST `/api/auth/activateAccount`
+
+Token-based. Activates a newly created account and sets its password.
+
+**Request**: `?token=<activate_account_token>` (query param) — **Needs verification** on exact body vs query param split.
+
+---
+
+## User endpoints (admin only)
+
+All endpoints in this group require `role: admin`.
+
+### POST `/api/users/create`
+
+Creates a new user and sends an activation email.
+
+**Request body**
+```json
+{ "name": "Jon Doe", "email": "jon@example.com", "role": "distributor" }
+```
+
+`role` must be `"admin"` or `"distributor"`. User is created inactive; activation email is sent to the provided email.
+
+**Response `201`** — **Needs verification** for exact shape; expected to be the created user object.
+
+---
+
+### GET `/api/users/list`
+
+**Query params**
+
+| Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| POST | `/api/users/create` | Create user and trigger activation flow | Admin |
-| GET | `/api/users/list` | Paginated user listing | Admin |
-| GET | `/api/users/getById?id=` | User detail by id | Admin |
-| PATCH | `/api/users/update` | Update user | Admin |
-| DELETE | `/api/users/remove?id=` | Remove user (constraints apply) | Admin |
-| PATCH | `/api/users/changeMyPwd` | Change own password | Bearer |
+| `page` | number | 1 | Page number |
+| `limit` | number | 20 | Max 100 |
+| `role` | `"admin"` \| `"distributor"` | — | Filter by role |
+| `is_active` | `"true"` \| `"false"` | — | Filter by active status |
+
+**Response `200`** — **Needs verification** for exact pagination envelope shape.
+
+---
+
+### GET `/api/users/getById?id=<number>`
+
+**Response `200`** — user object. `404` if not found.
+
+---
+
+### PATCH `/api/users/update`
+
+**Request body** — **Needs verification** for allowed fields; expected `{ name?, email?, role?, is_active? }`.
+
+---
+
+### DELETE `/api/users/remove?id=<number>`
+
+Removes user. A user cannot delete themselves.
+
+**Response `200`** or `403` if attempting self-deletion.
+
+---
+
+### PATCH `/api/users/changeMyPwd`
+
+Any authenticated role. Changes own password.
+
+**Request body**
+```json
+{ "current_password": "oldSecret", "new_password": "newSecret123" }
+```
+
+**Response `200`**
+```json
+{ "message": "Password updated successfully" }
+```
+
+---
 
 ## Package endpoints
 
-| Method | Path | Purpose | Auth | Frontend usage |
-| --- | --- | --- | --- | --- |
-| POST | `/api/packages/create` | Create package/address/tracking token | Admin | No direct current client call |
-| GET | `/api/packages/list` | Paginated package list | Admin | No direct current client call |
-| GET | `/api/packages/getById?id=` | Package detail | Admin/Distributor | `packages-api.getPackageById` |
-| GET | `/api/packages/getMyPackages` | Distributor package list | Distributor | `packages-api.getMyPackages` |
-| PATCH | `/api/packages/update?id=` | Update package info and address | Admin | No direct current client call |
-| PATCH | `/api/packages/updateStatus` | Update one or many package statuses | Distributor | `packages-api.updatePackageStatus` |
-| DELETE | `/api/packages/delete?id=` | Delete package | Admin | No direct current client call |
-| GET | `/api/packages/getDailySummary` | Daily package summary metrics | Admin | No direct current client call |
+### POST `/api/packages/create` — admin
+
+Creates a package, geocodes the address, generates a tracking token, and sends a tracking email.
+
+**Request body**
+```json
+{
+  "packageInfo": {
+    "recipient_name": "Ane Etxeberria",
+    "recipient_email": "ane@example.com",
+    "assigned_to": null,
+    "created_by": 1,
+    "status": "pending",
+    "weight_kg": 2.5,
+    "description": "Fragile"
+  },
+  "address_info": {
+    "street": "Kale Nagusia 12",
+    "city": "Tolosa",
+    "postal_code": "20400"
+  }
+}
+```
+
+`assigned_to` can be `null` (unassigned) or a valid user ID. `description` is optional.
+
+**Response `201`** — **Needs verification** for exact package shape.
+
+---
+
+### GET `/api/packages/list` — admin
+
+**Query params** — **Needs verification** for full filter set and pagination envelope.
+
+---
+
+### GET `/api/packages/getById?id=<number>` — admin
+
+**Response `200`** — `PackageWithAddress`:
+```json
+{
+  "id": 42,
+  "tracking_code": "PAK-20260001",
+  "recipient_name": "Ane Etxeberria",
+  "recipient_email": "ane@example.com",
+  "weight_kg": 2.5,
+  "description": "Fragile",
+  "status": "pending",
+  "estimated_delivery": "2026-05-01",
+  "address_id": 7,
+  "assigned_to": null,
+  "created_by": 1,
+  "created_at": "2026-04-26T10:00:00.000Z",
+  "updated_at": "2026-04-26T10:00:00.000Z",
+  "street": "Kale Nagusia 12",
+  "city": "Tolosa",
+  "postal_code": "20400",
+  "latitude": 43.1298,
+  "longitude": -2.0773,
+  "country": "España"
+}
+```
+
+---
+
+### GET `/api/packages/getMyPackages` — distributor
+
+Returns all packages assigned to the authenticated distributor.
+
+**Response `200`** — array of `PackageWithAddress`.
+
+---
+
+### PATCH `/api/packages/updateStatus` — distributor
+
+Updates the status of one or multiple packages. Exactly one of `package_id` or `package_ids` must be provided.
+
+**Request body (single)**
+```json
+{ "package_id": 42, "new_status": "in_transit" }
+```
+
+**Request body (batch)**
+```json
+{ "package_ids": [42, 43, 44], "new_status": "delivered" }
+```
+
+`new_status` must be a valid package status: `"pending"` | `"assigned"` | `"in_transit"` | `"delivered"` | `"undelivered"` | `"failed"`.
+
+**Response `200`** — single `PackageWithAddress` (single update) or `PackageWithAddress[]` (batch).
+
+Triggers status log insertion and email side effects (see [Domain Model](/en/domain)).
+
+---
+
+### PATCH `/api/packages/update?id=<number>` — admin
+
+Updates package info and address. **Needs verification** for allowed fields.
+
+---
+
+### DELETE `/api/packages/delete?id=<number>` — admin
+
+**Response `200`** — **Needs verification**.
+
+---
+
+### GET `/api/packages/getDailySummary` — admin
+
+Returns a count of packages per status for today.
+
+**Response `200`** — **Needs verification** for exact shape; expected `{ pending: n, assigned: n, ... }`.
+
+---
 
 ## Route and stop endpoints
 
-| Method | Path | Purpose | Auth | Frontend usage |
-| --- | --- | --- | --- | --- |
-| POST | `/api/routes/create` | Create optimized route for distributor/date | Admin | Not currently wired in frontend |
-| GET | `/api/routes/getByUserAndDate` | Route lookup for admin | Admin | Not currently wired in frontend |
-| GET | `/api/routes/getMyDaily` | Distributor daily route | Distributor | `routes-api.getMyDailyRoute` |
-| GET | `/api/routes/continueFromPast` | Find pending past route | Distributor | `routes-api.getPendingPastRoute` |
-| POST | `/api/routes/continueFromPast` | Continue route from past into today | Distributor | `routes-api.continueFromPast` |
-| PATCH | `/api/routes/updateStatus/:id` | Set route status (`in_progress` / `completed`) | Admin/Distributor (scoped) | `routes-api.updateRouteStatus` |
-| PATCH | `/api/stops/reorder` | Reorder stops in route | Admin | Not currently wired in frontend |
-| PATCH | `/api/stops/updateArrival` | Mark stop as arrived | Distributor | `routes-api.updateArrival` |
+### POST `/api/routes/create` — admin
 
-## Logs and tracking endpoints
+Creates an optimized delivery route for a distributor on a given date.
 
-| Method | Path | Purpose | Auth | Frontend usage |
-| --- | --- | --- | --- | --- |
-| GET | `/api/logs/listAll` | List package status logs | Admin | Not currently wired |
-| GET | `/api/logs/listByPackage` | Package log history | Admin/Distributor | `logs-api.getPackageLogs` |
-| GET | `/api/tracking/:trackingToken` | Public package tracking | Public token | `tracking-api.getTracking` |
+**Request body**
+```json
+{ "user_id": 3, "date": "2026-05-02", "package_ids": [10, 11, 12] }
+```
 
-## Request and response notes
+- `date` must be in `YYYY-MM-DD` format and must be at least tomorrow.
+- `package_ids` must be non-empty, no duplicates, all valid package IDs.
 
-### Known typed responses
+**Response `200`** — **Needs verification** for exact route+stops envelope shape.
 
-- Auth and user session: `app/utils/types/api/auth.types.ts`
-- Packages: `app/utils/types/api/package.types.ts`
-- Routes/stops: `app/utils/types/api/route.types.ts`
-- Logs: `app/utils/types/api/log.types.ts`
-- Tracking: `app/utils/types/api/tracking.types.ts`
+---
 
-### Needs verification markers
+### GET `/api/routes/getByUserAndDate` — admin
 
-The following areas should be checked against integration tests or runtime captures:
+**Query params**: `user_id`, `date` — **Needs verification**.
 
-- Exact payload schema for admin-only endpoints not consumed by current frontend clients.
-- Error response payload variants for all endpoints beyond `{ error: string }` baseline.
-- Pagination defaults for list endpoints where not represented in frontend types.
+---
+
+### GET `/api/routes/getMyDaily` — distributor
+
+Returns the route and stops for the authenticated distributor for today.
+
+**Response `200`**
+```json
+{
+  "route": { "id": 5, "route_date": "2026-04-26", "status": "in_progress" },
+  "stops": [
+    {
+      "id": 21,
+      "stop_order": 1,
+      "estimated_arrival": "09:30:00",
+      "actual_arrival": "09:28:00",
+      "package": {
+        "id": 42,
+        "recipient_name": "Ane Etxeberria",
+        "status": "delivered",
+        "address": {
+          "street": "Kale Nagusia 12",
+          "city": "Tolosa",
+          "lat": 43.1298,
+          "lng": -2.0773
+        }
+      }
+    }
+  ]
+}
+```
+
+---
+
+### PATCH `/api/routes/updateStatus/:id` — admin or distributor (scoped)
+
+**Request body**
+```json
+{ "status": "in_progress" }
+```
+
+`status` must be `"in_progress"` or `"completed"`.
+
+**Response `200`**
+```json
+{ "message": "Route status updated" }
+```
+
+---
+
+### GET `/api/routes/continueFromPast` — distributor
+
+Checks if the distributor has a past route with pending stops.
+
+**Response `200`**
+```json
+{
+  "pending": {
+    "route_id": 3,
+    "route_date": "2026-04-25",
+    "status": "in_progress",
+    "pending_count": 2,
+    "route_count": 5
+  }
+}
+```
+
+`pending` is `null` if no past pending route exists.
+
+---
+
+### POST `/api/routes/continueFromPast` — distributor
+
+Migrates pending stops from the last pending past route into today's route.
+
+**Request**: no body.
+
+**Response `200`**
+```json
+{
+  "route_id": 6,
+  "new_route_date": "2026-04-26",
+  "migrated_stops": 2
+}
+```
+
+---
+
+### PATCH `/api/stops/reorder` — admin
+
+Reorders stops within a route. **Needs verification** for body shape.
+
+---
+
+### PATCH `/api/stops/updateArrival` — distributor
+
+Records the actual arrival time at a stop.
+
+**Request body**
+```json
+{ "stop_id": 21 }
+```
+
+**Response `200`**
+```json
+{
+  "id": 21,
+  "route_id": 5,
+  "package_id": 42,
+  "stop_order": 1,
+  "estimated_arrival": "09:30:00",
+  "actual_arrival": "09:28:00"
+}
+```
+
+---
+
+## Logs endpoints
+
+### GET `/api/logs/listByPackage` — admin
+
+**Query params**: `packageId` (required), `page`, `limit`.
+
+**Response `200`**
+```json
+{
+  "logs": [
+    {
+      "id": 1,
+      "packageId": 42,
+      "oldStatus": "assigned",
+      "newStatus": "in_transit",
+      "changedBy": 3,
+      "notes": null,
+      "changedAt": "2026-04-26T09:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
+}
+```
+
+---
+
+### GET `/api/logs/listAll` — admin
+
+Lists all status logs across all packages. **Needs verification** for filters and pagination envelope.
+
+---
+
+## Tracking endpoint (public)
+
+### GET `/api/tracking/:trackingToken`
+
+Public. No auth required. Token is a 32-byte hex string.
+
+**Response `200`**
+```json
+{
+  "tracking_code": "PAK-20260001",
+  "recipient_name": "Ane Etxeberria",
+  "status": "in_transit",
+  "estimated_delivery": "2026-05-01",
+  "address": {
+    "street": "Kale Nagusia 12",
+    "city": "Tolosa",
+    "postal_code": "20400"
+  },
+  "last_update": "2026-04-26T09:00:00.000Z"
+}
+```
+
+Token expires after `TRACKING_EXPIRES_DAYS` days (default 30). Returns `404` if token is unknown or expired.

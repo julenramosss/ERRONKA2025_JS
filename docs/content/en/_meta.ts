@@ -15,4 +15,5 @@ export default {
   troubleshooting: { title: "Troubleshooting" },
   contributing: { title: "Contributing" },
   "ai-workflow": { title: "AI Documentation Workflow" },
+  audit: { title: "Docs Audit" },
 };

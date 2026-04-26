@@ -1,59 +1,140 @@
 # Auth and Security
 
-## Access token flow
+## Token architecture
 
-- Backend issues JWT access token on login/refresh.
-- Frontend stores this token in client cookie (`access_token`) and sends it as Bearer header through Axios interceptor.
-- `RouteGuard` validates JWT expiration in browser before allowing protected navigation.
+Two tokens are issued on login and maintained in the `tokens` table:
 
-## Refresh token cookie flow
+| Token | Storage | Lifetime | Purpose |
+| --- | --- | --- | --- |
+| Access token (JWT) | Frontend cookie `access_token` | 15 min (`JWT_ACCESS_EXPIRES_IN`) | Sent as `Authorization: Bearer` on every request |
+| Refresh token (opaque hex) | HTTP-only backend cookie | 7 days (`JWT_REFRESH_EXPIRES_DAYS`) | Rotated on each use via `/api/auth/refresh` |
 
-- Backend sets `refresh_token` as HTTP-only cookie through `res.ok(...cookies)`.
-- On refresh, backend revokes old token row and inserts a new refresh token record.
-- Logout revokes the current refresh token and clears cookie.
+## Login flow
 
-## Frontend cookie behavior
+```
+1. POST /api/auth/login { email, password }
+   → Backend verifies bcrypt hash
+   → Issues signed JWT access token (15 min)
+   → Generates refresh token, persists in tokens table
+   → Sets refresh_token as HttpOnly cookie
+   → Returns { user, access_token } in body
 
-- Access token cookie: `SameSite=Strict`, `max-age=900`, `Secure` in production.
-- Refresh refresh-call requests are sent with `withCredentials: true`.
+2. Frontend stores access_token in cookie:
+   SameSite=Strict, max-age=900, Secure in production
+```
 
-## Backend cookie behavior
+## Refresh flow
 
-`res.ok` applies:
+```
+3. Background query runs every 12 min (via SessionKeepAlive)
+   → POST /api/auth/refresh (cookie sent automatically)
+   → Backend validates refresh token (not revoked, not expired)
+   → Revokes old refresh token row in DB
+   → Inserts new refresh token row
+   → Returns new { access_token } + sets new cookie
 
-- `SameSite=Lax` in development
-- `SameSite=None; Secure` in production
+4. Axios interceptor triggers on unexpected 401:
+   → Refreshes then replays original request once
+   → On second failure: clears access_token, redirects to /login
+```
 
-for cookies set/deleted by backend helper.
+## Logout flow
 
-## Protected and public routes
+```
+5. POST /api/auth/logout
+   → Backend revokes refresh_token in DB
+   → Clears refresh_token cookie
+   → Frontend clears access_token cookie
+```
 
-### Public backend routes
+## Cookie settings
 
-- `POST /api/auth/login`
-- `POST /api/auth/forgotPassword`
-- `PATCH /api/auth/changePwd`
-- `GET /api/tracking/:trackingToken`
+Backend `res.ok()` helper applies:
 
-### Protected backend routes
+| Environment | access_token cookie | refresh_token cookie |
+| --- | --- | --- |
+| Development | `SameSite=Strict` | `SameSite=Lax; HttpOnly` |
+| Production | `SameSite=Strict; Secure` | `SameSite=None; Secure; HttpOnly` |
 
-All remaining domain routes require bearer auth; many also restrict by role.
+Frontend sets the access token cookie directly (not HttpOnly). This is a known exposure surface — see risks below.
 
 ## Role model
 
-- `admin`
-- `distributor`
+Two roles exist, enforced via `requireAuth(request, allowedRoles)` in every route handler:
 
-Role checks happen via `requireAuth(request, allowedRoles)` in route handlers.
+| Role | Access |
+| --- | --- |
+| `admin` | User management, package management, route creation, logs |
+| `distributor` | Own packages, own daily route, stop arrival, package status updates |
 
-## Security notes
+## Public routes (no auth)
 
-- Refresh tokens persisted in `tokens` table with expiry and revocation flags.
-- Passwords are hashed using bcrypt helpers.
-- Forgot-password endpoint returns a neutral success message for unknown emails.
+- `POST /api/auth/login`
+- `POST /api/auth/forgotPassword`
+- `PATCH /api/auth/changePwd` (token-based, not Bearer)
+- `GET /api/tracking/:trackingToken` (public tracking page)
 
-## Known risks / TODOs
+## Password reset flow
 
-- Hardcoded fallback secret/password values exist in backend env config (must override in production).
-- Activation URL currently derives from reset base URL (confirm intended product behavior).
-- Frontend-access token in non-HTTP-only cookie increases XSS exposure surface compared to server-only storage.
+```
+1. POST /api/auth/forgotPassword { email }
+   → Always responds with neutral message (no email enumeration)
+   → If email exists: generates reset_pwd_token (24h), sends email
+
+2. PATCH /api/auth/changePwd { reset_pwd_token }
+   → Returns { valid: true } (token check, no password change)
+
+3. PATCH /api/auth/changePwd { reset_pwd_token, new_password }
+   → Validates token not revoked, not expired
+   → Updates password_hash, revokes token
+   → Returns { message: "Password changed successfully" }
+```
+
+## Account activation flow
+
+```
+1. Admin: POST /api/users/create { name, email, role }
+   → User created with is_active=FALSE
+   → activate_account_token generated (24h expiry)
+   → Activation email sent to user
+
+2. User clicks link → POST /api/auth/activateAccount?token=...
+   → User sets their own password
+   → is_active=TRUE, token revoked
+```
+
+## Known risks
+
+| Severity | Risk | Source |
+| --- | --- | --- |
+| High | `JWT_SECRET` has a hardcoded fallback in `envConfig.ts`. If not set in production, anyone with the repo can forge access tokens. | `backend-js/src/app/config/envConfig.ts:14` |
+| High | `DEFAULT_USER_PASSWORD` has same hardcoded fallback. New users get a known password if the env var is unset. | `backend-js/src/app/config/envConfig.ts:37` |
+| Medium | `handleError` forwards internal error `.message` in HTTP 500 responses. MySQL or library error messages can leak table names and stack details. | `backend-js/src/app/lib/response.ts:83` |
+| Medium | `@upstash/ratelimit` and `@upstash/redis` are installed but not wired. Login, forgotPassword, and tracking endpoints are unprotected from brute force. | `backend-js/package.json` |
+| Medium | Access token stored in non-HttpOnly cookie (`access_token`). XSS can read it. Refresh token is safe in HttpOnly cookie. | `frontend-app/app/lib/api/helpers/client.ts` |
+| Low | `GOOGLE_DIRECTIONS_API_KEY` uses TypeScript `!` assertion without startup guard. Silent `undefined` at runtime if var is missing. | `backend-js/src/app/config/envConfig.ts:9` |
+| Low | MySQL env vars not validated at startup. Pool silently accepts `undefined`; first query fails without a descriptive startup error. | `backend-js/src/app/config/envConfig.ts:1-5` |
+
+## Fixing the hardcoded secrets
+
+The minimum required change in `envConfig.ts`:
+
+```ts
+// Current (unsafe):
+export const jwt_secret = process.env.JWT_SECRET ?? "kjhaf7ya...";
+
+// Should be:
+const jwt_secret = process.env.JWT_SECRET;
+if (!jwt_secret) throw new Error("JWT_SECRET env var is required");
+export { jwt_secret };
+```
+
+Apply the same pattern to `DEFAULT_USER_PASSWORD` and `GOOGLE_DIRECTIONS_API_KEY`.
+
+## Implementing rate limiting
+
+`@upstash/ratelimit` is already in `package.json`. To activate it:
+
+1. Add `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.local`.
+2. Create `backend-js/src/app/lib/rateLimit.ts` with a `Ratelimit` instance.
+3. Call the limiter at the top of: `POST /api/auth/login`, `POST /api/auth/forgotPassword`, `GET /api/tracking/:token`.

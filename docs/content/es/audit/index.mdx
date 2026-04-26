@@ -1,0 +1,42 @@
+# Auditoría de la documentación
+
+Esta página registra el estado actual del sitio de documentación: qué se ha verificado, qué aún está sin confirmar, riesgos conocidos y decisiones de arquitectura para futuros mantenedores.
+
+> [!NOTE]
+> La versión inglesa de esta página es la fuente de verdad y la más completa. Consulta [la versión en inglés](/en/audit) para todos los detalles.
+
+## Qué se ha verificado
+
+- Estructura del monorepo (`pnpm-workspace.yaml`)
+- Inventario de endpoints de backend (verificado contra `route.ts`)
+- Flujos de autenticación (JWT + cookie HTTP-only)
+- Máquina de estados de paquetes
+- Efectos secundarios de email en cambios de estado
+- Tipos de tokens
+- Inconsistencia en el nombre de la base de datos (`erronka` vs `pakag`)
+
+## Qué aún necesita verificación
+
+- Esquemas exactos de request/response para endpoints solo-admin
+- Valores por defecto de paginación en endpoints de listado
+- Variantes de respuesta de error más allá de `{ error: string }`
+- Configuración de dominio de producción y CORS
+
+## Riesgos conocidos
+
+| Severidad | Riesgo |
+| --- | --- |
+| Alta | `JWT_SECRET` con fallback hardcodeado visible en el repositorio |
+| Alta | `DEFAULT_USER_PASSWORD` con el mismo problema |
+| Media | `handleError` expone mensajes de error internos en respuestas 500 |
+| Media | Rate limiting instalado pero no implementado |
+
+## Decisiones de arquitectura del sitio de documentación
+
+- Layout completamente personalizado (sin `nextra-theme-docs`)
+- Enrutamiento por locale (`/en/`, `/es/`, `/eus/`)
+- Middleware redirige rutas sin locale a `/en/`
+- Búsqueda estática por títulos de página (Ctrl+K)
+- Tabla de contenidos generada desde el DOM
+
+Consulta la [versión en inglés](/en/audit) para la descripción completa de cada decisión.

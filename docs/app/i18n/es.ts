@@ -28,6 +28,7 @@ export const es: DocsDictionary = {
     troubleshooting: "Solución de problemas",
     contributing: "Cómo contribuir",
     aiWorkflow: "Flujo de trabajo de documentación con IA",
+    docsAudit: "Auditoría de la documentación",
   },
   callouts: {
     note: "Nota",
@@ -39,5 +40,6 @@ export const es: DocsDictionary = {
     onThisPage: "En esta página",
     lastUpdated: "Última actualización",
     editThisPage: "Editar esta página",
+    search: "Buscar",
   },
 };

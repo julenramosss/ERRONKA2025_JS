@@ -28,6 +28,7 @@ export const eus: DocsDictionary = {
     troubleshooting: "Arazoak konpontzea",
     contributing: "Nola lagundu",
     aiWorkflow: "AI dokumentazio fluxua",
+    docsAudit: "Dokumentazio ikuskaritza",
   },
   callouts: {
     note: "Oharra",
@@ -39,5 +40,6 @@ export const eus: DocsDictionary = {
     onThisPage: "Orrialde honetan",
     lastUpdated: "Azken eguneraketa",
     editThisPage: "Orrialde hau editatu",
+    search: "Bilatu",
   },
 };

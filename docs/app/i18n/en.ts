@@ -25,6 +25,7 @@ export interface DocsDictionary {
     troubleshooting: string;
     contributing: string;
     aiWorkflow: string;
+    docsAudit: string;
   };
   callouts: {
     note: string;
@@ -36,6 +37,7 @@ export interface DocsDictionary {
     onThisPage: string;
     lastUpdated: string;
     editThisPage: string;
+    search: string;
   };
 }
 
@@ -67,6 +69,7 @@ export const en: DocsDictionary = {
     troubleshooting: "Troubleshooting",
     contributing: "Contributing",
     aiWorkflow: "AI Documentation Workflow",
+    docsAudit: "Docs Audit",
   },
   callouts: {
     note: "Note",
@@ -78,5 +81,6 @@ export const en: DocsDictionary = {
     onThisPage: "On this page",
     lastUpdated: "Last updated",
     editThisPage: "Edit this page",
+    search: "Search",
   },
 };

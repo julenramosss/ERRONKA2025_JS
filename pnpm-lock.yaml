@@ -77,9 +77,15 @@ importers:
 
   docs:
     dependencies:
+      '@repo/frontend-app':
+        specifier: workspace:*
+        version: link:../frontend-app
       '@tailwindcss/postcss':
         specifier: ^4.2.4
         version: 4.2.4
+      fs:
+        specifier: 0.0.1-security
+        version: 0.0.1-security
       next:
         specifier: 16.2.4
         version: 16.2.4(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -2120,6 +2126,9 @@ packages:
   format@0.2.2:
     resolution: {integrity: sha512-wzsgA6WOq+09wrU1tsJ09udeR/YZRaeArL9e1wPbFg3GG2yDnC2ldKpxs4xunpFF9DgqCqOIra3bc1HWrJ37Ww==}
     engines: {node: '>=0.4.x'}
+
+  fs@0.0.1-security:
+    resolution: {integrity: sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==}
 
   fsevents@2.3.2:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
@@ -6096,6 +6105,8 @@ snapshots:
       mime-types: 2.1.35
 
   format@0.2.2: {}
+
+  fs@0.0.1-security: {}
 
   fsevents@2.3.2:
     optional: true
