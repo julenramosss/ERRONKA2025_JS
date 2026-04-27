@@ -86,11 +86,7 @@ export async function updatePackageService(
   if (newStatus !== undefined && newStatus !== oldStatus) {
     await applyPackageStatusSideEffects(
       [{ packageId: id, oldStatus, newStatus }],
-      changedBy,
-      {
-        defaultDistributorId:
-          resolvedPackageInfo.assigned_to ?? current.assigned_to,
-      }
+      changedBy
     );
   }
 
