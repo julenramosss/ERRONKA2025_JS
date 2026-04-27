@@ -180,12 +180,23 @@ export async function updateRouteStopOrders(
 ): Promise<void> {
   if (stops.length === 0) return;
   const db = await connect();
-  for (const s of stops) {
-    await db.query<ResultSetHeader>(
-      "UPDATE route_stops SET stop_order = ?, estimated_arrival = ? WHERE id = ?",
-      [s.stopOrder, s.estimatedArrival, s.stopId]
-    );
-  }
+
+  const ids = stops.map((s) => s.stopId);
+  const placeholders = ids.map(() => "?").join(", ");
+
+  const orderCase = stops.map(() => "WHEN ? THEN ?").join(" ");
+  const arrivalCase = stops.map(() => "WHEN ? THEN ?").join(" ");
+
+  const orderValues = stops.flatMap((s) => [s.stopId, s.stopOrder]);
+  const arrivalValues = stops.flatMap((s) => [s.stopId, s.estimatedArrival]);
+
+  await db.query<ResultSetHeader>(
+    `UPDATE route_stops
+     SET stop_order = CASE id ${orderCase} END,
+         estimated_arrival = CASE id ${arrivalCase} END
+     WHERE id IN (${placeholders})`,
+    [...orderValues, ...arrivalValues, ...ids]
+  );
 }
 
 export async function bulkUpdatePackagesEstimatedDelivery(
