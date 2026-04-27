@@ -6,9 +6,9 @@ import { SettingsAside } from "./SettingsAside";
 
 const ROUTE_LABELS: Record<SettingsRoute, string> = {
   [SETTINGS_ROUTES.general]: "Generala",
-  [SETTINGS_ROUTES.notifications]: "Notifikazioak",
   [SETTINGS_ROUTES.security]: "Segurtasuna",
   [SETTINGS_ROUTES.appearance]: "Itxura",
+  [SETTINGS_ROUTES.documentation]: "Dokumentazioa",
 };
 
 export function SettingsMobileAside({
