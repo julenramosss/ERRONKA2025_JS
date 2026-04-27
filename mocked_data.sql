@@ -404,7 +404,7 @@ SELECT 10, 'PAK-S1-001', 'Amaia Olano',      1.800, 'Entregada antes del cambio 
   TIMESTAMP(CURRENT_DATE - INTERVAL 2 DAY, '10:30:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:30:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '09:45:00')
-FROM dual WHERE @test_scenario = 1;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
@@ -414,7 +414,7 @@ SELECT 11, 'PAK-S1-002', 'Josu Zabala',      2.500, 'Pendiente tras cambio de di
   TIMESTAMP(CURRENT_DATE - INTERVAL 2 DAY, '10:35:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:35:00'),
   NULL
-FROM dual WHERE @test_scenario = 1;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
@@ -424,7 +424,7 @@ SELECT 12, 'PAK-S1-003', 'Nerea Eizaguirre', 1.100, 'Pendiente tras cambio de di
   TIMESTAMP(CURRENT_DATE - INTERVAL 2 DAY, '10:40:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:40:00'),
   NULL
-FROM dual WHERE @test_scenario = 1;
+FROM dual WHERE @test_scenario = 2;
 
 -- ----------------------------------------------------------------
 -- ESCENARIO 2: Ruta de HOY en planned
@@ -458,14 +458,14 @@ INSERT INTO seed_packages
 SELECT 16, 'PAK-S3-001', 'Saioa Aranburu',   4.500, 'Paquete para manana', 'assigned',
   CURRENT_DATE + INTERVAL 1 DAY, 11, @julen_arruti_id,
   NOW() - INTERVAL 120 MINUTE,  NOW() - INTERVAL 30 MINUTE,  NULL, NULL
-FROM dual WHERE @test_scenario = 3;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
 SELECT 17, 'PAK-S3-002', 'Unai Galdos',      1.600, 'Paquete para manana', 'assigned',
   CURRENT_DATE + INTERVAL 1 DAY, 12, @julen_arruti_id,
   NOW() - INTERVAL 115 MINUTE,  NOW() - INTERVAL 25 MINUTE,  NULL, NULL
-FROM dual WHERE @test_scenario = 3;
+FROM dual WHERE @test_scenario = 2;
 
 -- ----------------------------------------------------------------
 -- ESCENARIO 4: Sin ruta + 6 paquetes undelivered
@@ -479,8 +479,7 @@ SELECT 18, 'PAK-S4-001', 'Maialen Irizar',   1.200, 'Sin entregar al cerrar ruta
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:00:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:30:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:30:00'),
-  TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '17:00:00')
-FROM dual WHERE @test_scenario = 4;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
@@ -489,8 +488,7 @@ SELECT 19, 'PAK-S4-002', 'Eneko Lasa',       2.800, 'Sin entregar al cerrar ruta
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:05:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:35:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:35:00'),
-  TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '17:00:00')
-FROM dual WHERE @test_scenario = 4;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
@@ -499,8 +497,7 @@ SELECT 20, 'PAK-S4-003', 'Lide Otegi',       0.650, 'Sin entregar al cerrar ruta
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:10:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:40:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:40:00'),
-  TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '17:00:00')
-FROM dual WHERE @test_scenario = 4;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
@@ -509,8 +506,7 @@ SELECT 21, 'PAK-S4-004', 'Iker Alberdi',     3.100, 'Sin entregar al cerrar ruta
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:15:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:45:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:45:00'),
-  TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '17:00:00')
-FROM dual WHERE @test_scenario = 4;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
@@ -519,8 +515,7 @@ SELECT 22, 'PAK-S4-005', 'June Etxeberria',  1.900, 'Sin entregar al cerrar ruta
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:20:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:50:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:50:00'),
-  TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '17:00:00')
-FROM dual WHERE @test_scenario = 4;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO seed_packages
   (id, tracking_code, recipient_name, weight_kg, description, status, estimated_delivery, address_id, assigned_to, pending_at, assigned_at, transit_at, final_at)
@@ -529,8 +524,7 @@ SELECT 23, 'PAK-S4-006', 'Markel Arrieta',   5.700, 'Sin entregar al cerrar ruta
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:25:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 4 DAY, '09:55:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:55:00'),
-  TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '17:00:00')
-FROM dual WHERE @test_scenario = 4;
+FROM dual WHERE @test_scenario = 2;
 
 -- ESCENARIO 5: Sin paquetes para jramosarruti (nada que insertar)
 
@@ -643,7 +637,7 @@ SELECT 10, @julen_arruti_id,
   CURRENT_DATE - INTERVAL 1 DAY, 'in_progress',
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00'),
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '23:50:00')
-FROM dual WHERE @test_scenario = 1;
+FROM dual WHERE @test_scenario = 2;
 
 -- ESCENARIO 2: Ruta para HOY, planned
 INSERT INTO routes (id, user_id, route_date, status, created_at, updated_at)
@@ -657,15 +651,14 @@ INSERT INTO routes (id, user_id, route_date, status, created_at, updated_at)
 SELECT 12, @julen_arruti_id,
   CURRENT_DATE + INTERVAL 1 DAY, 'planned',
   NOW() - INTERVAL 45 MINUTE, NOW() - INTERVAL 45 MINUTE
-FROM dual WHERE @test_scenario = 3;
+FROM dual WHERE @test_scenario = 2;
 
 -- ESCENARIO 4: Ruta completada hace 3 días, paquetes quedaron undelivered
 INSERT INTO routes (id, user_id, route_date, status, created_at, updated_at)
 SELECT 13, @julen_arruti_id,
   CURRENT_DATE - INTERVAL 3 DAY, 'completed',
   TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00'),
-  TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '17:00:00')
-FROM dual WHERE @test_scenario = 4;
+FROM dual WHERE @test_scenario = 2;
 
 -- ESCENARIO 5: Sin rutas para jramosarruti (nada que insertar)
 
@@ -720,17 +713,17 @@ INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, ac
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
 SELECT 10, 10, 1, '09:00:00', '09:45:00',
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00')
-FROM dual WHERE @test_scenario = 1;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
 SELECT 10, 11, 2, '10:30:00', NULL,
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00')
-FROM dual WHERE @test_scenario = 1;
+FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
 SELECT 10, 12, 3, '11:15:00', NULL,
   TIMESTAMP(CURRENT_DATE - INTERVAL 1 DAY, '08:00:00')
-FROM dual WHERE @test_scenario = 1;
+FROM dual WHERE @test_scenario = 2;
 
 -- ESCENARIO 2: 3 paradas pendientes (ruta no iniciada aún)
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
@@ -744,29 +737,29 @@ SELECT 11, 15, 3, '11:00:00', NULL, NOW() - INTERVAL 60 MINUTE FROM dual WHERE @
 
 -- ESCENARIO 3: 2 paradas de mañana (no pueden interactuarse hoy)
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 12, 16, 1, '09:00:00', NULL, NOW() - INTERVAL 45 MINUTE FROM dual WHERE @test_scenario = 3;
+SELECT 12, 16, 1, '09:00:00', NULL, NOW() - INTERVAL 45 MINUTE FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 12, 17, 2, '10:30:00', NULL, NOW() - INTERVAL 45 MINUTE FROM dual WHERE @test_scenario = 3;
+SELECT 12, 17, 2, '10:30:00', NULL, NOW() - INTERVAL 45 MINUTE FROM dual WHERE @test_scenario = 2;
 
 -- ESCENARIO 4: 6 paradas, ruta completada, paquetes quedaron sin entregar
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 13, 18, 1, '09:00:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 4;
+SELECT 13, 18, 1, '09:00:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 13, 19, 2, '09:30:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 4;
+SELECT 13, 19, 2, '09:30:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 13, 20, 3, '10:00:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 4;
+SELECT 13, 20, 3, '10:00:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 13, 21, 4, '10:30:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 4;
+SELECT 13, 21, 4, '10:30:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 13, 22, 5, '11:00:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 4;
+SELECT 13, 22, 5, '11:00:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 2;
 
 INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival, actual_arrival, created_at)
-SELECT 13, 23, 6, '11:30:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 4;
+SELECT 13, 23, 6, '11:30:00', NULL, TIMESTAMP(CURRENT_DATE - INTERVAL 3 DAY, '08:00:00') FROM dual WHERE @test_scenario = 2;
 
 -- ESCENARIO 5: Sin paradas (nada que insertar)
 

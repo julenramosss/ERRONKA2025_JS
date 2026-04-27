@@ -69,6 +69,16 @@ export async function applyPackageStatusSideEffects(
       const distributorId = pkg.assigned_to;
       const trackingToken = trackingTokensById.get(change.packageId);
 
+      const rawDelivery = pkg.estimated_delivery as unknown;
+      const estimatedDelivery =
+        rawDelivery != null
+          ? new Intl.DateTimeFormat("eu-ES", { dateStyle: "medium" }).format(
+              rawDelivery instanceof Date
+                ? rawDelivery
+                : new Date(rawDelivery as string)
+            )
+          : undefined;
+
       await sendPackageTrackingEmail({
         recipientEmail: pkg.recipient_email,
         recipientName: pkg.recipient_name,
@@ -80,7 +90,7 @@ export async function applyPackageStatusSideEffects(
           distributorId != undefined
             ? (distributorNamesById.get(distributorId) ?? undefined)
             : undefined,
-        estimatedDelivery: pkg.estimated_delivery ?? undefined,
+        estimatedDelivery,
       });
     })
   );
