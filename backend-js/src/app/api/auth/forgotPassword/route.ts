@@ -8,7 +8,8 @@ export async function POST(request: Request) {
     const { email } = forgotPasswordDto(body);
     await forgotPasswordService(email);
     return res.ok({
-      message: "If that email exists, a reset link has been sent",
+      message:
+        "If that email exists, you will receive a reset password link shortly in your inbox. Please check it out and also the spam folder just in case.",
     });
   } catch (error) {
     return handleError("[POST /api/auth/forgotPassword]", error);

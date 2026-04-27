@@ -3,14 +3,20 @@ import {
   findUserByEmail,
   insertResetToken,
   revokeExistingResetTokens,
+  isResetPasswordTokenExists,
 } from "../repository/forgotPassword.repo";
 import { reset_base_url, reset_expires_minutes } from "@/app/config/envConfig";
 
 export async function forgotPasswordService(email: string): Promise<void> {
   const user = await findUserByEmail(email);
-
   // Si el usuario no existe respondemos igual para no filtrar info
   if (!user) return;
+
+  const isTokenExists = await isResetPasswordTokenExists(user.id);
+
+  if (isTokenExists) {
+    return;
+  }
 
   await revokeExistingResetTokens(user.id);
 
