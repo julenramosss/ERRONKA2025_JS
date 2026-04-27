@@ -7,7 +7,7 @@ const HERO_ICON = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" s
 export function packageFailedEmailTemplate(
   params: PackageFailedEmailTemplateParams
 ): string {
-  const { recipientName, failedAt, reason } = params;
+  const { recipientName, failedAt, reason, trackingUrl } = params;
 
   const infoCards = [
     {
@@ -48,6 +48,9 @@ export function packageFailedEmailTemplate(
       "Beharrezkoa bada, gure taldeak zurekin harremanetan jarriko da hurrengo pausoa adosteko.",
     ],
     infoCards,
+    ...(trackingUrl
+      ? { cta: { label: "Ikusi jarraipena", url: trackingUrl } }
+      : {}),
     secondaryNote:
       "Egoeraren inguruko informazio osagarria behar baduzu, jarri gurekin harremanetan zure eskaeraren datuak eskuan dituzula.",
   });

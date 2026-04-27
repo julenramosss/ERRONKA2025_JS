@@ -45,6 +45,7 @@ export const emailService = {
         recipientName: params.recipientName,
         distributorName: params.distributorName,
         estimatedDelivery: params.estimatedDelivery,
+        trackingUrl: params.trackingUrl,
       }),
     });
   },
@@ -57,6 +58,7 @@ export const emailService = {
       html: packageDeliveredTemplate({
         recipientName: params.recipientName,
         deliveredAt: params.deliveredAt,
+        trackingUrl: params.trackingUrl,
       }),
     });
   },
@@ -70,6 +72,7 @@ export const emailService = {
         recipientName: params.recipientName,
         failedAt: params.failedAt,
         reason: params.reason,
+        trackingUrl: params.trackingUrl,
       }),
     });
   },
@@ -94,6 +97,7 @@ export const emailService = {
       html: packageUndeliveredTemplate({
         recipientName: params.recipientName,
         attemptedAt: params.attemptedAt,
+        trackingUrl: params.trackingUrl,
       }),
     });
   },

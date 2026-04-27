@@ -7,7 +7,7 @@ const HERO_ICON = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" s
 export function packageDeliveredTemplate(
   params: DeliveredEmailTemplateParams
 ): string {
-  const { recipientName, deliveredAt } = params;
+  const { recipientName, deliveredAt, trackingUrl } = params;
 
   return renderEmailLayout({
     title: "Zure paketea entregatu dugu - PakAG",
@@ -37,6 +37,9 @@ export function packageDeliveredTemplate(
         accent: theme.status.delivered.fg,
       },
     ],
+    ...(trackingUrl
+      ? { cta: { label: "Ikusi jarraipena", url: trackingUrl } }
+      : {}),
     secondaryNote:
       "Mezu hau zure erreferentziarako da. Entregaren inguruan zalantzarik baduzu, gorde abisu hau.",
   });

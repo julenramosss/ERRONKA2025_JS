@@ -7,7 +7,7 @@ const HERO_ICON = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" s
 export function packageUndeliveredTemplate(
   params: PackageUndeliveredEmailTemplateParams
 ): string {
-  const { recipientName, attemptedAt } = params;
+  const { recipientName, attemptedAt, trackingUrl } = params;
 
   return renderEmailLayout({
     title: "Gaur ezin izan dugu zure paketea entregatu - PakAG",
@@ -38,6 +38,9 @@ export function packageUndeliveredTemplate(
         accent: theme.status.undelivered.fg,
       },
     ],
+    ...(trackingUrl
+      ? { cta: { label: "Ikusi jarraipena", url: trackingUrl } }
+      : {}),
     secondaryNote:
       "Momentuz ez duzu ezer egin behar. Baldintza berriren bat behar badugu, beste jakinarazpen batean azalduko dizugu.",
   });

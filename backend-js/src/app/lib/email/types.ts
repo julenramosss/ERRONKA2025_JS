@@ -10,12 +10,14 @@ export interface InTransitEmailParams {
   recipientName: string;
   distributorName: string;
   estimatedDelivery: string;
+  trackingUrl?: string;
 }
 
 export interface DeliveredEmailParams {
   to: string;
   recipientName: string;
   deliveredAt: string;
+  trackingUrl?: string;
 }
 
 export interface FailedEmailParams {
@@ -23,6 +25,7 @@ export interface FailedEmailParams {
   recipientName: string;
   failedAt: string;
   reason?: string;
+  trackingUrl?: string;
 }
 
 export interface PendingEmailParams {
@@ -47,6 +50,7 @@ export interface UndeliveredEmailParams {
   to: string;
   recipientName: string;
   attemptedAt: string;
+  trackingUrl?: string;
 }
 
 export interface LoginNotificationEmailParams {

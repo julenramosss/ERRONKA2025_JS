@@ -58,17 +58,20 @@ export interface InTransitEmailTemplateParams {
 export interface DeliveredEmailTemplateParams {
   recipientName: string;
   deliveredAt: string;
+  trackingUrl?: string;
 }
 
 export interface PackageFailedEmailTemplateParams {
   recipientName: string;
   failedAt: string;
   reason?: string;
+  trackingUrl?: string;
 }
 
 export interface PackageUndeliveredEmailTemplateParams {
   recipientName: string;
   attemptedAt: string;
+  trackingUrl?: string;
 }
 
 export interface PasswordChangeEmailTemplateParams {

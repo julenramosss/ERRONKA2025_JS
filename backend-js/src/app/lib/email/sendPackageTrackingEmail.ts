@@ -58,6 +58,7 @@ export async function sendPackageTrackingEmail(
       recipientName,
       distributorName: distributorName ?? "PakAG banatzailea",
       estimatedDelivery: estimatedDelivery ?? "Seguraski gaur",
+      trackingUrl,
     });
     return;
   }
@@ -67,6 +68,7 @@ export async function sendPackageTrackingEmail(
       to: recipientEmail,
       recipientName,
       deliveredAt: deliveredAt ?? nowLabel,
+      trackingUrl,
     });
     return;
   }
@@ -77,6 +79,7 @@ export async function sendPackageTrackingEmail(
       recipientName,
       failedAt: failedAt ?? nowLabel,
       reason,
+      trackingUrl,
     });
     return;
   }
@@ -86,6 +89,7 @@ export async function sendPackageTrackingEmail(
       to: recipientEmail,
       recipientName,
       attemptedAt: attemptedAt ?? nowLabel,
+      trackingUrl,
     });
     return;
   }
