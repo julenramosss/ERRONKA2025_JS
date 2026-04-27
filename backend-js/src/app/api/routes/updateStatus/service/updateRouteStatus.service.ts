@@ -6,12 +6,17 @@ import {
 import { AccessTokenPayload } from "@/app/lib/types";
 import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
 import { PACKAGE_STATUSES, USER_ROLES } from "@/app/types";
+import { mapsService } from "@/app/lib/maps/maps.service";
+import { PAKAG_ORIGIN } from "@/app/config/envConfig";
 import {
   findRouteById,
   migratePastPendingStopsIntoRoute,
   setRoutePendingPackagesInTransit,
   setRouteRemainingPackagesUndelivered,
   setRouteStatus,
+  findActiveStopsWithCoordinates,
+  updateRouteStopOrders,
+  bulkUpdatePackagesEstimatedDelivery,
 } from "../repository/updateRouteStatus.repo";
 import { ROUTE_STATUSES, RouteStatus, UpdateRouteStatusDto } from "../types";
 
@@ -59,7 +64,44 @@ export async function updateRouteStatusService(
   await setRouteStatus(dto.routeId, dto.status);
 
   if (dto.status === ROUTE_STATUSES.in_progress) {
-    await migratePastPendingStopsIntoRoute(route.user_id, route.id);
+    const migratedCount = await migratePastPendingStopsIntoRoute(
+      route.user_id,
+      route.id
+    );
+
+    if (migratedCount > 0) {
+      const activeStops = await findActiveStopsWithCoordinates(route.id);
+      const routeStops = activeStops.map((s) => ({
+        packageId: s.package_id,
+        lat: Number(s.lat),
+        lng: Number(s.lng),
+      }));
+      const optimized = await mapsService.optimizeRoute(
+        PAKAG_ORIGIN,
+        routeStops
+      );
+      await updateRouteStopOrders(
+        optimized.orderedStops.map((s, idx) => ({
+          stopId:
+            activeStops[
+              activeStops.findIndex((a) => a.package_id === s.packageId)
+            ].id,
+          stopOrder: idx + 1,
+          estimatedArrival: new Date(s.estimatedArrival)
+            .toISOString()
+            .slice(11, 19),
+        }))
+      );
+      await bulkUpdatePackagesEstimatedDelivery(
+        optimized.orderedStops.map((s) => ({
+          packageId: s.packageId,
+          estimatedDelivery: new Date(s.estimatedArrival)
+            .toISOString()
+            .slice(0, 10),
+        }))
+      );
+    }
+
     const inTransitChanges = await setRoutePendingPackagesInTransit(route.id);
     await applyPackageStatusSideEffects(
       inTransitChanges.map((pkg) => ({

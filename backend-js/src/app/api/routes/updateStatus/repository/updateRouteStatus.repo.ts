@@ -7,6 +7,13 @@ import {
   RouteStatus,
 } from "../types";
 
+interface ActiveStopCoordRow extends RowDataPacket {
+  id: number;
+  package_id: number;
+  lat: number;
+  lng: number;
+}
+
 export async function findRouteById(routeId: number): Promise<RouteRow | null> {
   const db = await connect();
   const [rows] = await db.query<(RowDataPacket & RouteRow)[]>(
@@ -149,4 +156,47 @@ export async function setRouteRemainingPackagesUndelivered(
   );
 
   return packages;
+}
+
+export async function findActiveStopsWithCoordinates(
+  routeId: number
+): Promise<ActiveStopCoordRow[]> {
+  const db = await connect();
+  const [rows] = await db.query<ActiveStopCoordRow[]>(
+    `SELECT rs.id, rs.package_id, a.latitude AS lat, a.longitude AS lng
+     FROM route_stops rs
+     JOIN packages p ON p.id = rs.package_id
+     JOIN addresses a ON p.address_id = a.id
+     WHERE rs.route_id = ?
+       AND p.status IN ('assigned', 'undelivered')
+     ORDER BY rs.stop_order ASC`,
+    [routeId]
+  );
+  return rows;
+}
+
+export async function updateRouteStopOrders(
+  stops: Array<{ stopId: number; stopOrder: number; estimatedArrival: string }>
+): Promise<void> {
+  if (stops.length === 0) return;
+  const db = await connect();
+  for (const s of stops) {
+    await db.query<ResultSetHeader>(
+      "UPDATE route_stops SET stop_order = ?, estimated_arrival = ? WHERE id = ?",
+      [s.stopOrder, s.estimatedArrival, s.stopId]
+    );
+  }
+}
+
+export async function bulkUpdatePackagesEstimatedDelivery(
+  stops: Array<{ packageId: number; estimatedDelivery: string }>
+): Promise<void> {
+  if (stops.length === 0) return;
+  const db = await connect();
+  for (const s of stops) {
+    await db.query<ResultSetHeader>(
+      "UPDATE packages SET estimated_delivery = ? WHERE id = ?",
+      [s.estimatedDelivery, s.packageId]
+    );
+  }
 }

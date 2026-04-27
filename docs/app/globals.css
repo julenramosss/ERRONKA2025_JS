@@ -288,6 +288,8 @@ html,
   border-collapse: collapse;
   font-size: 0.9rem;
   margin: 1.25rem 0;
+  display: block;
+  overflow-x: auto;
 }
 
 .docs-content th {

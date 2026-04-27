@@ -26,6 +26,11 @@ export function SettingsAside({
       label: "Itxura",
       icon: <Icons.Moon size={20} />,
     },
+    {
+      route: SETTINGS_ROUTES.documentation,
+      label: "Dokumentazioa",
+      icon: <Icons.Book size={20} />,
+    },
   ];
 
   return (

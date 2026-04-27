@@ -733,6 +733,18 @@ export const Icons: Record<string, (props: SvgIconProps) => ReactElement> = {
       }
     />
   ),
+  Book: (p) => (
+    <Icon
+      {...p}
+      d={
+        <>
+          <path d="M4 19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2Z" />
+          <path d="M4 19a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2" />
+          <path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2" />
+        </>
+      }
+    />
+  ),
   Monitor: (p) => (
     <Icon
       {...p}

@@ -8,7 +8,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <meta name="theme-color" content="#7c3aed" />
       </head>
-      <body className="w-screen h-screen bg-bg-dark text-text-primary font-sans antialiased">
+      <body className="w-full max-w-[100vw] overflow-x-hidden h-screen bg-bg-dark text-text-primary font-sans antialiased">
         {children}
       </body>
     </html>

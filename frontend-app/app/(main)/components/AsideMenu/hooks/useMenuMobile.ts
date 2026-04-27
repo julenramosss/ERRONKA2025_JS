@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLogout } from "../../../../hooks/auth/useLogout";
 import { useMe } from "../../../../hooks/auth/useMe";
+import { redirect } from "next/navigation";
 
 export function useMenuMobile() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,9 +18,9 @@ export function useMenuMobile() {
     setIsOpen(false);
   }
 
-  function onClickLogout() {
-    mutateAsync();
-    window.location.href = "/login";
+  async function onClickLogout() {
+    await mutateAsync();
+    redirect("/login");
   }
 
   return {

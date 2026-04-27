@@ -57,7 +57,7 @@ export default async function LangLayout({ children, params }: LayoutProps) {
         {/* Main content area */}
         <div
           id="docs-scroll"
-          className="flex flex-1 flex-col min-h-screen overflow-auto"
+          className="flex flex-1 flex-col min-h-screen overflow-y-auto overflow-x-hidden"
         >
           {/* Header */}
           <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-4 md:px-6 bg-bg-elevated border-b border-border shrink-0">

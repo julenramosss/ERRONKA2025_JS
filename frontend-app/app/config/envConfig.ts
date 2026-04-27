@@ -5,6 +5,11 @@ export const SECURE = isDev ? "" : "; Secure";
 export const API_BASE_URL = isDev
   ? process.env.NEXT_PUBLIC_API_BASE_URL!
   : "https://api.tolosaerronka.es/api";
+
+export const DOCS_BASE_URL = isDev
+  ? process.env.NEXT_PUBLIC_DOCS_BASE_URL!
+  : "https://docs.tolosaerronka.es";
+
 export const HERE_API_KEY = process.env.NEXT_PUBLIC_HERE_API_KEY!;
 
 export const JSON_HEADERS = {
