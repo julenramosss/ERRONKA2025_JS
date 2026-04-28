@@ -35,7 +35,7 @@ export async function insertResetToken(
 
 export async function isResetPasswordTokenExists(
   userId: number
-): Promise<{ token: string } | null> {
+): Promise<string | null> {
   const db = await connect();
   const [rows] = await db.query<RowDataPacket[]>(
     "SELECT token FROM tokens WHERE user_id = ? AND type = 'reset_pwd_token' AND revoked = FALSE AND expires_at > NOW()",
