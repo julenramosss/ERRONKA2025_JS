@@ -184,6 +184,14 @@ export async function updateRouteStopOrders(
   const ids = stops.map((s) => s.stopId);
   const placeholders = ids.map(() => '?').join(', ');
 
+  // Step 1: set temporary negative stop_orders to avoid unique constraint
+  // collisions when MySQL evaluates the UPDATE row by row
+  await db.query<ResultSetHeader>(
+    `UPDATE route_stops SET stop_order = -id WHERE id IN (${placeholders})`,
+    ids
+  );
+
+  // Step 2: set the real stop_orders and estimated_arrivals
   const orderCase = stops.map(() => 'WHEN ? THEN ?').join(' ');
   const arrivalCase = stops.map(() => 'WHEN ? THEN ?').join(' ');
 
