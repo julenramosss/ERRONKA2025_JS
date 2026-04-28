@@ -1,13 +1,13 @@
-import { redirect, useParams } from "next/navigation";
-import { usePackageById } from "../../../../../hooks/packages/usePackageById";
-import { usePackageLogs } from "../../../../../hooks/packages/usePackageLogs";
+import { redirect, useParams } from 'next/navigation';
+import { usePackageById } from '../../../../../hooks/packages/usePackageById';
+import { usePackageLogs } from '../../../../../hooks/packages/usePackageLogs';
 
 export function usePackageDetails() {
   const { packageId: packageIdParam }: { packageId: string } = useParams();
   const packageId = parseInt(packageIdParam);
 
   if (!/^\d+$/.test(packageIdParam) || Number.isNaN(packageId)) {
-    redirect("/404");
+    redirect('/404');
   }
 
   const {

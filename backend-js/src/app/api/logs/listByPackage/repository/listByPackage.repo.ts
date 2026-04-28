@@ -1,7 +1,7 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket } from "mysql2/promise";
-import { LogEntry, ListByPackageResult } from "../types";
-import { PackageStatus } from "@/app/types";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket } from 'mysql2/promise';
+import { LogEntry, ListByPackageResult } from '../types';
+import { PackageStatus } from '@/app/types';
 
 export async function listByPackageRepo(
   packageId: number,
@@ -12,15 +12,15 @@ export async function listByPackageRepo(
   const db = await connect();
   const offset = (page - 1) * limit;
 
-  const clauses = ["l.package_id = ?"];
+  const clauses = ['l.package_id = ?'];
   const params: unknown[] = [packageId];
 
   if (assignedTo !== undefined) {
-    clauses.push("p.assigned_to = ?");
+    clauses.push('p.assigned_to = ?');
     params.push(assignedTo);
   }
 
-  const where = `WHERE ${clauses.join(" AND ")}`;
+  const where = `WHERE ${clauses.join(' AND ')}`;
 
   const [countRows] = await db.query<(RowDataPacket & { total: number })[]>(
     `SELECT COUNT(*) as total

@@ -1,3 +1,3 @@
 export default {
-  index: "Repository layout",
+  index: 'Repository layout',
 };

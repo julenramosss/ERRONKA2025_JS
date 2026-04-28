@@ -1,3 +1,3 @@
 export default {
-  index: "Domeinu-eredua",
+  index: 'Domeinu-eredua',
 };

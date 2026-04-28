@@ -1,6 +1,6 @@
-import { CreateUserDto } from "../types";
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
+import { CreateUserDto } from '../types';
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 interface UserIdRow extends RowDataPacket {
   id: number;
@@ -9,7 +9,7 @@ interface UserIdRow extends RowDataPacket {
 export async function findUserByEmail(email: string): Promise<boolean> {
   const db = await connect();
   const [rows] = await db.query<UserIdRow[]>(
-    "SELECT id FROM users WHERE email = ?",
+    'SELECT id FROM users WHERE email = ?',
     [email]
   );
   return rows.length > 0;

@@ -1,6 +1,6 @@
-import { Icons } from "../../../../../components/icons";
-import { HereMap } from "../../../../components/Here/HereMap";
-import type { DeliveryLocationProps } from "../types";
+import { Icons } from '../../../../../components/icons';
+import { HereMap } from '../../../../components/Here/HereMap';
+import type { DeliveryLocationProps } from '../types';
 
 export function DeliveryLocation({ pkg }: DeliveryLocationProps) {
   return (

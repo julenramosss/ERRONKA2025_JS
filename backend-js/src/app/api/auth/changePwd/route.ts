@@ -1,9 +1,9 @@
-import { validateChangePwdDto } from "./dto/changePwd.dto";
+import { validateChangePwdDto } from './dto/changePwd.dto';
 import {
   changePwdService,
   checkTokenService,
-} from "./service/changePwd.service";
-import { handleError, res } from "@/app/lib/response";
+} from './service/changePwd.service';
+import { handleError, res } from '@/app/lib/response';
 
 export async function PATCH(request: Request) {
   try {
@@ -16,8 +16,8 @@ export async function PATCH(request: Request) {
     }
 
     await changePwdService({ ...dto, newPassword: dto.newPassword });
-    return res.ok({ message: "Password changed successfully" });
+    return res.ok({ message: 'Password changed successfully' });
   } catch (error) {
-    return handleError("[PATCH /api/auth/changePwd]", error);
+    return handleError('[PATCH /api/auth/changePwd]', error);
   }
 }

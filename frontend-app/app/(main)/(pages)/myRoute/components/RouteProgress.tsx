@@ -1,5 +1,5 @@
-import { Icons } from "../../../../components/icons";
-import { useRouteProgress } from "../hooks/useRouteProgress";
+import { Icons } from '../../../../components/icons';
+import { useRouteProgress } from '../hooks/useRouteProgress';
 
 export function RouteProgress() {
   const { totalStops, completedStops, activeStopOrder } = useRouteProgress();
@@ -12,7 +12,7 @@ export function RouteProgress() {
         <div>
           <p className="text-sm font-semibold text-text-primary">Aurrerapena</p>
           <p className="text-xs text-text-secondary">
-            Hurrengo geldialdia: {activeStopOrder ?? "--"}
+            Hurrengo geldialdia: {activeStopOrder ?? '--'}
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm font-bold text-accent-light">

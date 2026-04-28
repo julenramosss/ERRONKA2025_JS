@@ -1,11 +1,11 @@
-import { NotFoundError, UnauthorizedError } from "@/app/lib/errors";
-import { encryptPwd, verifyPassword } from "@/app/lib/hashPasword";
-import { ChangeMyPwdDto } from "../types";
+import { NotFoundError, UnauthorizedError } from '@/app/lib/errors';
+import { encryptPwd, verifyPassword } from '@/app/lib/hashPasword';
+import { ChangeMyPwdDto } from '../types';
 import {
   findUserPasswordById,
   revokeResetTokensForUser,
   updateUserPassword,
-} from "../repository/changeMyPwd.repository";
+} from '../repository/changeMyPwd.repository';
 
 export async function changeMyPwdService(
   userId: number,
@@ -13,7 +13,7 @@ export async function changeMyPwdService(
 ): Promise<void> {
   const user = await findUserPasswordById(userId);
   if (!user) {
-    throw new NotFoundError("User not found");
+    throw new NotFoundError('User not found');
   }
 
   const isCurrentPasswordValid = await verifyPassword(
@@ -22,7 +22,7 @@ export async function changeMyPwdService(
   );
 
   if (!isCurrentPasswordValid) {
-    throw new UnauthorizedError("Current password is incorrect");
+    throw new UnauthorizedError('Current password is incorrect');
   }
 
   const newPasswordHash = await encryptPwd(dto.newPassword);

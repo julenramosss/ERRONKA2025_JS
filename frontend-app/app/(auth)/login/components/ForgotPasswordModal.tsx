@@ -1,5 +1,5 @@
-import { Icons } from "../../../components/icons";
-import { useForgotPasswordModal } from "../hooks/useForgotPasswordModal";
+import { Icons } from '../../../components/icons';
+import { useForgotPasswordModal } from '../hooks/useForgotPasswordModal';
 
 export function ForgotPasswordModal({
   isOpen,
@@ -8,15 +8,21 @@ export function ForgotPasswordModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const { emailRef, showToast, isPending, isError, onClickForgotPassword } =
-    useForgotPasswordModal(onClose);
+  const {
+    emailRef,
+    showToast,
+    isPending,
+    isError,
+    isButtonDisabled,
+    onClickForgotPassword,
+  } = useForgotPasswordModal(onClose);
 
   return (
     <div
-      className={`z-200 absolute inset-0 bg-black/70 shadow-[0_0_0px_1000px_rgba(0,0,0,0.7)] flex items-center justify-center md:p-4 transition-opacity duration-300 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      className={`z-200 absolute inset-0 bg-black/70 shadow-[0_0_0px_1000px_rgba(0,0,0,0.7)] flex items-center justify-center md:p-4 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
     >
       <div
-        className={`relative bg-bg-dark rounded-lg p-6 w-full max-w-md border ${isError ? "border-red-500" : "border-border"} transition-all duration-300 ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-40"}`}
+        className={`relative bg-bg-dark rounded-lg p-6 w-full max-w-md border ${isError ? 'border-red-500' : 'border-border'} transition-all duration-300 ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-40'}`}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-bold text-accent-light">
@@ -44,7 +50,7 @@ export function ForgotPasswordModal({
           <div>
             <span className="text-text-secondary">Email</span>
             <div
-              className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? "border-red-500" : ""}`}
+              className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? 'border-red-500' : ''}`}
             >
               <Icons.Mail size={20} className="text-text-secondary" />
               <input
@@ -60,9 +66,10 @@ export function ForgotPasswordModal({
           </div>
           <button
             type="submit"
-            className="w-full flex items-center justify-center bg-accent text-white text-lg rounded-lg py-3 font-semibold gap-2 cursor-pointer hover:bg-accent-hover transition-colors shadow-[0_4px_24px_rgba(124,58,237,0.55)]"
+            disabled={isButtonDisabled}
+            className="w-full flex items-center justify-center bg-accent text-white text-lg rounded-lg py-3 font-semibold gap-2 cursor-pointer hover:bg-accent-hover transition-colors shadow-[0_4px_24px_rgba(124,58,237,0.55)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? "Berritu pasahiza..." : "Berritu pasahiza"}
+            {isPending ? 'Berritu pasahiza...' : 'Berritu pasahiza'}
             <Icons.ArrowRight size={16} className="inline ml-2" />
           </button>
         </form>
@@ -70,7 +77,7 @@ export function ForgotPasswordModal({
       {showToast && (
         <div
           className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-full max-w-sm px-4"
-          style={{ animation: "fadeInOut 4s ease forwards" }}
+          style={{ animation: 'fadeInOut 4s ease forwards' }}
         >
           <span className="text-st-delivered bg-bg-delivered border border-st-delivered block p-3 rounded-md text-sm text-center">
             Pasahitza berrezartzeko esteka bidali da korreo elektronikora!

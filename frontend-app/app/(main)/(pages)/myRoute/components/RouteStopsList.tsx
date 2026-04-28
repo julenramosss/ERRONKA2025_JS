@@ -1,12 +1,12 @@
-import { Icons } from "../../../../components/icons";
-import type { KeyboardEvent } from "react";
-import { StatusBadge } from "../../../components/StatusBadge";
-import { formatStopTime } from "../../../../utils/date.utils";
-import { isTerminalPackageStatus } from "../constants";
-import { useRouteStopsList } from "../hooks/useRouteStopsList";
-import type { RouteStopsListProps } from "../types";
-import { RouteStopActions } from "./RouteStopActions";
-import Link from "next/link";
+import { Icons } from '../../../../components/icons';
+import type { KeyboardEvent } from 'react';
+import { StatusBadge } from '../../../components/StatusBadge';
+import { formatStopTime } from '../../../../utils/date.utils';
+import { isTerminalPackageStatus } from '../constants';
+import { useRouteStopsList } from '../hooks/useRouteStopsList';
+import type { RouteStopsListProps } from '../types';
+import { RouteStopActions } from './RouteStopActions';
+import Link from 'next/link';
 
 export function RouteStopsList({
   selectedStopId,
@@ -26,7 +26,7 @@ export function RouteStopsList({
     event: KeyboardEvent<HTMLDivElement>,
     stopId: number
   ): void {
-    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     onSelectStop(stopId);
   }
@@ -66,17 +66,17 @@ export function RouteStopsList({
               onClick={() => onSelectStop(stop.id)}
               onKeyDown={(event) => handleRowKeyDown(event, stop.id)}
               className={`flex w-full gap-3 border-b border-border px-5 py-4 text-left transition-colors last:border-b-0 hover:bg-bg-elevated ${
-                isSelected ? "bg-accent-subtle/40" : ""
+                isSelected ? 'bg-accent-subtle/40' : ''
               }`}
             >
               <div className="flex flex-col items-center gap-2">
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
                     isDone
-                      ? "border-text-success bg-bg-success text-text-success"
+                      ? 'border-text-success bg-bg-success text-text-success'
                       : isActive
-                        ? "border-accent bg-accent text-white"
-                        : "border-border bg-bg-elevated text-text-secondary"
+                        ? 'border-accent bg-accent text-white'
+                        : 'border-border bg-bg-elevated text-text-secondary'
                   }`}
                 >
                   {isDone ? <Icons.Check size={14} /> : stop.stop_order}
@@ -98,7 +98,7 @@ export function RouteStopsList({
                         className="mt-0.5 shrink-0 text-text-disabled"
                       />
                       <span className="truncate">
-                        {stop.package.address.street},{" "}
+                        {stop.package.address.street},{' '}
                         {stop.package.address.city}
                       </span>
                     </p>

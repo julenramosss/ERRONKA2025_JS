@@ -1,10 +1,10 @@
-import type { ApiDateString, ApiTimeString } from "./common.types";
-import type { PackageStatus } from "./package.types";
+import type { ApiDateString, ApiTimeString } from './common.types';
+import type { PackageStatus } from './package.types';
 
-export type RouteStatus = "planned" | "in_progress" | "completed";
+export type RouteStatus = 'planned' | 'in_progress' | 'completed';
 export type UpdatableRouteStatus = Extract<
   RouteStatus,
-  "in_progress" | "completed"
+  'in_progress' | 'completed'
 >;
 
 export interface RouteSummary {

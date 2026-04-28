@@ -1,6 +1,6 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import crypto from "crypto";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import crypto from 'crypto';
 
 export async function findInactiveUserByEmail(
   email: string
@@ -8,7 +8,7 @@ export async function findInactiveUserByEmail(
   const db = await connect();
   const [rows] = await db.query<
     (RowDataPacket & { id: number; name: string })[]
-  >("SELECT id, name FROM users WHERE email = ? AND is_active = FALSE", [
+  >('SELECT id, name FROM users WHERE email = ? AND is_active = FALSE', [
     email,
   ]);
   return rows[0] ?? null;
@@ -29,7 +29,7 @@ export async function insertActivationToken(
   expiresAt: Date
 ): Promise<string> {
   const db = await connect();
-  const token = crypto.randomBytes(32).toString("hex");
+  const token = crypto.randomBytes(32).toString('hex');
   await db.query<ResultSetHeader>(
     "INSERT INTO tokens (type, token, user_id, expires_at) VALUES ('activate_account_token', ?, ?, ?)",
     [token, userId, expiresAt]

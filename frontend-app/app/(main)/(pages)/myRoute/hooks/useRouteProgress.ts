@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
-import { isTerminalPackageStatus } from "../constants";
+import { useMyDailyRoute } from '../../../../hooks/routes/useMyDailyRoute';
+import { isTerminalPackageStatus } from '../constants';
 
 export function useRouteProgress() {
   const routeQuery = useMyDailyRoute();

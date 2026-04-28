@@ -1,6 +1,6 @@
-import { PackageStatus } from "@/app/types";
-import { fetchDailyCounts } from "../repository/getDailySummary.repo";
-import { DailySummaryResult } from "../types";
+import { PackageStatus } from '@/app/types';
+import { fetchDailyCounts } from '../repository/getDailySummary.repo';
+import { DailySummaryResult } from '../types';
 
 export async function getDailySummaryService(): Promise<DailySummaryResult> {
   const rows = await fetchDailyCounts();

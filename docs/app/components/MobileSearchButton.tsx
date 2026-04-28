@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 export function MobileSearchButton() {
   function openSearch() {
-    window.dispatchEvent(new CustomEvent("docs:search:open"));
+    window.dispatchEvent(new CustomEvent('docs:search:open'));
   }
 
   return (

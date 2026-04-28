@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { usePathname } from "next/navigation";
+import { usePathname } from 'next/navigation';
 import {
   createContext,
   useCallback,
   useContext,
   useMemo,
   type ReactNode,
-} from "react";
-import { STATUS, useJoyride, type Status } from "react-joyride";
-import { usePreferences } from "../hooks/usePreferences";
-import { useTutorialSeen } from "../hooks/useTutorialSeen";
-import { setPreferences } from "../utils/preferences";
-import { getStepsForPath } from "../utils/constants/steps.Joyride";
+} from 'react';
+import { STATUS, useJoyride, type Status } from 'react-joyride';
+import { usePreferences } from '../hooks/usePreferences';
+import { useTutorialSeen } from '../hooks/useTutorialSeen';
+import { setPreferences } from '../utils/preferences';
+import { getStepsForPath } from '../utils/constants/steps.Joyride';
 import {
   DEFAULTS_TUTORIAL,
   setTutorialState,
   TutorialState,
-} from "../utils/tutorial.storage";
-import { TutorialTooltip } from "../components/tutorial/TutorialTooltip";
+} from '../utils/tutorial.storage';
+import { TutorialTooltip } from '../components/tutorial/TutorialTooltip';
 
 interface TutorialContextValue {
   isRunning: boolean;
@@ -33,7 +33,7 @@ const FINAL_STATUSES: Status[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
 export function TutorialProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const cleanPath = pathname.split("/")[1]; // For tutorial state key
+  const cleanPath = pathname.split('/')[1]; // For tutorial state key
   const { showTutorial } = usePreferences();
   const hasSeen = useTutorialSeen(cleanPath as keyof TutorialState);
 
@@ -56,11 +56,11 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       spotlightPadding: 6,
       spotlightRadius: 12,
       skipBeacon: true,
-      primaryColor: "#7c3aed",
-      backgroundColor: "#231d35",
-      textColor: "#f5f3ff",
-      arrowColor: "#231d35",
-      overlayColor: "rgba(14, 11, 22, 0.72)",
+      primaryColor: '#7c3aed',
+      backgroundColor: '#231d35',
+      textColor: '#f5f3ff',
+      arrowColor: '#231d35',
+      overlayColor: 'rgba(14, 11, 22, 0.72)',
     },
     onEvent: (data) => {
       if (FINAL_STATUSES.includes(data.status)) {
@@ -94,7 +94,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
 export function useTutorial(): TutorialContextValue {
   const ctx = useContext(TutorialContext);
   if (!ctx) {
-    throw new Error("useTutorial must be used within a TutorialProvider");
+    throw new Error('useTutorial must be used within a TutorialProvider');
   }
   return ctx;
 }

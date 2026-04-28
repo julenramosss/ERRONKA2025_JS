@@ -1,5 +1,5 @@
-import { RowDataPacket } from "mysql2";
-import { connect } from "@/app/config/dbConfig";
+import { RowDataPacket } from 'mysql2';
+import { connect } from '@/app/config/dbConfig';
 
 export async function listAllLogsRepo(
   params: string[],
@@ -8,7 +8,7 @@ export async function listAllLogsRepo(
   limit: number
 ): Promise<{ rows: RowDataPacket[]; total: number }> {
   const db = await connect();
-  const whereClause = params.length > 0 ? `WHERE ${params.join(" AND ")}` : "";
+  const whereClause = params.length > 0 ? `WHERE ${params.join(' AND ')}` : '';
 
   const [countRows] = await db.query<(RowDataPacket & { total: number })[]>(
     `SELECT COUNT(*) as total FROM package_status_logs ${whereClause}`,

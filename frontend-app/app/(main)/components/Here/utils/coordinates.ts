@@ -1,4 +1,4 @@
-import type { CoordinateValue, Coordinates } from "../types";
+import type { CoordinateValue, Coordinates } from '../types';
 
 export function normalizeCoordinates(
   latInput: CoordinateValue,

@@ -1,12 +1,12 @@
-import type { ApiDateString, ApiDateTimeString } from "./common.types";
+import type { ApiDateString, ApiDateTimeString } from './common.types';
 
 export type PackageStatus =
-  | "pending"
-  | "assigned"
-  | "in_transit"
-  | "delivered"
-  | "undelivered"
-  | "failed";
+  | 'pending'
+  | 'assigned'
+  | 'in_transit'
+  | 'delivered'
+  | 'undelivered'
+  | 'failed';
 
 export interface PackageWithAddress {
   id: number;

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import type { TooltipRenderProps } from "react-joyride";
-import { Icons } from "../icons";
+import type { TooltipRenderProps } from 'react-joyride';
+import { Icons } from '../icons';
 
 export function TutorialTooltip({
   backProps,
@@ -91,7 +91,7 @@ export function TutorialTooltip({
             type="button"
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3.5 py-1.5 text-xs font-semibold text-white shadow-[0_0_16px_rgba(124,58,237,0.35)] transition-colors hover:bg-accent-hover"
           >
-            {isLastStep ? "Bukatu" : "Hurrengoa"}
+            {isLastStep ? 'Bukatu' : 'Hurrengoa'}
             {!isLastStep && <Icons.ArrowRight size={13} />}
           </button>
         </div>

@@ -1,3 +1,3 @@
 export default {
-  index: "Ikuspegi orokorra",
+  index: 'Ikuspegi orokorra',
 };

@@ -1,14 +1,14 @@
-"use client";
-import { useEffect, useState } from "react";
-import { Icons } from "../../../../components/icons";
-import { SETTINGS_ROUTES, SettingsRoute } from "../types";
-import { SettingsAside } from "./SettingsAside";
+'use client';
+import { useEffect, useState } from 'react';
+import { Icons } from '../../../../components/icons';
+import { SETTINGS_ROUTES, SettingsRoute } from '../types';
+import { SettingsAside } from './SettingsAside';
 
 const ROUTE_LABELS: Record<SettingsRoute, string> = {
-  [SETTINGS_ROUTES.general]: "Generala",
-  [SETTINGS_ROUTES.security]: "Segurtasuna",
-  [SETTINGS_ROUTES.appearance]: "Itxura",
-  [SETTINGS_ROUTES.documentation]: "Dokumentazioa",
+  [SETTINGS_ROUTES.general]: 'Generala',
+  [SETTINGS_ROUTES.security]: 'Segurtasuna',
+  [SETTINGS_ROUTES.appearance]: 'Itxura',
+  [SETTINGS_ROUTES.documentation]: 'Dokumentazioa',
 };
 
 export function SettingsMobileAside({
@@ -28,10 +28,10 @@ export function SettingsMobileAside({
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key === 'Escape') setIsOpen(false);
     };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, [isOpen]);
 
   return (
@@ -73,7 +73,7 @@ export function SettingsMobileAside({
 
       <aside
         className={`fixed top-0 left-0 z-50 h-full w-72 max-w-[85vw] flex flex-col gap-5 bg-bg-surface border-r border-border shadow-xl transition-transform duration-200 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-hidden={!isOpen}
       >

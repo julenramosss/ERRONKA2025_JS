@@ -1,13 +1,13 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader } from "mysql2";
-import { UserPasswordRow } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader } from 'mysql2';
+import { UserPasswordRow } from '../types';
 
 export async function findUserPasswordById(
   userId: number
 ): Promise<UserPasswordRow | null> {
   const db = await connect();
   const [rows] = await db.query<UserPasswordRow[]>(
-    "SELECT id, password_hash FROM users WHERE id = ?",
+    'SELECT id, password_hash FROM users WHERE id = ?',
     [userId]
   );
 
@@ -20,7 +20,7 @@ export async function updateUserPassword(
 ): Promise<void> {
   const db = await connect();
   await db.execute<ResultSetHeader>(
-    "UPDATE users SET password_hash = ? WHERE id = ?",
+    'UPDATE users SET password_hash = ? WHERE id = ?',
     [passwordHash, userId]
   );
 }

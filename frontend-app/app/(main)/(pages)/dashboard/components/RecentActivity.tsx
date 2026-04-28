@@ -1,23 +1,23 @@
-import { RecentActivityProps } from "../types";
-import type { PackageStatus } from "../../../../utils/types/api/package.types";
-import { formatTime } from "../../../../utils/date.utils";
+import { RecentActivityProps } from '../types';
+import type { PackageStatus } from '../../../../utils/types/api/package.types';
+import { formatTime } from '../../../../utils/date.utils';
 
 const STATUS_TEXT: Record<PackageStatus, string> = {
-  pending: "Zain dago",
-  assigned: "Esleituta",
-  in_transit: "Garraioan dago",
-  delivered: "Entregatuta",
-  undelivered: "Entregatu gabe",
-  failed: "Entrega huts egin du",
+  pending: 'Zain dago',
+  assigned: 'Esleituta',
+  in_transit: 'Garraioan dago',
+  delivered: 'Entregatuta',
+  undelivered: 'Entregatu gabe',
+  failed: 'Entrega huts egin du',
 };
 
 const STATUS_DOT: Record<PackageStatus, string> = {
-  pending: "var(--st-pending-fg)",
-  assigned: "var(--st-assigned-fg)",
-  in_transit: "var(--st-transit-fg)",
-  delivered: "var(--st-delivered-fg)",
-  undelivered: "var(--st-undelivered-fg)",
-  failed: "var(--st-failed-fg)",
+  pending: 'var(--st-pending-fg)',
+  assigned: 'var(--st-assigned-fg)',
+  in_transit: 'var(--st-transit-fg)',
+  delivered: 'var(--st-delivered-fg)',
+  undelivered: 'var(--st-undelivered-fg)',
+  failed: 'var(--st-failed-fg)',
 };
 
 export function RecentActivity({ packages }: RecentActivityProps) {
@@ -46,7 +46,7 @@ export function RecentActivity({ packages }: RecentActivityProps) {
           {/* vertical line */}
           <div
             className="absolute left-6.75 top-7 bottom-7 w-px"
-            style={{ background: "var(--border-normal)" }}
+            style={{ background: 'var(--border-normal)' }}
           />
 
           {recent.map((pkg) => {
@@ -66,7 +66,7 @@ export function RecentActivity({ packages }: RecentActivityProps) {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-medium leading-tight">
-                    {STATUS_TEXT[pkg.status]}:{" "}
+                    {STATUS_TEXT[pkg.status]}:{' '}
                     <span className="text-text-secondary">
                       {pkg.recipient_name}
                     </span>

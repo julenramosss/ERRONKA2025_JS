@@ -1,8 +1,8 @@
-import { en, type DocsDictionary } from "./en";
-import { es } from "./es";
-import { eus } from "./eus";
+import { en, type DocsDictionary } from './en';
+import { es } from './es';
+import { eus } from './eus';
 
-export type SupportedLocale = "en" | "es" | "eus";
+export type SupportedLocale = 'en' | 'es' | 'eus';
 
 const dictionaries: Record<SupportedLocale, DocsDictionary> = {
   en,
@@ -10,6 +10,6 @@ const dictionaries: Record<SupportedLocale, DocsDictionary> = {
   eus,
 };
 
-export function getDictionary(locale: SupportedLocale = "en"): DocsDictionary {
+export function getDictionary(locale: SupportedLocale = 'en'): DocsDictionary {
   return dictionaries[locale] ?? dictionaries.en;
 }

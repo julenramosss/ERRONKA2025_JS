@@ -1,17 +1,19 @@
-"use client";
-import { useState } from "react";
-import { PageToc } from "./PageToc";
+'use client';
+import { useState } from 'react';
+import { PageToc } from './PageToc';
 
 interface MobilePageToolsProps {
   tocLabel?: string;
 }
 
-export function MobilePageTools({ tocLabel = "On this page" }: MobilePageToolsProps) {
+export function MobilePageTools({
+  tocLabel = 'On this page',
+}: MobilePageToolsProps) {
   const [open, setOpen] = useState(false);
 
   function openSearch() {
     setOpen(false);
-    window.dispatchEvent(new CustomEvent("docs:search:open"));
+    window.dispatchEvent(new CustomEvent('docs:search:open'));
   }
 
   return (
@@ -54,7 +56,7 @@ export function MobilePageTools({ tocLabel = "On this page" }: MobilePageToolsPr
         role="dialog"
         aria-label={tocLabel}
         aria-modal
-        className={`mobile-toc-drawer ${open ? "translate-y-0" : "translate-y-full"}`}
+        className={`mobile-toc-drawer ${open ? 'translate-y-0' : 'translate-y-full'}`}
       >
         {/* Drawer header */}
         <div className="mobile-toc-drawer-header">

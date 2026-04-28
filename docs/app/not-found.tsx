@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { Icons } from "./components/Icons";
+import { useRouter } from 'next/navigation';
+import { Icons } from './components/Icons';
 // import { Icons } from "@repo/frontend-app/app/components/icons";
 
 export default function NotFound() {
@@ -19,11 +19,11 @@ export default function NotFound() {
           <div
             className="font-extrabold leading-none tracking-tighter mb-4 select-none"
             style={{
-              fontSize: "clamp(8rem, 25vw, 14rem)",
+              fontSize: 'clamp(8rem, 25vw, 14rem)',
               background:
-                "linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #3d2960 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+                'linear-gradient(135deg, #a78bfa 0%, #7c3aed 50%, #3d2960 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
             }}
           >
             404
@@ -42,7 +42,7 @@ export default function NotFound() {
 
           {/* Button */}
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push('/')}
             className="
             flex items-center justify-center gap-3 px-5 py-2 bg-accent hover:bg-accent-hover
             text-text-primary font-medium text-lg

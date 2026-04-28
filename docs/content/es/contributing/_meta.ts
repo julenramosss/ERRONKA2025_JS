@@ -1,3 +1,3 @@
 export default {
-  index: "Cómo contribuir",
+  index: 'Cómo contribuir',
 };

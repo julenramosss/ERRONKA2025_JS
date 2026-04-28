@@ -1,3 +1,3 @@
 export default {
-  index: { title: "Auditoría de la documentación" },
+  index: { title: 'Auditoría de la documentación' },
 };

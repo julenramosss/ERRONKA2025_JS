@@ -1,9 +1,9 @@
 import type {
   PackageLogsRequest,
   PackageLogsResponse,
-} from "../../utils/types/api/log.types";
-import { apiClient } from "./helpers/client";
-import { omitUndefinedParams } from "./helpers/response-helpers";
+} from '../../utils/types/api/log.types';
+import { apiClient } from './helpers/client';
+import { omitUndefinedParams } from './helpers/response-helpers';
 
 export async function getPackageLogs({
   packageId,
@@ -11,7 +11,7 @@ export async function getPackageLogs({
   limit,
 }: PackageLogsRequest): Promise<PackageLogsResponse> {
   const response = await apiClient.get<PackageLogsResponse>(
-    "/logs/listByPackage",
+    '/logs/listByPackage',
     {
       params: omitUndefinedParams({
         packageId,

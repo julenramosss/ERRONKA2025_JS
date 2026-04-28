@@ -1,3 +1,3 @@
 export default {
-  index: "Autentikazioa eta segurtasuna",
+  index: 'Autentikazioa eta segurtasuna',
 };

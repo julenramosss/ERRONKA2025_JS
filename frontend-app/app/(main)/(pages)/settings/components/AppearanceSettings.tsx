@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Icons } from "../../../../components/icons";
-import { useAppearanceSettings } from "../hooks/useAppearanceSettings";
-import { SettingToggle } from "./SettingToggle";
+import { Icons } from '../../../../components/icons';
+import { useAppearanceSettings } from '../hooks/useAppearanceSettings';
+import { SettingToggle } from './SettingToggle';
 
 export function AppearanceSettings({ isActive }: { isActive: boolean }) {
   const {
@@ -33,7 +33,7 @@ export function AppearanceSettings({ isActive }: { isActive: boolean }) {
             icon={<Icons.Loader size={16} />}
             title="Animazioak"
             description="Desaktibatu trantsizio eta animazioak nabigazio azkarragoa lortzeko."
-            checked={animations === "on"}
+            checked={animations === 'on'}
             onChange={toggleAnimations}
           />
 
@@ -57,14 +57,14 @@ export function AppearanceSettings({ isActive }: { isActive: boolean }) {
               <FormatOption
                 label="Laburra"
                 sample={shortSample}
-                active={dateFormat === "short"}
-                onClick={() => changeDateFormat("short")}
+                active={dateFormat === 'short'}
+                onClick={() => changeDateFormat('short')}
               />
               <FormatOption
                 label="Luzea"
                 sample={longSample}
-                active={dateFormat === "long"}
-                onClick={() => changeDateFormat("long")}
+                active={dateFormat === 'long'}
+                onClick={() => changeDateFormat('long')}
               />
             </div>
           </div>
@@ -101,13 +101,13 @@ function FormatOption({
       aria-pressed={active}
       className={`flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition-colors cursor-pointer ${
         active
-          ? "border-border-focus bg-accent-subtle"
-          : "border-border bg-bg-base hover:bg-bg-elevated"
+          ? 'border-border-focus bg-accent-subtle'
+          : 'border-border bg-bg-base hover:bg-bg-elevated'
       }`}
     >
       <span
         className={`text-[11px] font-semibold uppercase tracking-wide ${
-          active ? "text-accent-light" : "text-text-secondary"
+          active ? 'text-accent-light' : 'text-text-secondary'
         }`}
       >
         {label}

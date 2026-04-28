@@ -1,12 +1,12 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.1.*", "10.23.*.*", "localhost"],
+  allowedDevOrigins: ['192.168.1.*', '10.23.*.*', 'localhost'],
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "image.maps.ls.hereapi.com",
+        protocol: 'https',
+        hostname: 'image.maps.ls.hereapi.com',
       },
     ],
   },

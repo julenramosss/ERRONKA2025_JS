@@ -1,3 +1,3 @@
 export default {
-  index: "Developer setup",
+  index: 'Developer setup',
 };

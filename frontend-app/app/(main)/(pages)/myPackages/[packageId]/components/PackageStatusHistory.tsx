@@ -1,17 +1,17 @@
-import { usePreferences } from "../../../../../hooks/usePreferences";
-import type { PackageStatus } from "../../../../../utils/types/api/package.types";
-import { STATUS_LABEL } from "../../../../../utils/types";
-import { formatDateTime } from "../../../../../utils/date.utils";
-import { StatusBadge } from "../../../../components/StatusBadge";
-import type { PackageStatusHistoryProps } from "../types";
+import { usePreferences } from '../../../../../hooks/usePreferences';
+import type { PackageStatus } from '../../../../../utils/types/api/package.types';
+import { STATUS_LABEL } from '../../../../../utils/types';
+import { formatDateTime } from '../../../../../utils/date.utils';
+import { StatusBadge } from '../../../../components/StatusBadge';
+import type { PackageStatusHistoryProps } from '../types';
 
 const STATUS_DOT_COLOR: Record<PackageStatus, string> = {
-  pending: "var(--st-pending-fg)",
-  assigned: "var(--st-assigned-fg)",
-  in_transit: "var(--st-transit-fg)",
-  delivered: "var(--st-delivered-fg)",
-  undelivered: "var(--st-undelivered-fg)",
-  failed: "var(--st-failed-fg)",
+  pending: 'var(--st-pending-fg)',
+  assigned: 'var(--st-assigned-fg)',
+  in_transit: 'var(--st-transit-fg)',
+  delivered: 'var(--st-delivered-fg)',
+  undelivered: 'var(--st-undelivered-fg)',
+  failed: 'var(--st-failed-fg)',
 };
 
 export function PackageStatusHistory({
@@ -31,7 +31,7 @@ export function PackageStatusHistory({
           Egoera historia
         </div>
         <div className="text-xs text-text-secondary mt-0.5">
-          {isLoading ? "Kargatzen…" : `${logs.length} aldaketa erregistratu`}
+          {isLoading ? 'Kargatzen…' : `${logs.length} aldaketa erregistratu`}
         </div>
       </div>
 
@@ -58,7 +58,7 @@ export function PackageStatusHistory({
             {/* Timeline line */}
             <div
               className="absolute left-1.25 top-4 bottom-4 w-px"
-              style={{ background: "var(--border-normal)" }}
+              style={{ background: 'var(--border-normal)' }}
             />
             <div className="flex flex-col">
               {sorted.map((entry, i) => {
@@ -92,7 +92,7 @@ export function PackageStatusHistory({
                       </div>
                       {entry.oldStatus && (
                         <div className="text-xs text-text-disabled mt-0.5">
-                          {STATUS_LABEL[entry.oldStatus]} →{" "}
+                          {STATUS_LABEL[entry.oldStatus]} →{' '}
                           {STATUS_LABEL[entry.newStatus]}
                         </div>
                       )}

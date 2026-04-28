@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import "./globals.css";
+import type { ReactNode } from 'react';
+import './globals.css';
 
 // Root layout — locale-specific layout lives in app/[lang]/layout.tsx
 export default function RootLayout({ children }: { children: ReactNode }) {

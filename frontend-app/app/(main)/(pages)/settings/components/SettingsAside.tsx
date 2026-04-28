@@ -1,5 +1,5 @@
-import { Icons } from "../../../../components/icons";
-import { SETTINGS_ROUTES, SettingsRoute } from "../types";
+import { Icons } from '../../../../components/icons';
+import { SETTINGS_ROUTES, SettingsRoute } from '../types';
 
 export function SettingsAside({
   settingsRoute,
@@ -13,22 +13,22 @@ export function SettingsAside({
   const items = [
     {
       route: SETTINGS_ROUTES.general,
-      label: "Generala",
+      label: 'Generala',
       icon: <Icons.User size={20} />,
     },
     {
       route: SETTINGS_ROUTES.security,
-      label: "Segurtasuna",
+      label: 'Segurtasuna',
       icon: <Icons.Shield size={20} />,
     },
     {
       route: SETTINGS_ROUTES.appearance,
-      label: "Itxura",
+      label: 'Itxura',
       icon: <Icons.Moon size={20} />,
     },
     {
       route: SETTINGS_ROUTES.documentation,
-      label: "Dokumentazioa",
+      label: 'Dokumentazioa',
       icon: <Icons.Book size={20} />,
     },
   ];
@@ -53,8 +53,8 @@ export function SettingsAside({
               key={route}
               className={`flex w-full rounded-md ${
                 isActive
-                  ? "bg-accent-subtle border-l-2 border-border-focus text-accent-light cursor-default"
-                  : "hover:bg-bg-elevated cursor-pointer"
+                  ? 'bg-accent-subtle border-l-2 border-border-focus text-accent-light cursor-default'
+                  : 'hover:bg-bg-elevated cursor-pointer'
               }`}
             >
               <button

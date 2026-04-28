@@ -1,5 +1,5 @@
-import { getDayName, getMonthName } from "./constants/date.constants";
-import { getPreferences } from "./preferences";
+import { getDayName, getMonthName } from './constants/date.constants';
+import { getPreferences } from './preferences';
 
 type DateInput = Date | string | number;
 
@@ -8,7 +8,7 @@ function toDate(value: DateInput): Date {
 }
 
 function pad2(n: number): string {
-  return String(n).padStart(2, "0");
+  return String(n).padStart(2, '0');
 }
 
 export function toDateKey(value: DateInput): string {
@@ -41,7 +41,7 @@ export function formatShortDate(value: DateInput): string {
 
 export function formatLongDate(value: DateInput): string {
   const d = toDate(value);
-  const monthEn = d.toLocaleDateString("en-EN", { month: "long" });
+  const monthEn = d.toLocaleDateString('en-EN', { month: 'long' });
   return `${d.getDate()} ${getMonthName(monthEn)} ${d.getFullYear()}`;
 }
 
@@ -60,18 +60,18 @@ export function formatDateTimeLong(value: DateInput): string {
 
 export function formatWeekday(value: DateInput): string {
   const d = toDate(value);
-  const weekdayEn = d.toLocaleDateString("en-EN", { weekday: "long" });
+  const weekdayEn = d.toLocaleDateString('en-EN', { weekday: 'long' });
   return getDayName(weekdayEn);
 }
 
 export function formatDate(value: DateInput): string {
-  return getPreferences().dateFormat === "long"
+  return getPreferences().dateFormat === 'long'
     ? formatLongDate(value)
     : formatShortDate(value);
 }
 
 export function formatDateTime(value: DateInput): string {
-  return getPreferences().dateFormat === "long"
+  return getPreferences().dateFormat === 'long'
     ? formatDateTimeLong(value)
     : formatDateTimeShort(value);
 }
@@ -88,6 +88,6 @@ export function formatPeriodLabel(start: DateInput, end: DateInput): string {
 }
 
 export function formatStopTime(value: string | null): string {
-  if (!value) return "--:--";
+  if (!value) return '--:--';
   return value.slice(0, 5);
 }

@@ -1,6 +1,6 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket } from "mysql2/promise";
-import { PackageWithAddress } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket } from 'mysql2/promise';
+import { PackageWithAddress } from '../types';
 
 export async function findMyPackagesToday(
   userId: number

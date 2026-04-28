@@ -2,16 +2,16 @@ import {
   CreateAddressInfoDto,
   CreatePackageDto,
   CreatedPackageResult,
-} from "../types";
+} from '../types';
 import {
   addPackageIdToToken,
   createAddress,
   createPackage,
   createPackageLog,
   createPackageToken,
-} from "../repository/createPackage.repo";
-import { mapsService } from "@/app/lib/maps/maps.service";
-import { applyPackageStatusSideEffects } from "../../../../lib/packageStatus/packageStatusSideEffects.service";
+} from '../repository/createPackage.repo';
+import { mapsService } from '@/app/lib/maps/maps.service';
+import { applyPackageStatusSideEffects } from '../../../../lib/packageStatus/packageStatusSideEffects.service';
 
 export async function createPackageService(
   packageInfo: CreatePackageDto,

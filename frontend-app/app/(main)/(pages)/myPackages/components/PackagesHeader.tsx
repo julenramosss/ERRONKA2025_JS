@@ -1,11 +1,11 @@
-"use client";
-import { Icons } from "../../../../components/icons";
+'use client';
+import { Icons } from '../../../../components/icons';
 import {
   STATUS_LABEL,
   PACKAGE_STATUSES,
   PackageStatus,
-} from "../../../../utils/types";
-import type { FilterChipProps, PackagesHeaderProps, ViewMode } from "../types";
+} from '../../../../utils/types';
+import type { FilterChipProps, PackagesHeaderProps, ViewMode } from '../types';
 
 function FilterChip({ label, count, active, onClick }: FilterChipProps) {
   return (
@@ -13,13 +13,13 @@ function FilterChip({ label, count, active, onClick }: FilterChipProps) {
       onClick={onClick}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
         active
-          ? "bg-accent-subtle border-border-focus text-accent-light"
-          : "bg-bg-surface border-border text-text-secondary hover:border-border-focus hover:text-text-primary"
+          ? 'bg-accent-subtle border-border-focus text-accent-light'
+          : 'bg-bg-surface border-border text-text-secondary hover:border-border-focus hover:text-text-primary'
       }`}
     >
       {label}
       <span
-        className={`text-[10px] px-1 rounded ${active ? "bg-accent text-white" : "bg-bg-elevated text-text-disabled"}`}
+        className={`text-[10px] px-1 rounded ${active ? 'bg-accent text-white' : 'bg-bg-elevated text-text-disabled'}`}
       >
         {count}
       </span>
@@ -52,17 +52,17 @@ export function PackagesHeader({
 
         {/* View toggle — always visible */}
         <div className="tour-packages-view-toggle flex gap-0.5 p-1 bg-bg-surface border border-border rounded-md shrink-0 self-start mt-1">
-          {(["list", "grid"] as ViewMode[]).map((v) => (
+          {(['list', 'grid'] as ViewMode[]).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
               className={`w-8 h-8 flex items-center justify-center rounded transition-colors cursor-pointer ${
                 view === v
-                  ? "bg-accent-subtle text-accent-light"
-                  : "text-text-secondary hover:text-text-primary"
+                  ? 'bg-accent-subtle text-accent-light'
+                  : 'text-text-secondary hover:text-text-primary'
               }`}
             >
-              {v === "list" ? (
+              {v === 'list' ? (
                 <Icons.List size={16} />
               ) : (
                 <Icons.Grid size={16} />
@@ -86,7 +86,7 @@ export function PackagesHeader({
         />
         {query && (
           <button
-            onClick={() => setQuery("")}
+            onClick={() => setQuery('')}
             className="text-text-disabled hover:text-text-primary shrink-0"
           >
             <Icons.X size={14} />
@@ -99,7 +99,7 @@ export function PackagesHeader({
         {Object.keys(counts).map((key, status) => (
           <FilterChip
             key={status}
-            label={key === "all" ? "Denak" : STATUS_LABEL[key as PackageStatus]}
+            label={key === 'all' ? 'Denak' : STATUS_LABEL[key as PackageStatus]}
             count={counts[key] ?? 0}
             active={filter === key}
             onClick={() => setFilter(key as PackageStatus)}

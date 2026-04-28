@@ -6,15 +6,15 @@ import type {
   UpdateArrivalResponse,
   UpdateRouteStatusRequest,
   UpdateRouteStatusResponse,
-} from "../../utils/types/api/route.types";
-import { apiClient } from "./helpers/client";
-import { omitUndefinedParams } from "./helpers/response-helpers";
+} from '../../utils/types/api/route.types';
+import { apiClient } from './helpers/client';
+import { omitUndefinedParams } from './helpers/response-helpers';
 
 export async function getMyDailyRoute(
   date?: string
 ): Promise<GetMyDailyRouteResponse> {
   const response = await apiClient.get<GetMyDailyRouteResponse>(
-    "/routes/getMyDaily",
+    '/routes/getMyDaily',
     {
       params: omitUndefinedParams({ date }),
     }
@@ -39,7 +39,7 @@ export async function updateArrival(
   payload: UpdateArrivalRequest
 ): Promise<UpdateArrivalResponse> {
   const response = await apiClient.patch<UpdateArrivalResponse>(
-    "/stops/updateArrival",
+    '/stops/updateArrival',
     payload
   );
 
@@ -48,14 +48,14 @@ export async function updateArrival(
 
 export async function getPendingPastRoute(): Promise<GetPendingPastRouteResponse> {
   const response = await apiClient.get<GetPendingPastRouteResponse>(
-    "/routes/continueFromPast"
+    '/routes/continueFromPast'
   );
   return response.data;
 }
 
 export async function continueFromPast(): Promise<ContinueFromPastResponse> {
   const response = await apiClient.post<ContinueFromPastResponse>(
-    "/routes/continueFromPast"
+    '/routes/continueFromPast'
   );
   return response.data;
 }

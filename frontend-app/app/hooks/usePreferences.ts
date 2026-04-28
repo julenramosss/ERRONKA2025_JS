@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from 'react';
 import {
   AppPreferences,
   getDefaultPreferences,
   getPreferences,
   setPreferences,
   subscribePreferences,
-} from "../utils/preferences";
+} from '../utils/preferences';
 
 export function usePreferences(): AppPreferences {
   return useSyncExternalStore(

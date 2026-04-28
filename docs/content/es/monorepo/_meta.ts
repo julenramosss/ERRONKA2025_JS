@@ -1,3 +1,3 @@
 export default {
-  index: "Estructura del monorepo",
+  index: 'Estructura del monorepo',
 };

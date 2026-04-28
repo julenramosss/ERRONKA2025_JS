@@ -1,5 +1,5 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
 export async function verifyToken(token: string): Promise<number | null> {
   const db = await connect();
@@ -17,7 +17,7 @@ export async function updateUserPasswordAndActivate(
 ): Promise<number> {
   const db = await connect();
   const [result] = await db.execute<ResultSetHeader>(
-    "UPDATE users SET password_hash = ?, is_active = TRUE WHERE id = ?",
+    'UPDATE users SET password_hash = ?, is_active = TRUE WHERE id = ?',
     [passwordHash, userId]
   );
   return result.affectedRows;

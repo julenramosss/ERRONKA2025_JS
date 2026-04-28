@@ -18,7 +18,7 @@ export interface EmailStatusBadge {
 
 export interface EmailProgressStep {
   label: string;
-  status: "completed" | "current" | "upcoming" | "error";
+  status: 'completed' | 'current' | 'upcoming' | 'error';
 }
 
 export interface EmailLayoutParams {

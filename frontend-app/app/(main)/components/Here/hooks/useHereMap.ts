@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useRef } from "react";
-import { Coordinates, HereMarker, UseHereMapOptions } from "../types";
-import { useHereMaps } from "../../../hooks/useHereMaps";
-import { MAP_ZOOM, PURPLE_PIN_SVG } from "../utils/mapConstants";
-import { normalizeCoordinates } from "../utils/coordinates";
+import { useEffect, useMemo, useRef } from 'react';
+import { Coordinates, HereMarker, UseHereMapOptions } from '../types';
+import { useHereMaps } from '../../../hooks/useHereMaps';
+import { MAP_ZOOM, PURPLE_PIN_SVG } from '../utils/mapConstants';
+import { normalizeCoordinates } from '../utils/coordinates';
 import {
   animateMapToCoordinates,
   focusMapOnCoordinates,
-} from "../utils/mapFocus";
+} from '../utils/mapFocus';
 import {
   createRasterHereMap,
   enableMapBehavior,
-} from "../utils/hereMapFactory";
-import { HERE_API_KEY } from "../../../../config/envConfig";
+} from '../utils/hereMapFactory';
+import { HERE_API_KEY } from '../../../../config/envConfig';
 
 export function useHereMap({ center }: UseHereMapOptions) {
   const mapRef = useRef<HTMLDivElement>(null);

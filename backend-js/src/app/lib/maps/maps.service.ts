@@ -1,9 +1,9 @@
 // src/lib/maps/maps.service.ts
 
-import { directions_api_key } from "@/app/config/envConfig";
-import { OptimizedRoute, RouteStop } from "./types";
+import { directions_api_key } from '@/app/config/envConfig';
+import { OptimizedRoute, RouteStop } from './types';
 
-const DIRECTIONS_BASE = "https://maps.googleapis.com/maps/api/directions/json";
+const DIRECTIONS_BASE = 'https://maps.googleapis.com/maps/api/directions/json';
 
 export const mapsService = {
   async optimizeRoute(
@@ -32,14 +32,14 @@ export const mapsService = {
     const middle = stops.slice(0, -1);
 
     const waypointsStr =
-      "optimize:true|" + middle.map((s) => `${s.lat},${s.lng}`).join("|");
+      'optimize:true|' + middle.map((s) => `${s.lat},${s.lng}`).join('|');
 
     const url = new URL(DIRECTIONS_BASE);
-    url.searchParams.set("origin", originStr);
-    url.searchParams.set("destination", `${last.lat},${last.lng}`);
-    url.searchParams.set("waypoints", waypointsStr);
-    url.searchParams.set("departure_time", "now"); // tráfico en tiempo real
-    url.searchParams.set("key", directions_api_key);
+    url.searchParams.set('origin', originStr);
+    url.searchParams.set('destination', `${last.lat},${last.lng}`);
+    url.searchParams.set('waypoints', waypointsStr);
+    url.searchParams.set('departure_time', 'now'); // tráfico en tiempo real
+    url.searchParams.set('key', directions_api_key);
 
     const res = await fetch(url.toString());
 
@@ -49,9 +49,9 @@ export const mapsService = {
 
     const data = await res.json();
 
-    if (data.status !== "OK") {
+    if (data.status !== 'OK') {
       throw new Error(
-        `Google Maps Directions error: ${data.status} — ${data.error_message ?? ""}`
+        `Google Maps Directions error: ${data.status} — ${data.error_message ?? ''}`
       );
     }
 
@@ -67,7 +67,7 @@ export const mapsService = {
     let accumulatedSeconds = 0;
     const now = Date.now();
 
-    const orderedStops: OptimizedRoute["orderedStops"] = finalStops.map(
+    const orderedStops: OptimizedRoute['orderedStops'] = finalStops.map(
       (stop, idx) => {
         const leg = route.legs[idx];
         accumulatedSeconds +=
@@ -110,11 +110,11 @@ export const mapsService = {
   },
 
   async geocodeAddress(address: string): Promise<{ lat: number; lng: number }> {
-    const GEOCODING_BASE = "https://maps.googleapis.com/maps/api/geocode/json";
+    const GEOCODING_BASE = 'https://maps.googleapis.com/maps/api/geocode/json';
 
     const url = new URL(GEOCODING_BASE);
-    url.searchParams.set("address", address);
-    url.searchParams.set("key", directions_api_key);
+    url.searchParams.set('address', address);
+    url.searchParams.set('key', directions_api_key);
 
     const res = await fetch(url.toString());
 
@@ -124,13 +124,13 @@ export const mapsService = {
 
     const data = await res.json();
 
-    if (data.status === "ZERO_RESULTS") {
+    if (data.status === 'ZERO_RESULTS') {
       throw new Error(`Dirección no encontrada: "${address}"`);
     }
 
-    if (data.status !== "OK") {
+    if (data.status !== 'OK') {
       throw new Error(
-        `Google Geocoding error: ${data.status} — ${data.error_message ?? ""}`
+        `Google Geocoding error: ${data.status} — ${data.error_message ?? ''}`
       );
     }
 

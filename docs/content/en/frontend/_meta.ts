@@ -1,3 +1,3 @@
 export default {
-  index: "Frontend architecture",
+  index: 'Frontend architecture',
 };

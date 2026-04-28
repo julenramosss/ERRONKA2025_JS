@@ -1,68 +1,68 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken } from "./app/lib/jwt";
-import { isDev } from "./app/config/envConfig";
-import { UnauthorizedError } from "./app/lib/errors";
-import { handleError } from "./app/lib/response";
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyAccessToken } from './app/lib/jwt';
+import { isDev } from './app/config/envConfig';
+import { UnauthorizedError } from './app/lib/errors';
+import { handleError } from './app/lib/response';
 
 const ALLOWED_ORIGINS = [
-  "https://api.tolosaerronka.es",
-  "https://portal.tolosaerronka.es",
-  "https://tolosaerronka.es",
-  "http://localhost:3001",
-  "http://localhost:3000",
-  "http://127.0.0.1:3001",
-  "http://127.0.0.1:3000",
-  "http://10.23.26.64:3000",
-  "http://10.23.26.64:3001",
+  'https://api.tolosaerronka.es',
+  'https://portal.tolosaerronka.es',
+  'https://tolosaerronka.es',
+  'http://localhost:3001',
+  'http://localhost:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:3000',
+  'http://10.23.26.64:3000',
+  'http://10.23.26.64:3001',
 ];
 
 const PUBLIC_PATHS = [
-  "/api/auth/login",
-  "/api/auth/refresh",
-  "/api/auth/forgotPassword",
-  "/api/auth/changePwd",
+  '/api/auth/login',
+  '/api/auth/refresh',
+  '/api/auth/forgotPassword',
+  '/api/auth/changePwd',
 ];
 
 function isPublicPath(pathname: string): boolean {
   return (
     PUBLIC_PATHS.some((path) => pathname.startsWith(path)) ||
-    pathname.startsWith("/api/tracking/")
+    pathname.startsWith('/api/tracking/')
   );
 }
 
 function addCorsHeaders(response: NextResponse, origin: string | null): void {
   if (isDev) {
-    response.headers.set("Access-Control-Allow-Origin", origin || "*");
+    response.headers.set('Access-Control-Allow-Origin', origin || '*');
     if (origin) {
-      response.headers.set("Access-Control-Allow-Credentials", "true");
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
     }
   } else if (!origin) {
-    response.headers.set("Access-Control-Allow-Origin", "*");
+    response.headers.set('Access-Control-Allow-Origin', '*');
   } else if (ALLOWED_ORIGINS.includes(origin)) {
-    response.headers.set("Access-Control-Allow-Origin", origin);
-    response.headers.set("Access-Control-Allow-Credentials", "true");
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
   }
 
-  response.headers.set("Vary", "Origin");
+  response.headers.set('Vary', 'Origin');
   response.headers.set(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    'Access-Control-Allow-Methods',
+    'GET, POST, PUT, DELETE, PATCH, OPTIONS'
   );
   response.headers.set(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, Accept, Origin, Cookie, X-CSRF-Token"
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, Accept, Origin, Cookie, X-CSRF-Token'
   );
 }
 
 export function proxy(request: NextRequest) {
-  const origin = request.headers.get("origin");
+  const origin = request.headers.get('origin');
   const pathname = request.nextUrl.pathname;
 
   // Handle CORS preflight requests
-  if (request.method === "OPTIONS") {
+  if (request.method === 'OPTIONS') {
     const response = new NextResponse(null, { status: 204 });
     addCorsHeaders(response, origin);
-    response.headers.set("Access-Control-Max-Age", "86400");
+    response.headers.set('Access-Control-Max-Age', '86400');
     return response;
   }
 
@@ -74,13 +74,13 @@ export function proxy(request: NextRequest) {
 
   // Protected paths require a Bearer access token.
   const header =
-    request.headers.get("authorization") ??
-    request.headers.get("Authorization");
+    request.headers.get('authorization') ??
+    request.headers.get('Authorization');
 
-  if (!header?.startsWith("Bearer ")) {
+  if (!header?.startsWith('Bearer ')) {
     const response = NextResponse.json(
       handleError(
-        "Authorization header missing or malformed",
+        'Authorization header missing or malformed',
         UnauthorizedError
       )
     );
@@ -96,7 +96,7 @@ export function proxy(request: NextRequest) {
   } catch {
     // Token invalid or expired
     const response = NextResponse.json(
-      handleError("Token was invalid or expired", UnauthorizedError)
+      handleError('Token was invalid or expired', UnauthorizedError)
     );
     addCorsHeaders(response, origin);
     return response;
@@ -104,5 +104,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/api/:path*",
+  matcher: '/api/:path*',
 };

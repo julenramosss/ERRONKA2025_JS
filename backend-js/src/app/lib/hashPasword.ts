@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from 'bcrypt';
 
 export async function encryptPwd(plainPassword: string): Promise<string> {
   const saltRounds = 10;

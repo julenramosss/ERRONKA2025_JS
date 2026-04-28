@@ -1,6 +1,6 @@
-import { HereMap } from "../../../components/Here/HereMap";
-import { useRouteMapPanel } from "../hooks/useRouteMapPanel";
-import type { RouteMapPanelProps } from "../types";
+import { HereMap } from '../../../components/Here/HereMap';
+import { useRouteMapPanel } from '../hooks/useRouteMapPanel';
+import type { RouteMapPanelProps } from '../types';
 
 export function RouteMapPanel({ selectedStopId }: RouteMapPanelProps) {
   const { selectedStop, activeStop } = useRouteMapPanel(selectedStopId);
@@ -15,7 +15,7 @@ export function RouteMapPanel({ selectedStopId }: RouteMapPanelProps) {
           <p className="mt-0.5 truncate text-xs text-text-secondary">
             {selectedStop
               ? `${selectedStop.package.address.street}, ${selectedStop.package.address.city}`
-              : "Geldialdirik gabe"}
+              : 'Geldialdirik gabe'}
           </p>
         </div>
       </div>

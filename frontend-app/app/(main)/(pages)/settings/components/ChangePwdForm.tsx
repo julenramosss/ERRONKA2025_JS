@@ -1,6 +1,6 @@
-import { Icons } from "../../../../components/icons";
-import { useSecuritySettings } from "../hooks/useSecuritySettings";
-import { PasswordField } from "./PasswordField";
+import { Icons } from '../../../../components/icons';
+import { useSecuritySettings } from '../hooks/useSecuritySettings';
+import { PasswordField } from './PasswordField';
 
 export function ChangePwdForm() {
   const {

@@ -1,26 +1,26 @@
-import { ConflictError, NotFoundError } from "@/app/lib/errors";
+import { ConflictError, NotFoundError } from '@/app/lib/errors';
 import {
   emailTakenByOther,
   existsUser,
   selectUpdatedUser,
   updateUser,
-} from "../repository/update.repository";
-import { UpdateUserDto, UpdateUserResponse } from "../types";
+} from '../repository/update.repository';
+import { UpdateUserDto, UpdateUserResponse } from '../types';
 
 export async function updateUserService(
   dto: UpdateUserDto
 ): Promise<UpdateUserResponse> {
   if (!(await existsUser(dto.id))) {
-    throw new NotFoundError("User not found");
+    throw new NotFoundError('User not found');
   }
 
   if (dto.user.email && (await emailTakenByOther(dto.user.email, dto.id))) {
-    throw new ConflictError("This email is already in use by another user");
+    throw new ConflictError('This email is already in use by another user');
   }
 
   await updateUser(dto.id, dto.user);
   const updated = await selectUpdatedUser(dto.id);
-  if (!updated) throw new NotFoundError("User not found");
+  if (!updated) throw new NotFoundError('User not found');
 
   return {
     id: updated.id,

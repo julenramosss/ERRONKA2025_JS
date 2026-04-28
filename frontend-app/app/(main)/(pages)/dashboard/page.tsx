@@ -1,15 +1,15 @@
-"use client";
-import { Skeleton } from "boneyard-js/react";
-import { DashboardHeader } from "./components/DashboardHeader";
-import { NextDeliveries } from "./components/NextDeliveries";
-import { RecentActivity } from "./components/RecentActivity";
-import { StatCards } from "./components/StatCards";
-import { useDashboardData } from "./hooks/useDashboardData";
-import { HeroLoader } from "./components/loaders/Hero.loader";
-import { StatsCardsLoader } from "./components/loaders/StatsCards.loader";
-import { PackageInfoLoader } from "./components/loaders/PackageInfo.loader";
-import { HereMap } from "../../components/Here/HereMap";
-import { useDashboardMap } from "./hooks/useDashboardMap";
+'use client';
+import { Skeleton } from 'boneyard-js/react';
+import { DashboardHeader } from './components/DashboardHeader';
+import { NextDeliveries } from './components/NextDeliveries';
+import { RecentActivity } from './components/RecentActivity';
+import { StatCards } from './components/StatCards';
+import { useDashboardData } from './hooks/useDashboardData';
+import { HeroLoader } from './components/loaders/Hero.loader';
+import { StatsCardsLoader } from './components/loaders/StatsCards.loader';
+import { PackageInfoLoader } from './components/loaders/PackageInfo.loader';
+import { HereMap } from '../../components/Here/HereMap';
+import { useDashboardMap } from './hooks/useDashboardMap';
 
 export default function DashboardPage() {
   const {

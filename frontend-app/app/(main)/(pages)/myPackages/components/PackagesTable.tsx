@@ -1,9 +1,9 @@
-import Link from "next/link";
-import { Icons } from "../../../../components/icons";
-import { formatListDate, TABLE_COLS } from "../constants";
-import type { PackagesTableProps } from "../types";
-import { PackageMobileCard } from "./PackageMobileCard";
-import { StatusBadge } from "../../../components/StatusBadge";
+import Link from 'next/link';
+import { Icons } from '../../../../components/icons';
+import { formatListDate, TABLE_COLS } from '../constants';
+import type { PackagesTableProps } from '../types';
+import { PackageMobileCard } from './PackageMobileCard';
+import { StatusBadge } from '../../../components/StatusBadge';
 
 export function PackagesTable({ packages }: PackagesTableProps) {
   if (packages.length === 0) {
@@ -45,7 +45,7 @@ export function PackagesTable({ packages }: PackagesTableProps) {
                 <tr
                   key={pkg.id}
                   className={`hover:bg-[rgba(124,58,237,0.05)] transition-colors ${
-                    i < packages.length - 1 ? "border-b border-border" : ""
+                    i < packages.length - 1 ? 'border-b border-border' : ''
                   }`}
                 >
                   <td className="px-5 py-3.5">

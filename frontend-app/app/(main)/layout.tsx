@@ -1,8 +1,8 @@
-import { Header } from "./components/Header/Header";
-import { AsideMenu } from "./components/AsideMenu/AsideMenu";
-import { SessionKeepAlive } from "../components/SessionKeepAlive";
-import { PreferencesSync } from "../components/PreferencesSync";
-import { TutorialProvider } from "../providers/TutorialProvider";
+import { Header } from './components/Header/Header';
+import { AsideMenu } from './components/AsideMenu/AsideMenu';
+import { SessionKeepAlive } from '../components/SessionKeepAlive';
+import { PreferencesSync } from '../components/PreferencesSync';
+import { TutorialProvider } from '../providers/TutorialProvider';
 
 export default function AuthLayout({
   children,

@@ -1,6 +1,6 @@
-"use client";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+'use client';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 export interface SearchEntry {
   title: string;
@@ -23,13 +23,13 @@ interface DocsSearchProps {
 function getSnippet(content: string, query: string, radius = 100): string {
   const lower = content.toLowerCase();
   const idx = lower.indexOf(query.toLowerCase());
-  if (idx === -1) return content.slice(0, radius * 2) + "…";
+  if (idx === -1) return content.slice(0, radius * 2) + '…';
   const start = Math.max(0, idx - radius);
   const end = Math.min(content.length, idx + query.length + radius);
   return (
-    (start > 0 ? "…" : "") +
+    (start > 0 ? '…' : '') +
     content.slice(start, end) +
-    (end < content.length ? "…" : "")
+    (end < content.length ? '…' : '')
   );
 }
 
@@ -50,11 +50,11 @@ function highlight(text: string, query: string): React.ReactNode {
 
 export function DocsSearch({
   entries,
-  placeholder = "Search docs...",
+  placeholder = 'Search docs...',
   hideTrigger = false,
 }: DocsSearchProps) {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -64,7 +64,7 @@ export function DocsSearch({
           .filter(
             (e) =>
               e.title.toLowerCase().includes(query.toLowerCase()) ||
-              e.content.toLowerCase().includes(query.toLowerCase()),
+              e.content.toLowerCase().includes(query.toLowerCase())
           )
           .map((e) => ({ entry: e, snippet: getSnippet(e.content, query) }))
           .slice(0, 12)
@@ -72,13 +72,13 @@ export function DocsSearch({
 
   const openModal = useCallback(() => {
     setOpen(true);
-    setQuery("");
+    setQuery('');
     setTimeout(() => inputRef.current?.focus(), 50);
   }, []);
 
   const closeModal = useCallback(() => {
     setOpen(false);
-    setQuery("");
+    setQuery('');
   }, []);
 
   function navigate(path: string) {
@@ -88,20 +88,20 @@ export function DocsSearch({
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         openModal();
       }
-      if (e.key === "Escape" && open) closeModal();
+      if (e.key === 'Escape' && open) closeModal();
     }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, openModal, closeModal]);
 
   useEffect(() => {
     const handleOpen = () => openModal();
-    window.addEventListener("docs:search:open", handleOpen);
-    return () => window.removeEventListener("docs:search:open", handleOpen);
+    window.addEventListener('docs:search:open', handleOpen);
+    return () => window.removeEventListener('docs:search:open', handleOpen);
   }, [openModal]);
 
   return (
@@ -171,7 +171,7 @@ export function DocsSearch({
                 placeholder={placeholder}
                 className="search-modal-input"
                 onKeyDown={(e) => {
-                  if (e.key === "Escape") closeModal();
+                  if (e.key === 'Escape') closeModal();
                 }}
               />
               <button

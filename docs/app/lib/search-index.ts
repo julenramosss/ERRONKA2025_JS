@@ -1,4 +1,4 @@
-import searchData from "./search-data.json";
+import searchData from './search-data.json';
 
 export interface SearchEntry {
   title: string;

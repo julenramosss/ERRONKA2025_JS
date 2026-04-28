@@ -1,3 +1,3 @@
 export default {
-  index: "Arazoak konpontzea",
+  index: 'Arazoak konpontzea',
 };

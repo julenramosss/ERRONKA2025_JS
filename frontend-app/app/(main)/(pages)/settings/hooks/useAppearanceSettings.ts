@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useCallback } from "react";
-import { usePreferences } from "../../../../hooks/usePreferences";
-import { setPreferences } from "../../../../utils/preferences";
-import type { DateFormatPref } from "../../../../utils/preferences";
-import { formatLongDate, formatShortDate } from "../../../../utils/date.utils";
-import { resetTutorialState } from "../../../../utils/tutorial.storage";
+import { useCallback } from 'react';
+import { usePreferences } from '../../../../hooks/usePreferences';
+import { setPreferences } from '../../../../utils/preferences';
+import type { DateFormatPref } from '../../../../utils/preferences';
+import { formatLongDate, formatShortDate } from '../../../../utils/date.utils';
+import { resetTutorialState } from '../../../../utils/tutorial.storage';
 
 export function useAppearanceSettings() {
   const { animations, dateFormat, showTutorial } = usePreferences();
 
   const toggleAnimations = useCallback(() => {
-    setPreferences({ animations: animations === "on" ? "off" : "on" });
+    setPreferences({ animations: animations === 'on' ? 'off' : 'on' });
   }, [animations]);
 
   const changeDateFormat = useCallback((value: DateFormatPref) => {

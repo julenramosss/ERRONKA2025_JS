@@ -2,12 +2,12 @@ import {
   ForbiddenError,
   NotFoundError,
   ValidationError,
-} from "@/app/lib/errors";
-import { AccessTokenPayload } from "@/app/lib/types";
-import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
-import { PACKAGE_STATUSES, USER_ROLES } from "@/app/types";
-import { mapsService } from "@/app/lib/maps/maps.service";
-import { PAKAG_ORIGIN } from "@/app/config/envConfig";
+} from '@/app/lib/errors';
+import { AccessTokenPayload } from '@/app/lib/types';
+import { applyPackageStatusSideEffects } from '@/app/lib/packageStatus/packageStatusSideEffects.service';
+import { PACKAGE_STATUSES, USER_ROLES } from '@/app/types';
+import { mapsService } from '@/app/lib/maps/maps.service';
+import { PAKAG_ORIGIN } from '@/app/config/envConfig';
 import {
   findRouteById,
   migratePastPendingStopsIntoRoute,
@@ -17,8 +17,8 @@ import {
   findActiveStopsWithCoordinates,
   updateRouteStopOrders,
   bulkUpdatePackagesEstimatedDelivery,
-} from "../repository/updateRouteStatus.repo";
-import { ROUTE_STATUSES, RouteStatus, UpdateRouteStatusDto } from "../types";
+} from '../repository/updateRouteStatus.repo';
+import { ROUTE_STATUSES, RouteStatus, UpdateRouteStatusDto } from '../types';
 
 const VALID_TRANSITIONS: Record<RouteStatus, RouteStatus | null> = {
   planned: ROUTE_STATUSES.in_progress,
@@ -29,8 +29,8 @@ const VALID_TRANSITIONS: Record<RouteStatus, RouteStatus | null> = {
 function todayIso(): string {
   const now = new Date();
   const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
 
@@ -39,16 +39,16 @@ export async function updateRouteStatusService(
   caller: AccessTokenPayload
 ): Promise<void> {
   const route = await findRouteById(dto.routeId);
-  if (!route) throw new NotFoundError("Route not found");
+  if (!route) throw new NotFoundError('Route not found');
 
   if (caller.role === USER_ROLES.distributor && route.user_id !== caller.sub) {
-    throw new ForbiddenError("You can only update your own routes");
+    throw new ForbiddenError('You can only update your own routes');
   }
 
   const allowedNext = VALID_TRANSITIONS[route.status];
   if (dto.status !== allowedNext) {
     throw new ValidationError(
-      `Cannot transition from '${route.status}' to '${dto.status}'. Expected '${allowedNext ?? "nothing (already completed)"}'`
+      `Cannot transition from '${route.status}' to '${dto.status}'. Expected '${allowedNext ?? 'nothing (already completed)'}'`
     );
   }
 

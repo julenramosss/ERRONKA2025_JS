@@ -1,8 +1,8 @@
-"use client";
-import { useLogin } from "@/app/hooks/auth/useLogin";
-import { useCallback, useRef, useState } from "react";
-import { refresh } from "../../../lib/api/auth-api";
-import { redirect } from "next/navigation";
+'use client';
+import { useLogin } from '@/app/hooks/auth/useLogin';
+import { useRef, useState } from 'react';
+import { redirect } from 'next/navigation';
+import { REDIRECT_AFTER_LOGIN_STORAGE_KEY } from '../../../config/envConfig';
 
 export function useLoginForm() {
   const emailRef = useRef<HTMLInputElement>(null);
@@ -16,20 +16,17 @@ export function useLoginForm() {
     setIsForgotPasswordModalOpen((prev) => !prev);
   };
 
-  const onLoginRedirect = useCallback(() => {
-    const onExecuteRedirect = async () => {
-      await refresh();
-      const redirectPathName = sessionStorage.getItem("redirect_after_login");
-      if (typeof redirectPathName === "object" || redirectPathName === "") {
-        redirect("/dashboard");
-      } else {
-        sessionStorage.removeItem("redirect_after_login");
-        redirect(redirectPathName ?? "/dashboard");
-      }
-    };
-
-    onExecuteRedirect();
-  }, []);
+  const onLoginRedirect = () => {
+    const redirectPathName = sessionStorage.getItem(
+      REDIRECT_AFTER_LOGIN_STORAGE_KEY
+    );
+    if (typeof redirectPathName === 'object' || redirectPathName === '') {
+      redirect('/dashboard');
+    } else {
+      sessionStorage.removeItem(REDIRECT_AFTER_LOGIN_STORAGE_KEY);
+      redirect(redirectPathName ?? '/dashboard');
+    }
+  };
 
   async function onSubmitLogin() {
     const email = emailRef.current?.value;
@@ -45,11 +42,12 @@ export function useLoginForm() {
         email: email,
         password: password,
       });
-
-      onLoginRedirect();
     } catch {
       // error queda capturado en `error` / `isError` del mutation
+      return;
     }
+
+    onLoginRedirect();
   }
 
   return {

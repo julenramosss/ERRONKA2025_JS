@@ -1,7 +1,7 @@
-"use client";
-import { useState } from "react";
-import { PakLogo } from "./PakLogo";
-import { DocsSidebarNav } from "./DocsSidebarNav";
+'use client';
+import { useState } from 'react';
+import { PakLogo } from './PakLogo';
+import { DocsSidebarNav } from './DocsSidebarNav';
 
 interface NavItem {
   href: string;
@@ -51,7 +51,7 @@ export function MobileMenu({ locale, navItems }: MobileMenuProps) {
       {/* Slide-in drawer */}
       <div
         className={`fixed top-0 left-0 z-50 h-full w-72 bg-bg-surface border-r border-border flex flex-col transition-transform duration-200 md:hidden ${
-          open ? "translate-x-0" : "-translate-x-full"
+          open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Header */}

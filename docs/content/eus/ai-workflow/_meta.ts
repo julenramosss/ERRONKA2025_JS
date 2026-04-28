@@ -1,3 +1,3 @@
 export default {
-  index: "AI dokumentazio fluxua",
+  index: 'AI dokumentazio fluxua',
 };

@@ -1,3 +1,3 @@
 export default {
-  index: "Arquitectura del backend",
+  index: 'Arquitectura del backend',
 };

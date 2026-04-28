@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { updateRouteStatus } from "../../lib/api/routes-api";
-import { packagesKeys } from "../../query/keys/packages.keys";
-import { routesKeys } from "../../query/keys/routes.keys";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateRouteStatus } from '../../lib/api/routes-api';
+import { packagesKeys } from '../../query/keys/packages.keys';
+import { routesKeys } from '../../query/keys/routes.keys';
 import type {
   UpdateRouteStatusRequest,
   UpdateRouteStatusResponse,
-} from "../../utils/types/api/route.types";
-import type { AppError } from "../../utils/types/api/common.types";
+} from '../../utils/types/api/route.types';
+import type { AppError } from '../../utils/types/api/common.types';
 
 interface UpdateRouteStatusVariables {
   routeId: number;

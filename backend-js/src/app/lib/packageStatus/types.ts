@@ -1,4 +1,4 @@
-import { PackageStatus } from "@/app/types";
+import { PackageStatus } from '@/app/types';
 
 export interface PackageStatusChange {
   packageId: number;

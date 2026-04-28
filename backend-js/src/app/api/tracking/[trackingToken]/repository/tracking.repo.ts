@@ -1,7 +1,7 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket } from "mysql2/promise";
-import { TrackingResult } from "../types";
-import { PackageStatus } from "@/app/types";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket } from 'mysql2/promise';
+import { TrackingResult } from '../types';
+import { PackageStatus } from '@/app/types';
 
 export async function findPackageByTrackingToken(
   token: string

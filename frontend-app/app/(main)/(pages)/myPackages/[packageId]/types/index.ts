@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
-import type { PackageLogEntry } from "../../../../../utils/types/api/log.types";
-import type { PackageWithAddress } from "../../../../../utils/types/api/package.types";
+import type { ReactNode } from 'react';
+import type { PackageLogEntry } from '../../../../../utils/types/api/log.types';
+import type { PackageWithAddress } from '../../../../../utils/types/api/package.types';
 
 export interface PackageDetailHeaderProps {
   pkg: PackageWithAddress;

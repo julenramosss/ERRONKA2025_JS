@@ -1,6 +1,6 @@
-import { Icons } from "../../../../components/icons";
-import type { MouseEvent } from "react";
-import type { RouteStopActionsProps } from "../types";
+import { Icons } from '../../../../components/icons';
+import type { MouseEvent } from 'react';
+import type { RouteStopActionsProps } from '../types';
 
 type ButtonClickEvent = MouseEvent<HTMLButtonElement>;
 
@@ -12,11 +12,11 @@ export function RouteStopActions({
   onMarkStop,
 }: RouteStopActionsProps) {
   const canUpdate =
-    routeStatus === "in_progress" &&
+    routeStatus === 'in_progress' &&
     isActive &&
-    stop.package.status === "in_transit";
+    stop.package.status === 'in_transit';
 
-  if (stop.package.status === "delivered" || stop.package.status === "failed") {
+  if (stop.package.status === 'delivered' || stop.package.status === 'failed') {
     return null;
   }
 
@@ -26,7 +26,7 @@ export function RouteStopActions({
         type="button"
         onClick={(event: ButtonClickEvent) => {
           event.stopPropagation();
-          onMarkStop(stop, "failed");
+          onMarkStop(stop, 'failed');
         }}
         disabled={!canUpdate || isUpdatingStop}
         className="inline-flex items-center gap-1.5 rounded-md border border-text-error bg-bg-error px-3 py-1.5 text-xs font-semibold text-text-error transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
@@ -38,7 +38,7 @@ export function RouteStopActions({
         type="button"
         onClick={(event: ButtonClickEvent) => {
           event.stopPropagation();
-          onMarkStop(stop, "delivered");
+          onMarkStop(stop, 'delivered');
         }}
         disabled={!canUpdate || isUpdatingStop}
         className="inline-flex items-center gap-1.5 rounded-md border border-text-success bg-bg-success px-3 py-1.5 text-xs font-semibold text-text-success transition-opacity disabled:cursor-not-allowed disabled:opacity-40"

@@ -1,4 +1,4 @@
-import { PackageStatus } from "@/app/types";
+import { PackageStatus } from '@/app/types';
 
 export interface TrackingResult {
   tracking_code: string;

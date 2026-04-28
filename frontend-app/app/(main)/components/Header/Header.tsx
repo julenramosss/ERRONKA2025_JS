@@ -1,12 +1,12 @@
-"use client";
-import Link from "next/link";
-import { useRef } from "react";
-import { Icons } from "../../../components/icons";
-import { AsideMobile } from "../AsideMenu/components/AsideMobile";
-import { SearchMobile } from "./SearcMobile";
-import { useHeader } from "./useHeader";
-import { useSearchShortcut } from "./useSearchShortcut";
-import { HeaderCorner } from "./HeaderCorner";
+'use client';
+import Link from 'next/link';
+import { useRef } from 'react';
+import { Icons } from '../../../components/icons';
+import { AsideMobile } from '../AsideMenu/components/AsideMobile';
+import { SearchMobile } from './SearcMobile';
+import { useHeader } from './useHeader';
+import { useSearchShortcut } from './useSearchShortcut';
+import { HeaderCorner } from './HeaderCorner';
 
 export function Header() {
   const { pathname, userName, userSurname } = useHeader();
@@ -20,13 +20,13 @@ export function Header() {
         <AsideMobile />
         <div className="tour-header-breadcrumb flex items-center justify-start gap-2">
           <Link
-            aria-disabled={pathname === "/dashboard"}
-            href={pathname === "/dashboard" ? "" : "/dashboard"}
-            className={`text-text-secondary hover:text-text-primary ${pathname === "/dashboard" ? "pointer-events-none" : ""}`}
+            aria-disabled={pathname === '/dashboard'}
+            href={pathname === '/dashboard' ? '' : '/dashboard'}
+            className={`text-text-secondary hover:text-text-primary ${pathname === '/dashboard' ? 'pointer-events-none' : ''}`}
           >
             pakAg
           </Link>
-          {pathname.split("/").map((segment, index) => {
+          {pathname.split('/').map((segment, index) => {
             if (index === 0) return null;
             return (
               <div key={index} className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export function Header() {
           className="hidden lg:flex w-10 h-10 shrink-0 rounded-full items-center justify-center text-sm text-white font-bold"
           style={{
             background:
-              "linear-gradient(135deg, #3b0764 0%, #6b21a8 50%, #7c3aed 100%)",
+              'linear-gradient(135deg, #3b0764 0%, #6b21a8 50%, #7c3aed 100%)',
           }}
         >
           {userName.slice(0, 1)}

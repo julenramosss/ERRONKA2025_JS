@@ -1,5 +1,5 @@
-import { Icons } from "../../../../components/icons";
-import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
+import { Icons } from '../../../../components/icons';
+import { useMyDailyRoute } from '../../../../hooks/routes/useMyDailyRoute';
 
 export function NotRouteFound() {
   const { refetch } = useMyDailyRoute();

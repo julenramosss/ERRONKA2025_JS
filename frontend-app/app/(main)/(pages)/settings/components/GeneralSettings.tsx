@@ -1,7 +1,7 @@
-import { usePreferences } from "../../../../hooks/usePreferences";
-import { formatDate } from "../../../../utils/date.utils";
-import { USER_ROLES } from "../../../../utils/types";
-import { useGeneralSettings } from "../hooks/useGeneralSettings";
+import { usePreferences } from '../../../../hooks/usePreferences';
+import { formatDate } from '../../../../utils/date.utils';
+import { USER_ROLES } from '../../../../utils/types';
+import { useGeneralSettings } from '../hooks/useGeneralSettings';
 
 export function GeneralSettings({ isActive }: { isActive: boolean }) {
   const { userData, userName, userSurname } = useGeneralSettings();
@@ -22,7 +22,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
               className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-2xl sm:text-3xl text-white font-bold"
               style={{
                 background:
-                  "linear-gradient(135deg, #3b0764 0%, #6b21a8 50%, #7c3aed 100%)",
+                  'linear-gradient(135deg, #3b0764 0%, #6b21a8 50%, #7c3aed 100%)',
               }}
             >
               {userName.slice(0, 1)}
@@ -31,7 +31,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
             <div className="flex flex-col gap-3 min-w-0">
               <div className="min-w-0">
                 <p className="text-text-primary font-semibold truncate">
-                  {userData?.name.split(" ").slice(0, 2).join(" ")}
+                  {userData?.name.split(' ').slice(0, 2).join(' ')}
                 </p>
                 <p className="text-sm text-text-secondary truncate">
                   {userData?.email}
@@ -42,13 +42,13 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
                 <span
                   className={`border text-[10px] rounded-full font-semibold text-center uppercase px-2 py-1 ${
                     userData?.role === USER_ROLES.admin
-                      ? "border-border-admin bg-bg-admin text-text-admin"
-                      : "border-border-focus bg-accent-subtle text-text-secondary"
+                      ? 'border-border-admin bg-bg-admin text-text-admin'
+                      : 'border-border-focus bg-accent-subtle text-text-secondary'
                   }`}
                 >
                   {userData?.role === USER_ROLES.admin
-                    ? "ADMINISTRATZAILEA"
-                    : "DISTRIBUIDOREA"}
+                    ? 'ADMINISTRATZAILEA'
+                    : 'DISTRIBUIDOREA'}
                 </span>
                 <span>
                   {userData?.is_active ? (
@@ -73,7 +73,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
                   Nombre completo
                 </label>
                 <div className="bg-bg-base border border-border rounded-lg px-4 py-3 text-text-primary text-sm">
-                  {userData?.name ?? "—"}
+                  {userData?.name ?? '—'}
                 </div>
               </div>
               <div className="flex flex-col gap-1">
@@ -94,7 +94,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
                     <rect width="20" height="16" x="2" y="4" rx="2" />
                     <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                   </svg>
-                  <span className="truncate">{userData?.email ?? "—"}</span>
+                  <span className="truncate">{userData?.email ?? '—'}</span>
                 </div>
               </div>
               <div className="flex flex-col gap-1">
@@ -102,7 +102,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
                   ID de usuario
                 </label>
                 <div className="bg-bg-base border border-border rounded-lg px-4 py-3 text-text-primary text-sm font-mono">
-                  #{userData?.id ?? "—"}
+                  #{userData?.id ?? '—'}
                 </div>
               </div>
               <div className="flex flex-col gap-1">
@@ -110,7 +110,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
                   Cuenta creada
                 </label>
                 <div className="bg-bg-base border border-border rounded-lg px-4 py-3 text-text-primary text-sm">
-                  {userData?.created_at ? formatDate(userData.created_at) : "—"}
+                  {userData?.created_at ? formatDate(userData.created_at) : '—'}
                 </div>
               </div>
             </div>

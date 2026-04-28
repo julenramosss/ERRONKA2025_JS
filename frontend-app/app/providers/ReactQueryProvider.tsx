@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
 import {
   QueryClient,
   QueryClientProvider,
   type QueryClientConfig,
-} from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
-import { isAppError } from "../lib/api/helpers/errors";
+} from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
+import { isAppError } from '../lib/api/helpers/errors';
 
 const NON_RETRIABLE_STATUSES = new Set([400, 401, 403, 404, 409]);
 

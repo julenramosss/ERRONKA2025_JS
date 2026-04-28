@@ -2,10 +2,10 @@ import axios, {
   AxiosHeaders,
   type AxiosError,
   type InternalAxiosRequestConfig,
-} from "axios";
-import type { RefreshResponse } from "../../../utils/types/api/auth.types";
-import { clearAccessToken, getAccessToken, setAccessToken } from "./auth-token";
-import { toAppError } from "./errors";
+} from 'axios';
+import type { RefreshResponse } from '../../../utils/types/api/auth.types';
+import { clearAccessToken, getAccessToken, setAccessToken } from './auth-token';
+import { toAppError } from './errors';
 import {
   API_BASE_URL,
   AUTH_FORGOT_PASSWORD_PATH,
@@ -13,7 +13,7 @@ import {
   AUTH_REFRESH_PATH,
   JSON_HEADERS,
   TRACKING_PATH_PREFIX,
-} from "../../../config/envConfig";
+} from '../../../config/envConfig';
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -24,7 +24,7 @@ function applyAuthorizationHeader(
   accessToken: string
 ): void {
   const headers = AxiosHeaders.from(config.headers);
-  headers.set("Authorization", `Bearer ${accessToken}`);
+  headers.set('Authorization', `Bearer ${accessToken}`);
   config.headers = headers;
 }
 

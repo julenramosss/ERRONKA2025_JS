@@ -1,6 +1,6 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import { PackageAddressRow, RouteResult } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import { PackageAddressRow, RouteResult } from '../types';
 
 interface UserRow extends RowDataPacket {
   id: number;
@@ -29,7 +29,7 @@ interface StopDetailRow extends RowDataPacket {
 export async function findUserById(userId: number): Promise<UserRow | null> {
   const db = await connect();
   const [rows] = await db.query<UserRow[]>(
-    "SELECT id, role FROM users WHERE id = ? AND is_active = 1",
+    'SELECT id, role FROM users WHERE id = ? AND is_active = 1',
     [userId]
   );
   return rows[0] ?? null;
@@ -41,7 +41,7 @@ export async function findRouteByUserAndDate(
 ): Promise<{ id: number } | null> {
   const db = await connect();
   const [rows] = await db.query<(RowDataPacket & { id: number })[]>(
-    "SELECT id FROM routes WHERE user_id = ? AND route_date = ?",
+    'SELECT id FROM routes WHERE user_id = ? AND route_date = ?',
     [userId, date]
   );
   return rows[0] ?? null;
@@ -51,7 +51,7 @@ export async function findPackagesWithAddresses(
   packageIds: number[]
 ): Promise<(RowDataPacket & PackageAddressRow)[]> {
   const db = await connect();
-  const placeholders = packageIds.map(() => "?").join(", ");
+  const placeholders = packageIds.map(() => '?').join(', ');
   const [rows] = await db.query<(RowDataPacket & PackageAddressRow)[]>(
     `SELECT p.id, p.recipient_name, p.status, p.assigned_to,
             a.street, a.city,
@@ -70,7 +70,7 @@ export async function insertRoute(
 ): Promise<number> {
   const db = await connect();
   const [result] = await db.query<ResultSetHeader>(
-    "INSERT INTO routes (user_id, route_date) VALUES (?, ?)",
+    'INSERT INTO routes (user_id, route_date) VALUES (?, ?)',
     [userId, date]
   );
   return result.insertId;
@@ -119,7 +119,7 @@ export async function insertRouteStops(
     }
 
     await db.query<ResultSetHeader>(
-      "INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival) VALUES (?, ?, ?, ?)",
+      'INSERT INTO route_stops (route_id, package_id, stop_order, estimated_arrival) VALUES (?, ?, ?, ?)',
       [routeId, stop.packageId, stop.stopOrder, stop.estimatedArrival]
     );
   }
@@ -130,7 +130,7 @@ export async function findRouteById(
 ): Promise<RouteResult | null> {
   const db = await connect();
   const [rows] = await db.query<RouteRow[]>(
-    "SELECT id, user_id, route_date, status, created_at FROM routes WHERE id = ?",
+    'SELECT id, user_id, route_date, status, created_at FROM routes WHERE id = ?',
     [routeId]
   );
   return rows[0] ?? null;
@@ -195,7 +195,7 @@ export async function updatePackagesStatusToAssigned(
 ): Promise<void> {
   if (packageIds.length === 0) return;
   const db = await connect();
-  const placeholders = packageIds.map(() => "?").join(", ");
+  const placeholders = packageIds.map(() => '?').join(', ');
   await db.query<ResultSetHeader>(
     `UPDATE packages SET status = 'assigned' WHERE id IN (${placeholders})`,
     packageIds
@@ -208,7 +208,7 @@ export async function updatePackagesEstimatedDelivery(
   const db = await connect();
   for (const stop of stops) {
     await db.query<ResultSetHeader>(
-      "UPDATE packages SET estimated_delivery = ? WHERE id = ?",
+      'UPDATE packages SET estimated_delivery = ? WHERE id = ?',
       [stop.estimatedDelivery, stop.packageId]
     );
   }

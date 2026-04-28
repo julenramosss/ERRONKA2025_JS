@@ -1,5 +1,5 @@
-import type { ApiDateString, ApiDateTimeString } from "./common.types";
-import type { PackageStatus } from "./package.types";
+import type { ApiDateString, ApiDateTimeString } from './common.types';
+import type { PackageStatus } from './package.types';
 
 export interface TrackingAddress {
   street: string;

@@ -1,7 +1,7 @@
-import { requireAuth } from "@/app/lib/jwt";
-import { handleError, res } from "@/app/lib/response";
-import { getMyPackagesService } from "./service/getMyPackages.service";
-import { USER_ROLES } from "@/app/types";
+import { requireAuth } from '@/app/lib/jwt';
+import { handleError, res } from '@/app/lib/response';
+import { getMyPackagesService } from './service/getMyPackages.service';
+import { USER_ROLES } from '@/app/types';
 
 export async function GET(request: Request) {
   try {
@@ -19,6 +19,6 @@ export async function GET(request: Request) {
       })
     );
   } catch (error) {
-    return handleError("[GET /api/packages/getMyPackages]", error);
+    return handleError('[GET /api/packages/getMyPackages]', error);
   }
 }

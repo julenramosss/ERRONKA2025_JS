@@ -1,9 +1,9 @@
 import type {
   PackageStatus,
   PackageWithAddress,
-} from "../../../../utils/types/api/package.types";
+} from '../../../../utils/types/api/package.types';
 
-export type ViewMode = "list" | "grid";
+export type ViewMode = 'list' | 'grid';
 
 export interface ConfirmState {
   pkg: PackageWithAddress;
@@ -20,8 +20,8 @@ export interface FilterChipProps {
 export interface PackagesHeaderProps {
   total: number;
   counts: Record<string, number>;
-  filter: PackageStatus | "all";
-  setFilter: (f: PackageStatus | "all") => void;
+  filter: PackageStatus | 'all';
+  setFilter: (f: PackageStatus | 'all') => void;
   query: string;
   setQuery: (q: string) => void;
   view: ViewMode;

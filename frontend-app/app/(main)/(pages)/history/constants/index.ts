@@ -1,9 +1,9 @@
-import type { HistoryFilterStatus } from "../types";
+import type { HistoryFilterStatus } from '../types';
 
 export const HISTORY_FILTERS: { key: HistoryFilterStatus; label: string }[] = [
-  { key: "all", label: "Denak" },
-  { key: "delivered", label: "Entregatuta" },
-  { key: "failed", label: "Huts" },
+  { key: 'all', label: 'Denak' },
+  { key: 'delivered', label: 'Entregatuta' },
+  { key: 'failed', label: 'Huts' },
 ];
 
 export function formatGroupSummary(total: number, delivered: number): string {
@@ -18,5 +18,5 @@ export function formatCompactGroupSummary(
 }
 
 export function getRecipientInitial(name: string): string {
-  return name.trim().charAt(0).toUpperCase() || "?";
+  return name.trim().charAt(0).toUpperCase() || '?';
 }

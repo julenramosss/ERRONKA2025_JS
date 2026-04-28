@@ -1,7 +1,7 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { PackageStatus } from "@/app/types";
-import { PackageWithAddress, StatusLogEntry } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { PackageStatus } from '@/app/types';
+import { PackageWithAddress, StatusLogEntry } from '../types';
 
 export async function findPackageById(
   id: number
@@ -29,7 +29,7 @@ export async function updatePackagesStatus(
   status: PackageStatus
 ): Promise<void> {
   const db = await connect();
-  const placeholders = ids.map(() => "?").join(", ");
+  const placeholders = ids.map(() => '?').join(', ');
   await db.query<ResultSetHeader>(
     `UPDATE packages SET status = ? WHERE id IN (${placeholders})`,
     [status, ...ids]
@@ -40,7 +40,7 @@ export async function findPackagesByIds(
   ids: number[]
 ): Promise<PackageWithAddress[]> {
   const db = await connect();
-  const placeholders = ids.map(() => "?").join(", ");
+  const placeholders = ids.map(() => '?').join(', ');
   const [rows] = await db.query<(RowDataPacket & PackageWithAddress)[]>(
     `SELECT p.*, a.street, a.city, a.postal_code, a.latitude, a.longitude, a.country
      FROM packages p
@@ -66,7 +66,7 @@ export async function insertStatusLogs(
   if (entries.length === 0) return;
 
   const db = await connect();
-  const placeholders = entries.map(() => "(?, ?, ?, ?)").join(", ");
+  const placeholders = entries.map(() => '(?, ?, ?, ?)').join(', ');
   const values = entries.flatMap((entry) => [
     entry.packageId,
     entry.oldStatus ?? null,

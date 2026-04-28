@@ -1,3 +1,3 @@
 export default {
-  index: { title: "Dokumentazio ikuskaritza" },
+  index: { title: 'Dokumentazio ikuskaritza' },
 };

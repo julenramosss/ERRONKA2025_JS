@@ -1,4 +1,4 @@
-import { ValidationError } from "@/app/lib/errors";
+import { ValidationError } from '@/app/lib/errors';
 
 export interface GetMyDailyDto {
   date: string;
@@ -8,11 +8,11 @@ export interface GetMyDailyDto {
 export function validateGetMyDailyDto(
   searchParams: URLSearchParams
 ): GetMyDailyDto {
-  const date = searchParams.get("date");
+  const date = searchParams.get('date');
 
   if (date !== null) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      throw new ValidationError("date must be in YYYY-MM-DD format");
+      throw new ValidationError('date must be in YYYY-MM-DD format');
     }
     return { date, allowFutureFallback: false };
   }

@@ -1,3 +1,3 @@
 export default {
-  index: "Entities and relationships",
+  index: 'Entities and relationships',
 };

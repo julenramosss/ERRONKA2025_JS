@@ -1,7 +1,7 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { PackageStatus } from "@/app/types";
-import { PackageWithAddress, UpdatePackageDto } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { PackageStatus } from '@/app/types';
+import { PackageWithAddress, UpdatePackageDto } from '../types';
 
 export async function findPackageById(
   id: number
@@ -36,31 +36,31 @@ export async function updatePackageFields(
   const params: unknown[] = [];
 
   if (fields.recipient_name !== undefined) {
-    sets.push("recipient_name = ?");
+    sets.push('recipient_name = ?');
     params.push(fields.recipient_name);
   }
   if (fields.recipient_email !== undefined) {
-    sets.push("recipient_email = ?");
+    sets.push('recipient_email = ?');
     params.push(fields.recipient_email);
   }
   if (fields.assigned_to !== undefined) {
-    sets.push("assigned_to = ?");
+    sets.push('assigned_to = ?');
     params.push(fields.assigned_to);
   }
   if (fields.status !== undefined) {
-    sets.push("status = ?");
+    sets.push('status = ?');
     params.push(fields.status);
   }
   if (fields.weight_kg !== undefined) {
-    sets.push("weight_kg = ?");
+    sets.push('weight_kg = ?');
     params.push(fields.weight_kg);
   }
   if (fields.description !== undefined) {
-    sets.push("description = ?");
+    sets.push('description = ?');
     params.push(fields.description);
   }
   if (fields.estimated_delivery !== undefined) {
-    sets.push("estimated_delivery = ?");
+    sets.push('estimated_delivery = ?');
     params.push(fields.estimated_delivery);
   }
 
@@ -68,7 +68,7 @@ export async function updatePackageFields(
   params.push(id);
   const db = await connect();
   await db.query<ResultSetHeader>(
-    `UPDATE packages SET ${sets.join(", ")} WHERE id = ?`,
+    `UPDATE packages SET ${sets.join(', ')} WHERE id = ?`,
     params
   );
 }
@@ -80,7 +80,7 @@ export async function updateAddressFields(
   if (sets.length === 0) return;
   const db = await connect();
   await db.query<ResultSetHeader>(
-    `UPDATE addresses SET ${sets.join(", ")} WHERE id = ?`,
+    `UPDATE addresses SET ${sets.join(', ')} WHERE id = ?`,
     params
   );
 }
@@ -93,7 +93,7 @@ export async function insertStatusLog(
 ): Promise<void> {
   const db = await connect();
   await db.query<ResultSetHeader>(
-    "INSERT INTO package_status_logs (package_id, old_status, new_status, changed_by) VALUES (?, ?, ?, ?)",
+    'INSERT INTO package_status_logs (package_id, old_status, new_status, changed_by) VALUES (?, ?, ?, ?)',
     [packageId, oldStatus, newStatus, changedBy]
   );
 }
@@ -115,7 +115,7 @@ export async function getDistributorName(
   if (distributorId === null) return null;
   const db = await connect();
   const [rows] = await db.query<RowDataPacket[]>(
-    "SELECT name FROM users WHERE id = ?",
+    'SELECT name FROM users WHERE id = ?',
     [distributorId]
   );
   return rows[0]?.name ?? null;

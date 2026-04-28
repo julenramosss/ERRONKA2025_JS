@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { Skeleton } from "boneyard-js/react";
-import { EmptyRouteState } from "./components/EmptyRouteState";
-import { MyRouteHeader } from "./components/MyRouteHeader";
-import { RouteMapPanel } from "./components/RouteMapPanel";
-import { RouteProgress } from "./components/RouteProgress";
-import { RouteStopsList } from "./components/RouteStopsList";
-import { MyRouteLoader } from "./components/loaders/MyRoute.loader";
-import { useMyRoutePage } from "./hooks/useMyRoutePage";
-import { NotRouteFound } from "./components/NotRouteFound";
+import { Skeleton } from 'boneyard-js/react';
+import { EmptyRouteState } from './components/EmptyRouteState';
+import { MyRouteHeader } from './components/MyRouteHeader';
+import { RouteMapPanel } from './components/RouteMapPanel';
+import { RouteProgress } from './components/RouteProgress';
+import { RouteStopsList } from './components/RouteStopsList';
+import { MyRouteLoader } from './components/loaders/MyRoute.loader';
+import { useMyRoutePage } from './hooks/useMyRoutePage';
+import { NotRouteFound } from './components/NotRouteFound';
 
 export default function MyRoutePage() {
   const {

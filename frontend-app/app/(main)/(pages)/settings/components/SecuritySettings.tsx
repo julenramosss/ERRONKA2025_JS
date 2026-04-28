@@ -1,4 +1,4 @@
-import { ChangePwdForm } from "./ChangePwdForm";
+import { ChangePwdForm } from './ChangePwdForm';
 
 export function SecuritySettings({ isActive }: { isActive: boolean }) {
   if (!isActive) return null;

@@ -1,7 +1,7 @@
-"use client";
-import { useRef } from "react";
-import { Icons } from "../../../components/icons";
-import { useSearchMobile } from "./useSearchMobile";
+'use client';
+import { useRef } from 'react';
+import { Icons } from '../../../components/icons';
+import { useSearchMobile } from './useSearchMobile';
 
 export function SearchMobile() {
   const { isOpen, onClickOpen, onClickClose } = useSearchMobile();
@@ -27,8 +27,8 @@ export function SearchMobile() {
       <div
         className={`sm:hidden fixed inset-0 z-40 transition-all duration-200 ${
           isOpen
-            ? "backdrop-blur-sm bg-black/30 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
+            ? 'backdrop-blur-sm bg-black/30 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClickClose}
       />
@@ -37,8 +37,8 @@ export function SearchMobile() {
       <div
         className={`sm:hidden fixed left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 transition-all duration-200 ${
           isOpen
-            ? "top-25 opacity-100 translate-y-0"
-            : "top-15 opacity-0 -translate-y-4 pointer-events-none"
+            ? 'top-25 opacity-100 translate-y-0'
+            : 'top-15 opacity-0 -translate-y-4 pointer-events-none'
         }`}
       >
         <div className="flex items-center gap-3 bg-bg-surface px-4 py-2 rounded-md border border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent shadow-xl transition-colors">

@@ -1,15 +1,15 @@
-import { findUserByEmail, insertUser } from "../repository/user.repo";
-import { CreateUserDto, CreateUserResponse } from "../types";
-import { ConflictError } from "@/app/lib/errors";
-import { encryptPwd } from "@/app/lib/hashPasword";
-import { default_user_password } from "@/app/config/envConfig";
-import { sendActivationEmailService } from "@/app/api/auth/activateAccount/service/activateAccount.service";
+import { findUserByEmail, insertUser } from '../repository/user.repo';
+import { CreateUserDto, CreateUserResponse } from '../types';
+import { ConflictError } from '@/app/lib/errors';
+import { encryptPwd } from '@/app/lib/hashPasword';
+import { default_user_password } from '@/app/config/envConfig';
+import { sendActivationEmailService } from '@/app/api/auth/activateAccount/service/activateAccount.service';
 
 export async function createUserService(
   dto: CreateUserDto
 ): Promise<CreateUserResponse> {
   if (await findUserByEmail(dto.email)) {
-    throw new ConflictError("A user with this email already exists");
+    throw new ConflictError('A user with this email already exists');
   }
 
   const passwordHash = await encryptPwd(default_user_password);

@@ -1,5 +1,5 @@
-import { handleError, res } from "@/app/lib/response";
-import { trackingService } from "./service/tracking.service";
+import { handleError, res } from '@/app/lib/response';
+import { trackingService } from './service/tracking.service';
 
 export async function GET(
   _request: Request,
@@ -10,6 +10,6 @@ export async function GET(
     const result = await trackingService(trackingToken);
     return res.ok(result);
   } catch (error) {
-    return handleError("[GET /api/tracking/[trackingToken]]", error);
+    return handleError('[GET /api/tracking/[trackingToken]]', error);
   }
 }

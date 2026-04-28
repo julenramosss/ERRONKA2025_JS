@@ -1,5 +1,5 @@
-import { Icons } from "../../../../components/icons";
-import type { PackageWithAddress } from "../../../../utils/types/api/package.types";
+import { Icons } from '../../../../components/icons';
+import type { PackageWithAddress } from '../../../../utils/types/api/package.types';
 
 interface StatCardsProps {
   packagesData: PackageWithAddress[];
@@ -14,12 +14,12 @@ interface StatCardItemProps {
 }
 
 export function StatCards({ packagesData }: StatCardsProps) {
-  const delivered = packagesData.filter((p) => p.status === "delivered").length;
+  const delivered = packagesData.filter((p) => p.status === 'delivered').length;
   const inTransit = packagesData.filter(
-    (p) => p.status === "in_transit"
+    (p) => p.status === 'in_transit'
   ).length;
-  const assigned = packagesData.filter((p) => p.status === "assigned").length;
-  const failed = packagesData.filter((p) => p.status === "failed").length;
+  const assigned = packagesData.filter((p) => p.status === 'assigned').length;
+  const failed = packagesData.filter((p) => p.status === 'failed').length;
 
   return (
     <div className="tour-stat-cards grid grid-cols-2 lg:grid-cols-4 gap-4">

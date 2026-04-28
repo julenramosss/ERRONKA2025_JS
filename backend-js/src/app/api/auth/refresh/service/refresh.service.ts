@@ -1,29 +1,29 @@
-import { randomUUID } from "crypto";
-import { ForbiddenError, UnauthorizedError } from "@/app/lib/errors";
-import { signAccessToken } from "@/app/lib/jwt";
-import { jwt_refresh_expires_days } from "@/app/config/envConfig";
-import { RefreshDto, RefreshResponse } from "../types";
+import { randomUUID } from 'crypto';
+import { ForbiddenError, UnauthorizedError } from '@/app/lib/errors';
+import { signAccessToken } from '@/app/lib/jwt';
+import { jwt_refresh_expires_days } from '@/app/config/envConfig';
+import { RefreshDto, RefreshResponse } from '../types';
 import {
   findRefreshToken,
   insertRefreshToken,
   revokeTokenById,
-} from "../repository/refresh.repository";
+} from '../repository/refresh.repository';
 
 export async function refreshService(
   dto: RefreshDto
 ): Promise<RefreshResponse> {
   const row = await findRefreshToken(dto.refresh_token);
-  if (!row) throw new UnauthorizedError("Refresh token not found");
+  if (!row) throw new UnauthorizedError('Refresh token not found');
 
   if (row.revoked)
-    throw new UnauthorizedError("Refresh token has been revoked");
+    throw new UnauthorizedError('Refresh token has been revoked');
 
   if (new Date(row.expires_at).getTime() < Date.now()) {
-    throw new UnauthorizedError("Refresh token has expired");
+    throw new UnauthorizedError('Refresh token has expired');
   }
 
   if (!row.is_active) {
-    throw new ForbiddenError("User account is disabled");
+    throw new ForbiddenError('User account is disabled');
   }
 
   await revokeTokenById(row.id);

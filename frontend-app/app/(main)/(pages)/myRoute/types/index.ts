@@ -1,9 +1,9 @@
-import type { PackageStatus } from "../../../../utils/types/api/package.types";
+import type { PackageStatus } from '../../../../utils/types/api/package.types';
 import type {
   RouteStatus,
   RouteStop,
-} from "../../../../utils/types/api/route.types";
-import type { Coords } from "../../../components/Here/types";
+} from '../../../../utils/types/api/route.types';
+import type { Coords } from '../../../components/Here/types';
 
 export interface MyRouteHeaderProps {
   onOpenNavigation: (origin: Coords, destination: Coords) => void;
@@ -21,7 +21,7 @@ export interface RouteStopActionsProps {
   isUpdatingStop: boolean;
   onMarkStop: (
     stop: RouteStop,
-    status: Extract<PackageStatus, "delivered" | "failed">
+    status: Extract<PackageStatus, 'delivered' | 'failed'>
   ) => void;
 }
 

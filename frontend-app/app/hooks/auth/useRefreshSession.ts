@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { refresh } from "../../lib/api/auth-api";
-import { setAccessToken } from "../../lib/api/helpers/auth-token";
-import { authKeys } from "../../query/keys/auth.keys";
-import type { RefreshResponse } from "../../utils/types/api/auth.types";
-import type { AppError } from "../../utils/types/api/common.types";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { refresh } from '../../lib/api/auth-api';
+import { setAccessToken } from '../../lib/api/helpers/auth-token';
+import { authKeys } from '../../query/keys/auth.keys';
+import type { RefreshResponse } from '../../utils/types/api/auth.types';
+import type { AppError } from '../../utils/types/api/common.types';
 
 export function useRefreshSession() {
   const queryClient = useQueryClient();

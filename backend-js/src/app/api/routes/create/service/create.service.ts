@@ -1,10 +1,10 @@
-import { mapsService } from "../../../../lib/maps/maps.service";
+import { mapsService } from '../../../../lib/maps/maps.service';
 import {
   ConflictError,
   NotFoundError,
   ValidationError,
-} from "../../../../lib/errors";
-import { CreateRouteDto, CreateRouteResult } from "../types";
+} from '../../../../lib/errors';
+import { CreateRouteDto, CreateRouteResult } from '../types';
 import {
   findUserById,
   findRouteByUserAndDate,
@@ -15,19 +15,19 @@ import {
   findRouteById,
   findStopsByRouteId,
   updatePackagesEstimatedDelivery,
-} from "../repository/create.repository";
-import { applyPackageStatusSideEffects } from "../../../../lib/packageStatus/packageStatusSideEffects.service";
-import { PACKAGE_STATUSES } from "../../../../types";
-import { PAKAG_ORIGIN } from "../../../../config/envConfig";
-import { updatePackagesStatus } from "../../../packages/updateStatus/repository/updateStatus.repo";
+} from '../repository/create.repository';
+import { applyPackageStatusSideEffects } from '../../../../lib/packageStatus/packageStatusSideEffects.service';
+import { PACKAGE_STATUSES } from '../../../../types';
+import { PAKAG_ORIGIN } from '../../../../config/envConfig';
+import { updatePackagesStatus } from '../../../packages/updateStatus/repository/updateStatus.repo';
 
 export async function createRouteService(
   dto: CreateRouteDto
 ): Promise<CreateRouteResult> {
   const user = await findUserById(dto.user_id);
   if (!user) throw new NotFoundError(`User ${dto.user_id} not found`);
-  if (user.role !== "distributor") {
-    throw new ValidationError("user_id must belong to a distributor");
+  if (user.role !== 'distributor') {
+    throw new ValidationError('user_id must belong to a distributor');
   }
 
   const existing = await findRouteByUserAndDate(dto.user_id, dto.date);
@@ -65,7 +65,7 @@ export async function createRouteService(
   const packages = await findPackagesWithAddresses(allPackageIds);
 
   if (packages.length !== allPackageIds.length) {
-    throw new NotFoundError("One or more package_ids do not exist");
+    throw new NotFoundError('One or more package_ids do not exist');
   }
 
   for (const pkg of packages) {

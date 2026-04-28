@@ -1,11 +1,11 @@
-"use client";
-import { AppearanceSettings } from "./components/AppearanceSettings";
-import { GeneralSettings } from "./components/GeneralSettings";
-import { SecuritySettings } from "./components/SecuritySettings";
-import { SettingsAside } from "./components/SettingsAside";
-import { SettingsMobileAside } from "./components/SettingsMobileAside";
-import { useSettingsRoute } from "./hooks/useSettingsRoute";
-import { SETTINGS_ROUTES } from "./types";
+'use client';
+import { AppearanceSettings } from './components/AppearanceSettings';
+import { GeneralSettings } from './components/GeneralSettings';
+import { SecuritySettings } from './components/SecuritySettings';
+import { SettingsAside } from './components/SettingsAside';
+import { SettingsMobileAside } from './components/SettingsMobileAside';
+import { useSettingsRoute } from './hooks/useSettingsRoute';
+import { SETTINGS_ROUTES } from './types';
 
 export default function SettingsPage() {
   const { settingsRoute, onClickChangeRoute } = useSettingsRoute();

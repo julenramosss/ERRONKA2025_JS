@@ -1,15 +1,15 @@
 import {
   findPackagesByIds,
   insertStatusLogs,
-} from "@/app/api/packages/updateStatus/repository/updateStatus.repo";
+} from '@/app/api/packages/updateStatus/repository/updateStatus.repo';
 import {
   getDistributorName,
   getTrackingTokenByPackageId,
-} from "@/app/api/packages/update/repository/updatePackage.repo";
-import { NotFoundError } from "@/app/lib/errors";
-import { sendPackageTrackingEmail } from "@/app/lib/email/sendPackageTrackingEmail";
-import { tracking_base_url } from "@/app/config/envConfig";
-import type { PackageStatusChange } from "./types";
+} from '@/app/api/packages/update/repository/updatePackage.repo';
+import { NotFoundError } from '@/app/lib/errors';
+import { sendPackageTrackingEmail } from '@/app/lib/email/sendPackageTrackingEmail';
+import { tracking_base_url } from '@/app/config/envConfig';
+import type { PackageStatusChange } from './types';
 
 export async function applyPackageStatusSideEffects(
   changes: PackageStatusChange[],
@@ -27,7 +27,7 @@ export async function applyPackageStatusSideEffects(
   const packageIds = [...new Set(changes.map((change) => change.packageId))];
   const packages = await findPackagesByIds(packageIds);
   if (packages.length !== packageIds.length) {
-    throw new NotFoundError("One or more packages were not found");
+    throw new NotFoundError('One or more packages were not found');
   }
 
   const packagesById = new Map(packages.map((pkg) => [pkg.id, pkg]));
@@ -72,7 +72,7 @@ export async function applyPackageStatusSideEffects(
       const rawDelivery = pkg.estimated_delivery as unknown;
       const estimatedDelivery =
         rawDelivery != null
-          ? new Intl.DateTimeFormat("eu-ES", { dateStyle: "medium" }).format(
+          ? new Intl.DateTimeFormat('eu-ES', { dateStyle: 'medium' }).format(
               rawDelivery instanceof Date
                 ? rawDelivery
                 : new Date(rawDelivery as string)

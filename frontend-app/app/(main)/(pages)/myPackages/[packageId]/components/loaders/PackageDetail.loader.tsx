@@ -22,7 +22,7 @@ export function PackageDetailLoader() {
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-5">
               {[...Array(7)].map((_, i) => (
-                <div key={i} className={i === 2 ? "sm:col-span-2" : ""}>
+                <div key={i} className={i === 2 ? 'sm:col-span-2' : ''}>
                   <div className="h-2.5 w-14 rounded bg-bg-elevated mb-1.5" />
                   <div className="h-4 w-full rounded bg-bg-elevated" />
                 </div>

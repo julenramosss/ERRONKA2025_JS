@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { NoHereMap } from "./components/NoHereMap";
-import { useHereMap } from "./hooks/useHereMap";
-import type { HereMapProps } from "./types";
+import { NoHereMap } from './components/NoHereMap';
+import { useHereMap } from './hooks/useHereMap';
+import type { HereMapProps } from './types';
 
 export function HereMap({
   reference,
   center,
   label,
-  height = "300px",
+  height = '300px',
 }: HereMapProps) {
   const { mapRef, loaded, hasValidCoords } = useHereMap({ center });
 
@@ -20,7 +20,7 @@ export function HereMap({
     return (
       <div
         ref={reference}
-        style={{ width: "100%", height }}
+        style={{ width: '100%', height }}
         className="relative overflow-hidden rounded-xl bg-bg-surface animate-pulse"
       >
         <div className="absolute inset-0 flex items-center justify-center">
@@ -28,8 +28,8 @@ export function HereMap({
             <div
               className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
               style={{
-                borderColor: "var(--accent-primary)",
-                borderTopColor: "transparent",
+                borderColor: 'var(--accent-primary)',
+                borderTopColor: 'transparent',
               }}
             />
             <span className="text-xs text-text-disabled">
@@ -44,10 +44,10 @@ export function HereMap({
   return (
     <div
       ref={reference}
-      style={{ width: "100%", height }}
+      style={{ width: '100%', height }}
       className="relative overflow-hidden rounded-xl"
     >
-      <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
+      <div ref={mapRef} style={{ width: '100%', height: '100%' }} />
       {label && (
         <div className="flex items-center justify-center">
           <div className="hidden md:block absolute top-1 left-3 right-3 rounded-lg px-3 py-1.5 text-xs font-medium text-text-secondary truncate bg-accent-subtle border-border-focus">

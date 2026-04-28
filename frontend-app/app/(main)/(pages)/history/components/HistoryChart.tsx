@@ -1,4 +1,4 @@
-import type { HistoryChartProps } from "../types";
+import type { HistoryChartProps } from '../types';
 
 export function HistoryChart({ bars }: HistoryChartProps) {
   if (bars.length === 0) {
@@ -40,7 +40,7 @@ export function HistoryChart({ bars }: HistoryChartProps) {
           <span className="flex items-center gap-1.5">
             <span
               className="w-2.5 h-2.5 rounded-sm"
-              style={{ background: "var(--st-failed-fg)" }}
+              style={{ background: 'var(--st-failed-fg)' }}
             />
             Huts
           </span>
@@ -50,49 +50,49 @@ export function HistoryChart({ bars }: HistoryChartProps) {
       <div className="px-3 py-4 sm:px-5 sm:py-6">
         <div className="flex h-40 items-end gap-1 sm:h-52 sm:gap-3">
           {bars.map((bar, index) => {
-              const deliveredPct = max > 0 ? (bar.delivered / max) * 100 : 0;
-              const failedPct = max > 0 ? (bar.failed / max) * 100 : 0;
+            const deliveredPct = max > 0 ? (bar.delivered / max) * 100 : 0;
+            const failedPct = max > 0 ? (bar.failed / max) * 100 : 0;
 
-              return (
-                <div
-                  key={bar.dateKey}
-                  className="flex min-w-0 flex-1 flex-col items-center gap-1 sm:gap-2"
-                  title={`${bar.fullLabel}: ${bar.total} pakete`}
-                >
-                  <div className="h-4 text-[10px] font-mono text-text-disabled">
-                    {bar.total > 0 ? bar.total : ""}
-                  </div>
-                  <div className="h-28 w-full max-w-7 sm:h-36 sm:max-w-10">
-                    <div className="flex h-full flex-col-reverse overflow-hidden rounded-md border border-border bg-bg-elevated">
-                      {deliveredPct > 0 && (
-                        <div
-                          className="w-full transition-all duration-500"
-                          style={{
-                            height: `${deliveredPct}%`,
-                            background:
-                              "linear-gradient(to top, #7C3AED, #A78BFA)",
-                          }}
-                        />
-                      )}
-                      {failedPct > 0 && (
-                        <div
-                          className="w-full transition-all duration-500"
-                          style={{
-                            height: `${failedPct}%`,
-                            background: "var(--st-failed-fg)",
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <span className="h-3 text-center font-mono text-[9px] text-text-disabled sm:text-[10px]">
-                    <span className={index % 2 === 0 ? "" : "hidden sm:inline"}>
-                      {bar.shortLabel}
-                    </span>
-                  </span>
+            return (
+              <div
+                key={bar.dateKey}
+                className="flex min-w-0 flex-1 flex-col items-center gap-1 sm:gap-2"
+                title={`${bar.fullLabel}: ${bar.total} pakete`}
+              >
+                <div className="h-4 text-[10px] font-mono text-text-disabled">
+                  {bar.total > 0 ? bar.total : ''}
                 </div>
-              );
-            })}
+                <div className="h-28 w-full max-w-7 sm:h-36 sm:max-w-10">
+                  <div className="flex h-full flex-col-reverse overflow-hidden rounded-md border border-border bg-bg-elevated">
+                    {deliveredPct > 0 && (
+                      <div
+                        className="w-full transition-all duration-500"
+                        style={{
+                          height: `${deliveredPct}%`,
+                          background:
+                            'linear-gradient(to top, #7C3AED, #A78BFA)',
+                        }}
+                      />
+                    )}
+                    {failedPct > 0 && (
+                      <div
+                        className="w-full transition-all duration-500"
+                        style={{
+                          height: `${failedPct}%`,
+                          background: 'var(--st-failed-fg)',
+                        }}
+                      />
+                    )}
+                  </div>
+                </div>
+                <span className="h-3 text-center font-mono text-[9px] text-text-disabled sm:text-[10px]">
+                  <span className={index % 2 === 0 ? '' : 'hidden sm:inline'}>
+                    {bar.shortLabel}
+                  </span>
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

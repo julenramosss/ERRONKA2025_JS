@@ -1,3 +1,3 @@
 export default {
-  index: "Ingurune-aldagaiak",
+  index: 'Ingurune-aldagaiak',
 };

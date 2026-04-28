@@ -1,6 +1,10 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket } from "mysql2/promise";
-import { ListPackagesFilters, ListPackagesResult, PackageWithAddress } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket } from 'mysql2/promise';
+import {
+  ListPackagesFilters,
+  ListPackagesResult,
+  PackageWithAddress,
+} from '../types';
 
 export async function listPackages(
   filters: ListPackagesFilters
@@ -13,19 +17,19 @@ export async function listPackages(
   const params: unknown[] = [];
 
   if (status !== undefined) {
-    clauses.push("p.status = ?");
+    clauses.push('p.status = ?');
     params.push(status);
   }
   if (assigned_to !== undefined) {
-    clauses.push("p.assigned_to = ?");
+    clauses.push('p.assigned_to = ?');
     params.push(assigned_to);
   }
   if (city !== undefined) {
-    clauses.push("a.city LIKE ?");
+    clauses.push('a.city LIKE ?');
     params.push(`%${city}%`);
   }
 
-  const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
 
   const [countRows] = await db.query<(RowDataPacket & { total: number })[]>(
     `SELECT COUNT(*) as total FROM packages p JOIN addresses a ON p.address_id = a.id ${where}`,

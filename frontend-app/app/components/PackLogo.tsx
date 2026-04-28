@@ -4,20 +4,20 @@ interface PakLogoProps {
 }
 
 export const PakLogo = ({ size = 28, showText = true }: PakLogoProps) => (
-  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
     <div
       style={{
         width: size,
         height: size,
         borderRadius: size * 0.25,
         background:
-          "linear-gradient(135deg, #A78BFA 0%, #7C3AED 55%, #4C1D95 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxShadow: "0 4px 14px rgba(124,58,237,0.45)",
-        position: "relative",
-        overflow: "hidden",
+          'linear-gradient(135deg, #A78BFA 0%, #7C3AED 55%, #4C1D95 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 14px rgba(124,58,237,0.45)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
       <svg
@@ -36,23 +36,23 @@ export const PakLogo = ({ size = 28, showText = true }: PakLogoProps) => (
       </svg>
       <span
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 3,
           right: 4,
           width: 5,
           height: 5,
-          borderRadius: "50%",
-          background: "#F5F3FF",
-          boxShadow: "0 0 6px #F5F3FF",
+          borderRadius: '50%',
+          background: '#F5F3FF',
+          boxShadow: '0 0 6px #F5F3FF',
         }}
       />
     </div>
     {showText && (
-      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
         <span
-          style={{ fontWeight: 700, fontSize: 16, letterSpacing: "-0.02em" }}
+          style={{ fontWeight: 700, fontSize: 16, letterSpacing: '-0.02em' }}
         >
-          pak<span style={{ color: "var(--accent-light)" }}>AG</span>
+          pak<span style={{ color: 'var(--accent-light)' }}>AG</span>
         </span>
       </div>
     )}

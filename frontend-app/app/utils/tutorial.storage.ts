@@ -1,4 +1,4 @@
-const STORAGE_KEY = "tutorial.v1";
+const STORAGE_KEY = 'tutorial.v1';
 
 export interface TutorialHasSeen {
   hasSeen: boolean;
@@ -29,9 +29,9 @@ function notify(): void {
 }
 
 function bindStorageListener(): void {
-  if (isStorageListenerBound || typeof window === "undefined") return;
+  if (isStorageListenerBound || typeof window === 'undefined') return;
 
-  window.addEventListener("storage", (event) => {
+  window.addEventListener('storage', (event) => {
     if (event.key !== STORAGE_KEY) return;
     cache = load();
     notify();
@@ -41,20 +41,20 @@ function bindStorageListener(): void {
 }
 
 function isTutorialState(value: unknown): value is TutorialState {
-  if (!value || typeof value !== "object") return false;
+  if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
-    typeof v.hasSeen === "boolean" &&
-    typeof v.dashboard === "object" &&
-    typeof v.myPackages === "object" &&
-    typeof v.myRoute === "object" &&
-    typeof v.history === "object" &&
-    typeof v.settings === "object"
+    typeof v.hasSeen === 'boolean' &&
+    typeof v.dashboard === 'object' &&
+    typeof v.myPackages === 'object' &&
+    typeof v.myRoute === 'object' &&
+    typeof v.history === 'object' &&
+    typeof v.settings === 'object'
   );
 }
 
 function load(): TutorialState {
-  if (typeof window === "undefined") return DEFAULTS_TUTORIAL;
+  if (typeof window === 'undefined') return DEFAULTS_TUTORIAL;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS_TUTORIAL;
@@ -67,7 +67,7 @@ function load(): TutorialState {
 }
 
 function persist(value: Partial<TutorialState>): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     const stored = load();
     // Agregate the new value with the stored one to avoid overwriting unseen states when only updating a part of the tutorial state.
@@ -79,11 +79,11 @@ function persist(value: Partial<TutorialState>): void {
 }
 
 export function getTutorialState(key: keyof TutorialState): TutorialHasSeen {
-  if (typeof window === "undefined") return DEFAULTS_TUTORIAL[key];
+  if (typeof window === 'undefined') return DEFAULTS_TUTORIAL[key];
   if (cache === null) cache = load();
 
-  if (typeof cache[key] === "undefined") return DEFAULTS_TUTORIAL[key];
-  if (typeof cache[key] === "string") return DEFAULTS_TUTORIAL[key];
+  if (typeof cache[key] === 'undefined') return DEFAULTS_TUTORIAL[key];
+  if (typeof cache[key] === 'string') return DEFAULTS_TUTORIAL[key];
   return cache[key] ?? DEFAULTS_TUTORIAL[key];
 }
 

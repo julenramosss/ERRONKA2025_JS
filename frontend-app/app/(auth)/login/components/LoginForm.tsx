@@ -1,8 +1,8 @@
-"use client";
-import { Icons } from "../../../components/icons";
-import { useLoginForm } from "../hooks/useLoginForm";
-import { ErrorPanel } from "./ErrorPanel";
-import { ForgotPasswordModal } from "./ForgotPasswordModal";
+'use client';
+import { Icons } from '../../../components/icons';
+import { useLoginForm } from '../hooks/useLoginForm';
+import { ErrorPanel } from './ErrorPanel';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 export function LoginForm() {
   const {
@@ -32,7 +32,7 @@ export function LoginForm() {
         <div>
           <span className="text-text-secondary">Email</span>
           <div
-            className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? "border-red-500" : ""}`}
+            className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? 'border-red-500' : ''}`}
           >
             <Icons.Mail size={20} className="text-text-secondary" />
             <input
@@ -49,7 +49,7 @@ export function LoginForm() {
         <div>
           <span className="text-text-secondary">Password</span>
           <div
-            className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? "border-red-500" : ""}`}
+            className={`bg-bg-surface flex items-center justify-between mt-3 px-4 py-1 rounded-md border border-gray-700 focus-within:border-accent focus-within:ring-1 focus-within:ring-accent transition-colors ${isError ? 'border-red-500' : ''}`}
           >
             <Icons.Lock size={20} className="text-text-secondary" />
             <input
@@ -76,12 +76,12 @@ export function LoginForm() {
             type="submit"
             className="w-full flex items-center justify-center bg-accent text-white text-lg rounded-lg py-3 font-semibold gap-2 cursor-pointer hover:bg-accent-hover transition-colors shadow-[0_4px_24px_rgba(124,58,237,0.55)]"
           >
-            {isPending ? "Saioa hasten..." : "Saioa hasi"}
+            {isPending ? 'Saioa hasten...' : 'Saioa hasi'}
             <Icons.ArrowRight size={16} className="inline ml-2" />
           </button>
         </div>
         <p className="text-xs md:text-base text-center text-text-secondary">
-          Problemak sartzeko?{" "}
+          Problemak sartzeko?{' '}
           <span className="text-accent-light font-semibold">
             Gurekin kontaktuan jarri zaitez!
           </span>

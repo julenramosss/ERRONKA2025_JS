@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { Icons } from "../../../../../components/icons";
-import type { PackageDetailHeaderProps } from "../types";
+import Link from 'next/link';
+import { Icons } from '../../../../../components/icons';
+import type { PackageDetailHeaderProps } from '../types';
 
 export function PackageDetailHeader({ pkg }: PackageDetailHeaderProps) {
   return (

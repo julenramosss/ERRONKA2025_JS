@@ -1,17 +1,17 @@
-import { NotFoundError, ValidationError } from "@/app/lib/errors";
-import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
+import { NotFoundError, ValidationError } from '@/app/lib/errors';
+import { applyPackageStatusSideEffects } from '@/app/lib/packageStatus/packageStatusSideEffects.service';
 import {
   findPackageById,
   updateAddressFields,
   updatePackageFields,
   validateDistributorExists,
-} from "../repository/updatePackage.repo";
+} from '../repository/updatePackage.repo';
 import {
   PackageWithAddress,
   UpdateAddressDto,
   UpdatePackageDto,
-} from "../types";
-import { mapsService } from "@/app/lib/maps/maps.service";
+} from '../types';
+import { mapsService } from '@/app/lib/maps/maps.service';
 
 export async function updatePackageService(
   id: number,
@@ -20,7 +20,7 @@ export async function updatePackageService(
   changedBy: number
 ): Promise<PackageWithAddress> {
   const current = await findPackageById(id);
-  if (!current) throw new NotFoundError("Package not found");
+  if (!current) throw new NotFoundError('Package not found');
 
   const resolvedPackageInfo = { ...packageInfo };
 
@@ -33,14 +33,14 @@ export async function updatePackageService(
     );
     if (!valid) {
       throw new ValidationError(
-        "assigned_to must be an existing active distributor"
+        'assigned_to must be an existing active distributor'
       );
     }
     if (
-      current.status === "pending" &&
+      current.status === 'pending' &&
       resolvedPackageInfo.status === undefined
     ) {
-      resolvedPackageInfo.status = "assigned";
+      resolvedPackageInfo.status = 'assigned';
     }
   }
 
@@ -60,22 +60,22 @@ export async function updatePackageService(
     );
 
     if (addressInfo.street !== undefined) {
-      sets.push("street = ?");
+      sets.push('street = ?');
       params.push(addressInfo.street);
     }
     if (addressInfo.city !== undefined) {
-      sets.push("city = ?");
+      sets.push('city = ?');
       params.push(addressInfo.city);
     }
     if (addressInfo.postal_code !== undefined) {
-      sets.push("postal_code = ?");
+      sets.push('postal_code = ?');
       params.push(addressInfo.postal_code);
     }
     if (addressInfo.country !== undefined) {
-      sets.push("country = ?");
+      sets.push('country = ?');
       params.push(addressInfo.country);
     }
-    sets.push("latitude = ?", "longitude = ?");
+    sets.push('latitude = ?', 'longitude = ?');
     params.push(lat, lng);
 
     params.push(current.address_id);

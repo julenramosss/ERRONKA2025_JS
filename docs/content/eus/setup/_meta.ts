@@ -1,3 +1,3 @@
 export default {
-  index: "Tokiko konfigurazioa",
+  index: 'Tokiko konfigurazioa',
 };

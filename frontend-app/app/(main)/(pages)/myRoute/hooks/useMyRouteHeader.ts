@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
-import { usePreferences } from "../../../../hooks/usePreferences";
-import { useUpdateRouteStatus } from "../../../../hooks/routes/useUpdateRouteStatus";
+import { useState } from 'react';
+import { useMyDailyRoute } from '../../../../hooks/routes/useMyDailyRoute';
+import { usePreferences } from '../../../../hooks/usePreferences';
+import { useUpdateRouteStatus } from '../../../../hooks/routes/useUpdateRouteStatus';
 import {
   formatDate,
   normalizeDateKey,
   toLocalDateKey,
-} from "../../../../utils/date.utils";
-import { isTerminalPackageStatus, ROUTE_STATUS_LABEL } from "../constants";
-import { getActionErrorMessage } from "./routeUtils";
-import { ROUTE_STATUSES } from "../../../../utils/types";
+} from '../../../../utils/date.utils';
+import { isTerminalPackageStatus, ROUTE_STATUS_LABEL } from '../constants';
+import { getActionErrorMessage } from './routeUtils';
+import { ROUTE_STATUSES } from '../../../../utils/types';
 
 export function useMyRouteHeader() {
   const routeQuery = useMyDailyRoute();
@@ -45,19 +45,19 @@ export function useMyRouteHeader() {
   );
 
   const startButtonLabel = (() => {
-    if (isCompleted) return "Ez dago ibilbide pendenterik";
-    if (isInProgress) return "Ibilbidea bukatu";
-    if (!isToday) return "Gaurko ibilbidea sortu";
-    return "Ibilbidea hasi";
+    if (isCompleted) return 'Ez dago ibilbide pendenterik';
+    if (isInProgress) return 'Ibilbidea bukatu';
+    if (!isToday) return 'Gaurko ibilbidea sortu';
+    return 'Ibilbidea hasi';
   })();
 
   const routeStatusLabel = routeData
     ? ROUTE_STATUS_LABEL[routeData.route.status]
-    : "--";
+    : '--';
 
   const routeDateLabel = routeData
     ? formatDate(normalizeDateKey(routeData.route.route_date))
-    : "--";
+    : '--';
 
   async function onClickUpdateRouteStatus(): Promise<void> {
     if (!routeData || !canUpdateRoute) return;

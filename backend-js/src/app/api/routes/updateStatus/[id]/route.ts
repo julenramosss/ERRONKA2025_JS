@@ -1,8 +1,8 @@
-import { requireAuth } from "@/app/lib/jwt";
-import { handleError, res } from "@/app/lib/response";
-import { USER_ROLES } from "@/app/types";
-import { updateRouteStatusDto } from "../dto/updateRouteStatus.dto";
-import { updateRouteStatusService } from "../service/updateRouteStatus.service";
+import { requireAuth } from '@/app/lib/jwt';
+import { handleError, res } from '@/app/lib/response';
+import { USER_ROLES } from '@/app/types';
+import { updateRouteStatusDto } from '../dto/updateRouteStatus.dto';
+import { updateRouteStatusService } from '../service/updateRouteStatus.service';
 
 export async function PATCH(
   request: Request,
@@ -17,8 +17,8 @@ export async function PATCH(
     const body = await request.json();
     const dto = await updateRouteStatusDto(id, caller, body);
     await updateRouteStatusService(dto, caller);
-    return res.ok({ message: "Route status updated" });
+    return res.ok({ message: 'Route status updated' });
   } catch (error) {
-    return handleError("[PATCH /api/routes/updateStatus/[id]]", error);
+    return handleError('[PATCH /api/routes/updateStatus/[id]]', error);
   }
 }

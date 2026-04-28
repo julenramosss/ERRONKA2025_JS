@@ -1,3 +1,3 @@
 export default {
-  index: "Variables de entorno",
+  index: 'Variables de entorno',
 };

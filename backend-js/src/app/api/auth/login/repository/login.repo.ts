@@ -1,6 +1,6 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
-import { UserRole } from "@/app/types";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { UserRole } from '@/app/types';
 
 export interface UserAuthRow extends RowDataPacket {
   id: number;
@@ -16,7 +16,7 @@ export async function findUserByEmailForAuth(
 ): Promise<UserAuthRow | null> {
   const db = await connect();
   const [rows] = await db.query<UserAuthRow[]>(
-    "SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ?",
+    'SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ?',
     [email]
   );
   return rows[0] ?? null;

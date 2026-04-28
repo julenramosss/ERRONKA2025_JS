@@ -1,23 +1,23 @@
-import { NextDeliveriesProps } from "../types";
-import { Icons } from "../../../../components/icons";
-import { STATUS_LABEL } from "../../../../utils/types";
-import type { PackageStatus } from "../../../../utils/types/api/package.types";
-import { formatDayMonth } from "../../../../utils/date.utils";
-import Link from "next/link";
+import { NextDeliveriesProps } from '../types';
+import { Icons } from '../../../../components/icons';
+import { STATUS_LABEL } from '../../../../utils/types';
+import type { PackageStatus } from '../../../../utils/types/api/package.types';
+import { formatDayMonth } from '../../../../utils/date.utils';
+import Link from 'next/link';
 
 const STATUS_STYLE: Record<PackageStatus, string> = {
   pending:
-    "bg-[var(--st-pending-bg)] text-[var(--st-pending-fg)] border-[var(--st-pending-fg)]",
+    'bg-[var(--st-pending-bg)] text-[var(--st-pending-fg)] border-[var(--st-pending-fg)]',
   assigned:
-    "bg-[var(--st-assigned-bg)] text-[var(--st-assigned-fg)] border-[var(--st-assigned-fg)]",
+    'bg-[var(--st-assigned-bg)] text-[var(--st-assigned-fg)] border-[var(--st-assigned-fg)]',
   in_transit:
-    "bg-[var(--st-transit-bg)] text-[var(--st-transit-fg)] border-[var(--st-transit-fg)]",
+    'bg-[var(--st-transit-bg)] text-[var(--st-transit-fg)] border-[var(--st-transit-fg)]',
   delivered:
-    "bg-[var(--st-delivered-bg)] text-[var(--st-delivered-fg)] border-[var(--st-delivered-fg)]",
+    'bg-[var(--st-delivered-bg)] text-[var(--st-delivered-fg)] border-[var(--st-delivered-fg)]',
   undelivered:
-    "bg-[var(--st-undelivered-bg)] text-[var(--st-undelivered-fg)] border-[var(--st-undelivered-fg)]",
+    'bg-[var(--st-undelivered-bg)] text-[var(--st-undelivered-fg)] border-[var(--st-undelivered-fg)]',
   failed:
-    "bg-[var(--st-failed-bg)] text-[var(--st-failed-fg)] border-[var(--st-failed-fg)]",
+    'bg-[var(--st-failed-bg)] text-[var(--st-failed-fg)] border-[var(--st-failed-fg)]',
 };
 
 export function NextDeliveries({
@@ -25,12 +25,12 @@ export function NextDeliveries({
   assignPackage,
   isHrefAvailable,
 }: {
-  packages: NextDeliveriesProps["packages"];
-  assignPackage: (pkg: NextDeliveriesProps["packages"][number]) => void;
+  packages: NextDeliveriesProps['packages'];
+  assignPackage: (pkg: NextDeliveriesProps['packages'][number]) => void;
   isHrefAvailable: boolean;
 }) {
   const pending = packages
-    .filter((p) => p.status !== "delivered" && p.status !== "failed")
+    .filter((p) => p.status !== 'delivered' && p.status !== 'failed')
     .slice(0, 6);
 
   return (
@@ -63,12 +63,12 @@ export function NextDeliveries({
               key={pkg.id}
               onClick={() => assignPackage(pkg)}
               className={`flex items-center gap-3 hover:bg-bg-elevated transition-colors cursor-pointer ${
-                i < pending.length - 1 ? "border-b border-border" : ""
+                i < pending.length - 1 ? 'border-b border-border' : ''
               }`}
             >
               <Link
                 // onDoubleClick={}
-                href={isHrefAvailable ? `/myPackages/${pkg.id}` : "#"}
+                href={isHrefAvailable ? `/myPackages/${pkg.id}` : '#'}
                 className="flex items-center gap-3 px-5 py-3.5 w-full"
               >
                 {/* Stop indicator */}

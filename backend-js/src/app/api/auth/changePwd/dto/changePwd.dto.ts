@@ -1,21 +1,21 @@
-import { ValidationError } from "@/app/lib/errors";
-import { isString } from "@/app/lib/dto";
-import { ChangePwdDto } from "../types";
+import { ValidationError } from '@/app/lib/errors';
+import { isString } from '@/app/lib/dto';
+import { ChangePwdDto } from '../types';
 
 export function validateChangePwdDto(body: unknown): ChangePwdDto {
-  if (!body || typeof body !== "object") {
-    throw new ValidationError("Invalid request body");
+  if (!body || typeof body !== 'object') {
+    throw new ValidationError('Invalid request body');
   }
 
   const { new_password, reset_pwd_token } = body as Record<string, unknown>;
 
   if (!isString(reset_pwd_token)) {
-    throw new ValidationError("reset_pwd_token is required");
+    throw new ValidationError('reset_pwd_token is required');
   }
 
   if (new_password !== undefined) {
     if (!isString(new_password) || (new_password as string).length < 6) {
-      throw new ValidationError("new_password must be at least 6 characters");
+      throw new ValidationError('new_password must be at least 6 characters');
     }
     return {
       newPassword: new_password as string,

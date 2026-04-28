@@ -1,11 +1,11 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import {
   PendingStopRow,
   RoutePackageStatusChangeRow,
   RouteRow,
   RouteStatus,
-} from "../types";
+} from '../types';
 
 interface ActiveStopCoordRow extends RowDataPacket {
   id: number;
@@ -28,7 +28,7 @@ export async function setRouteStatus(
   status: RouteStatus
 ): Promise<void> {
   const db = await connect();
-  await db.query<ResultSetHeader>("UPDATE routes SET status = ? WHERE id = ?", [
+  await db.query<ResultSetHeader>('UPDATE routes SET status = ? WHERE id = ?', [
     status,
     routeId,
   ]);
@@ -83,7 +83,7 @@ export async function migratePastPendingStopsIntoRoute(
   const [[{ max_order }]] = await db.query<
     (RowDataPacket & { max_order: number })[]
   >(
-    "SELECT COALESCE(MAX(stop_order), 0) AS max_order FROM route_stops WHERE route_id = ?",
+    'SELECT COALESCE(MAX(stop_order), 0) AS max_order FROM route_stops WHERE route_id = ?',
     [targetRouteId]
   );
 
@@ -146,7 +146,7 @@ export async function setRouteRemainingPackagesUndelivered(
   if (packages.length === 0) return [];
 
   const packageIds = packages.map((pkg) => pkg.id);
-  const placeholders = packageIds.map(() => "?").join(", ");
+  const placeholders = packageIds.map(() => '?').join(', ');
 
   await db.query<ResultSetHeader>(
     `UPDATE packages
@@ -182,10 +182,10 @@ export async function updateRouteStopOrders(
   const db = await connect();
 
   const ids = stops.map((s) => s.stopId);
-  const placeholders = ids.map(() => "?").join(", ");
+  const placeholders = ids.map(() => '?').join(', ');
 
-  const orderCase = stops.map(() => "WHEN ? THEN ?").join(" ");
-  const arrivalCase = stops.map(() => "WHEN ? THEN ?").join(" ");
+  const orderCase = stops.map(() => 'WHEN ? THEN ?').join(' ');
+  const arrivalCase = stops.map(() => 'WHEN ? THEN ?').join(' ');
 
   const orderValues = stops.flatMap((s) => [s.stopId, s.stopOrder]);
   const arrivalValues = stops.flatMap((s) => [s.stopId, s.estimatedArrival]);
@@ -206,7 +206,7 @@ export async function bulkUpdatePackagesEstimatedDelivery(
   const db = await connect();
   for (const s of stops) {
     await db.query<ResultSetHeader>(
-      "UPDATE packages SET estimated_delivery = ? WHERE id = ?",
+      'UPDATE packages SET estimated_delivery = ? WHERE id = ?',
       [s.estimatedDelivery, s.packageId]
     );
   }

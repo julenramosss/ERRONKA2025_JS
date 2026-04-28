@@ -1,5 +1,5 @@
-export type AnimationsPref = "on" | "off";
-export type DateFormatPref = "short" | "long";
+export type AnimationsPref = 'on' | 'off';
+export type DateFormatPref = 'short' | 'long';
 
 export interface AppPreferences {
   animations: AnimationsPref;
@@ -7,11 +7,11 @@ export interface AppPreferences {
   showTutorial: boolean;
 }
 
-const STORAGE_KEY = "pakag.prefs.v1";
+const STORAGE_KEY = 'pakag.prefs.v1';
 
 const DEFAULTS: AppPreferences = {
-  animations: "on",
-  dateFormat: "short",
+  animations: 'on',
+  dateFormat: 'short',
   showTutorial: true,
 };
 
@@ -24,9 +24,9 @@ function notifyListeners(): void {
 }
 
 function bindStorageListener(): void {
-  if (isStorageListenerBound || typeof window === "undefined") return;
+  if (isStorageListenerBound || typeof window === 'undefined') return;
 
-  window.addEventListener("storage", (event) => {
+  window.addEventListener('storage', (event) => {
     if (event.key !== STORAGE_KEY) return;
     cache = load();
     notifyListeners();
@@ -36,17 +36,17 @@ function bindStorageListener(): void {
 }
 
 function isAppPreferences(value: unknown): value is AppPreferences {
-  if (!value || typeof value !== "object") return false;
+  if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
-    (v.animations === "on" || v.animations === "off") &&
-    (v.dateFormat === "short" || v.dateFormat === "long") &&
-    typeof v.showTutorial === "boolean"
+    (v.animations === 'on' || v.animations === 'off') &&
+    (v.dateFormat === 'short' || v.dateFormat === 'long') &&
+    typeof v.showTutorial === 'boolean'
   );
 }
 
 function load(): AppPreferences {
-  if (typeof window === "undefined") return DEFAULTS;
+  if (typeof window === 'undefined') return DEFAULTS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
@@ -59,7 +59,7 @@ function load(): AppPreferences {
 }
 
 function persist(value: AppPreferences): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
   } catch {
@@ -68,7 +68,7 @@ function persist(value: AppPreferences): void {
 }
 
 export function getPreferences(): AppPreferences {
-  if (typeof window === "undefined") return DEFAULTS;
+  if (typeof window === 'undefined') return DEFAULTS;
   if (cache === null) cache = load();
   return cache;
 }

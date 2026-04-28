@@ -1,13 +1,15 @@
-import { NotFoundError, ValidationError } from "@/app/lib/errors";
-import { ReorderDto, ReorderedStop } from "../types";
+import { NotFoundError, ValidationError } from '@/app/lib/errors';
+import { ReorderDto, ReorderedStop } from '../types';
 import {
   findRouteById,
   findStopsByRouteId,
   updateStopOrders,
   findStopsAfterReorder,
-} from "../repository/reorder.repository";
+} from '../repository/reorder.repository';
 
-export async function reorderStopsService(dto: ReorderDto): Promise<ReorderedStop[]> {
+export async function reorderStopsService(
+  dto: ReorderDto
+): Promise<ReorderedStop[]> {
   const route = await findRouteById(dto.route_id);
   if (!route) throw new NotFoundError(`Route ${dto.route_id} not found`);
 

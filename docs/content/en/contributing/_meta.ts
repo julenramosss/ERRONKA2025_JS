@@ -1,3 +1,3 @@
 export default {
-  index: "Contribution workflow",
+  index: 'Contribution workflow',
 };

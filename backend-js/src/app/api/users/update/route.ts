@@ -1,8 +1,8 @@
-import { validateUpdateUserDto } from "./dtos/update.dto";
-import { updateUserService } from "./service/update.service";
-import { handleError, res } from "@/app/lib/response";
-import { requireAuth } from "@/app/lib/jwt";
-import { USER_ROLES } from "@/app/types";
+import { validateUpdateUserDto } from './dtos/update.dto';
+import { updateUserService } from './service/update.service';
+import { handleError, res } from '@/app/lib/response';
+import { requireAuth } from '@/app/lib/jwt';
+import { USER_ROLES } from '@/app/types';
 
 export async function PATCH(request: Request) {
   try {
@@ -12,6 +12,6 @@ export async function PATCH(request: Request) {
     const updated = await updateUserService(dto);
     return res.ok(updated);
   } catch (error) {
-    return handleError("[PATCH /api/users/update]", error);
+    return handleError('[PATCH /api/users/update]', error);
   }
 }

@@ -1,28 +1,28 @@
-﻿import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import "../globals.css";
-import { getDictionary } from "../i18n";
-import type { SupportedLocale } from "../i18n";
-import { PakLogo } from "../components/PakLogo";
-import { DocsSidebarNav } from "../components/DocsSidebarNav";
-import { LocaleSwitcher } from "../components/LocaleSwitcher";
-import { MobileMenu } from "../components/MobileMenu";
-import { MobileSearchButton } from "../components/MobileSearchButton";
-import { PageToc } from "../components/PageToc";
-import { MobilePageTools } from "../components/MobilePageTools";
-import { DocsSearch } from "../components/DocsSearch";
-import { HTMLaddElements } from "../components/HTMLaddElements";
-import { buildSearchIndex } from "../lib/search-index";
-import { navItems } from "../utils/constants";
-import { DocsDictionary } from "../i18n/en";
+﻿import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import '../globals.css';
+import { getDictionary } from '../i18n';
+import type { SupportedLocale } from '../i18n';
+import { PakLogo } from '../components/PakLogo';
+import { DocsSidebarNav } from '../components/DocsSidebarNav';
+import { LocaleSwitcher } from '../components/LocaleSwitcher';
+import { MobileMenu } from '../components/MobileMenu';
+import { MobileSearchButton } from '../components/MobileSearchButton';
+import { PageToc } from '../components/PageToc';
+import { MobilePageTools } from '../components/MobilePageTools';
+import { DocsSearch } from '../components/DocsSearch';
+import { HTMLaddElements } from '../components/HTMLaddElements';
+import { buildSearchIndex } from '../lib/search-index';
+import { navItems } from '../utils/constants';
+import { DocsDictionary } from '../i18n/en';
 
 export const metadata: Metadata = {
   title: {
-    template: "%s · PakAG Docs",
-    default: "PakAG Engineering Docs",
+    template: '%s · PakAG Docs',
+    default: 'PakAG Engineering Docs',
   },
   description:
-    "Technical documentation for PakAG backend, frontend, operations, and onboarding.",
+    'Technical documentation for PakAG backend, frontend, operations, and onboarding.',
 };
 
 type LayoutProps = Readonly<{
@@ -32,7 +32,7 @@ type LayoutProps = Readonly<{
 
 export default async function LangLayout({ children, params }: LayoutProps) {
   const { lang } = await params;
-  const locale = (lang as SupportedLocale) ?? "en";
+  const locale = (lang as SupportedLocale) ?? 'en';
   const dict = getDictionary(locale);
   const nav = navItems(dict.navigation);
   const searchEntries = buildSearchIndex(locale);
@@ -95,7 +95,7 @@ export default async function LangLayout({ children, params }: LayoutProps) {
           {/* Page content */}
           <main
             className="flex-1 px-4 py-6 md:px-8 lg:px-12 w-full"
-            style={{ viewTransitionName: "page-content" }}
+            style={{ viewTransitionName: 'page-content' }}
           >
             <div className="docs-layout">
               <div className="docs-content">{children}</div>

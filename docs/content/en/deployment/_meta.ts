@@ -1,3 +1,3 @@
 export default {
-  index: "Deployment notes",
+  index: 'Deployment notes',
 };

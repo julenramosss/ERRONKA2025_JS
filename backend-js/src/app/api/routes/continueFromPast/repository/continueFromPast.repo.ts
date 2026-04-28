@@ -1,10 +1,10 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
-import { PendingPastRouteRow } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { PendingPastRouteRow } from '../types';
 
 export interface TodayRouteRow extends RowDataPacket {
   id: number;
-  status: "planned" | "in_progress" | "completed";
+  status: 'planned' | 'in_progress' | 'completed';
 }
 
 export async function findTodayRoute(
@@ -12,7 +12,7 @@ export async function findTodayRoute(
 ): Promise<TodayRouteRow | null> {
   const db = await connect();
   const [rows] = await db.query<TodayRouteRow[]>(
-    "SELECT id, status FROM routes WHERE user_id = ? AND route_date = CURRENT_DATE LIMIT 1",
+    'SELECT id, status FROM routes WHERE user_id = ? AND route_date = CURRENT_DATE LIMIT 1',
     [userId]
   );
   return rows[0] ?? null;

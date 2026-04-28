@@ -1,6 +1,6 @@
-import { PackageStatus } from "@/app/types";
-import { listAllLogsRepo } from "../repository/listAllLogs.repo";
-import { ListAllLogsDto, ListAllLogsResult } from "../types";
+import { PackageStatus } from '@/app/types';
+import { listAllLogsRepo } from '../repository/listAllLogs.repo';
+import { ListAllLogsDto, ListAllLogsResult } from '../types';
 
 export async function listAllLogsService(
   filters: ListAllLogsDto

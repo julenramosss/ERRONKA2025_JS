@@ -1,17 +1,14 @@
-"use client";
+'use client';
 
-import { Icons } from "../../../../components/icons";
+import { Icons } from '../../../../components/icons';
 import {
   useContinueFromPast,
   usePendingPastRoute,
-} from "../../../../hooks/routes/usePendingPastRoute";
-import {
-  formatDate,
-  normalizeDateKey,
-} from "../../../../utils/date.utils";
-import { usePreferences } from "../../../../hooks/usePreferences";
-import { getActionErrorMessage } from "../hooks/routeUtils";
-import { useState } from "react";
+} from '../../../../hooks/routes/usePendingPastRoute';
+import { formatDate, normalizeDateKey } from '../../../../utils/date.utils';
+import { usePreferences } from '../../../../hooks/usePreferences';
+import { getActionErrorMessage } from '../hooks/routeUtils';
+import { useState } from 'react';
 
 export function EmptyRouteState() {
   const pendingQuery = usePendingPastRoute();

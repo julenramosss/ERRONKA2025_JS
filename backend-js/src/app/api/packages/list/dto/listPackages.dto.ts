@@ -1,20 +1,20 @@
-import { isPackageValidStatus } from "@/app/lib/dto";
-import { ValidationError } from "@/app/lib/errors";
-import { ListPackagesFilters } from "../types";
+import { isPackageValidStatus } from '@/app/lib/dto';
+import { ValidationError } from '@/app/lib/errors';
+import { ListPackagesFilters } from '../types';
 
 export function listPackagesDto(url: URL): ListPackagesFilters {
   const params = url.searchParams;
 
-  const statusRaw = params.get("status");
-  const assignedToRaw = params.get("assigned_to");
-  const cityRaw = params.get("city");
-  const pageRaw = params.get("page");
-  const limitRaw = params.get("limit");
+  const statusRaw = params.get('status');
+  const assignedToRaw = params.get('assigned_to');
+  const cityRaw = params.get('city');
+  const pageRaw = params.get('page');
+  const limitRaw = params.get('limit');
 
-  let status: ListPackagesFilters["status"];
+  let status: ListPackagesFilters['status'];
   if (statusRaw !== null) {
     if (!isPackageValidStatus(statusRaw))
-      throw new ValidationError("status must be a valid package status");
+      throw new ValidationError('status must be a valid package status');
     status = statusRaw;
   }
 
@@ -22,7 +22,7 @@ export function listPackagesDto(url: URL): ListPackagesFilters {
   if (assignedToRaw !== null) {
     const parsed = parseInt(assignedToRaw, 10);
     if (isNaN(parsed) || parsed < 1)
-      throw new ValidationError("assigned_to must be a positive integer");
+      throw new ValidationError('assigned_to must be a positive integer');
     assigned_to = parsed;
   }
 

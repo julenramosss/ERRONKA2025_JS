@@ -1,14 +1,14 @@
-"use client";
-import { Skeleton } from "boneyard-js/react";
-import { PackagesGrid } from "./components/PackagesGrid";
-import { PackagesHeader } from "./components/PackagesHeader";
-import { PackagesTable } from "./components/PackagesTable";
+'use client';
+import { Skeleton } from 'boneyard-js/react';
+import { PackagesGrid } from './components/PackagesGrid';
+import { PackagesHeader } from './components/PackagesHeader';
+import { PackagesTable } from './components/PackagesTable';
 import {
   PackagesGridLoader,
   PackagesHeaderLoader,
   PackagesTableLoader,
-} from "./components/loaders/Packages.loader";
-import { useMyPackagesPage } from "./hooks/useMyPackagesPage";
+} from './components/loaders/Packages.loader';
+import { useMyPackagesPage } from './hooks/useMyPackagesPage';
 
 export default function MyPackagesPage() {
   const {
@@ -46,11 +46,11 @@ export default function MyPackagesPage() {
         name="packages-list"
         loading={isLoading}
         fallback={
-          view === "list" ? <PackagesTableLoader /> : <PackagesGridLoader />
+          view === 'list' ? <PackagesTableLoader /> : <PackagesGridLoader />
         }
       >
         <div className="tour-packages-table">
-          {view === "list" ? (
+          {view === 'list' ? (
             <PackagesTable packages={filtered} />
           ) : (
             <PackagesGrid packages={filtered} />

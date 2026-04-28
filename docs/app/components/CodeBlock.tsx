@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useRef, useState } from "react";
-import type { ComponentProps } from "react";
+import { useRef, useState } from 'react';
+import type { ComponentProps } from 'react';
 
-export function CodeBlock({ children, ...props }: ComponentProps<"pre">) {
+export function CodeBlock({ children, ...props }: ComponentProps<'pre'>) {
   const [copied, setCopied] = useState(false);
   const preRef = useRef<HTMLPreElement>(null);
 
   const handleCopy = async () => {
-    const text = preRef.current?.textContent ?? "";
+    const text = preRef.current?.textContent ?? '';
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -27,7 +27,7 @@ export function CodeBlock({ children, ...props }: ComponentProps<"pre">) {
         onClick={handleCopy}
         className="code-copy-btn"
         aria-label="Copy code"
-        title={copied ? "Copied!" : "Copy"}
+        title={copied ? 'Copied!' : 'Copy'}
       >
         {copied ? (
           <svg

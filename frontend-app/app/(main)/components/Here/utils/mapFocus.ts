@@ -1,11 +1,11 @@
-import type { AnimationFrameRef, Coordinates } from "../types";
+import type { AnimationFrameRef, Coordinates } from '../types';
 import {
   MAP_FOCUS_ANIMATION_MS,
   MAP_FOCUS_OUT_PHASE,
   MAP_FOCUS_OUT_ZOOM,
   MAP_ZOOM,
-} from "./mapConstants";
-import { easeInOutCubic, easeOutCubic, lerp } from "./math";
+} from './mapConstants';
+import { easeInOutCubic, easeOutCubic, lerp } from './math';
 
 export function focusMapOnCoordinates(
   map: HereMapsMap,
@@ -23,7 +23,7 @@ export function focusMapOnCoordinates(
     animate
   );
 
-  if (typeof map.setRotation === "function") {
+  if (typeof map.setRotation === 'function') {
     map.setRotation(0, false);
   }
 }

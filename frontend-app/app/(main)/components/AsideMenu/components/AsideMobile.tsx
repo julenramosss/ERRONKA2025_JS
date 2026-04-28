@@ -1,21 +1,14 @@
-"use client";
-import { Icons } from "../../../../components/icons";
-import { PakLogo } from "../../../../components/PackLogo";
-import { USER_ROLES } from "../../../../utils/types";
-import { useMenuMobile } from "../hooks/useMenuMobile";
-import { MenuOptions } from "./MenuOptions";
+'use client';
+import { Icons } from '../../../../components/icons';
+import { PakLogo } from '../../../../components/PackLogo';
+import { USER_ROLES } from '../../../../utils/types';
+import { useMenu } from '../hooks/useMenu';
+import { useMenuMobile } from '../hooks/useMenuMobile';
+import { MenuOptions } from './MenuOptions';
 
 export function AsideMobile() {
-  const {
-    fullName,
-    userName,
-    userSurname,
-    role,
-    isOpen,
-    onOpen,
-    onClose,
-    onClickLogout,
-  } = useMenuMobile();
+  const { isOpen, onOpen, onClose } = useMenuMobile();
+  const { fullName, userName, userSurname, role, onClickLogout } = useMenu();
 
   return (
     <>
@@ -39,7 +32,7 @@ export function AsideMobile() {
       {/* Drawer */}
       <aside
         className={`md:hidden fixed top-0 left-0 z-50 h-full w-60 flex flex-col gap-5 bg-bg-surface border-r border-border shadow-xl transition-transform duration-200 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <header className="w-full py-4 px-4 border-b border-border flex items-center justify-between">
@@ -55,7 +48,7 @@ export function AsideMobile() {
 
         <nav className="w-full flex flex-col gap-2 px-2">
           <h3 className="px-4 text-[10px] text-text-disabled font-bold uppercase tracking-wide">
-            {role === USER_ROLES.admin ? "ADMINISTRATZAILEA" : "DISTRIBUIDOREA"}
+            {role === USER_ROLES.admin ? 'ADMINISTRATZAILEA' : 'DISTRIBUIDOREA'}
           </h3>
           <MenuOptions onClose={onClose} />
         </nav>
@@ -66,7 +59,7 @@ export function AsideMobile() {
               className="w-10 h-10 shrink-0 rounded-full flex items-center justify-center text-sm text-white font-bold"
               style={{
                 background:
-                  "linear-gradient(135deg, #3b0764 0%, #6b21a8 50%, #7c3aed 100%)",
+                  'linear-gradient(135deg, #3b0764 0%, #6b21a8 50%, #7c3aed 100%)',
               }}
             >
               {userName.slice(0, 1)}
@@ -74,18 +67,18 @@ export function AsideMobile() {
             </span>
             <div className="flex flex-col gap-2 items-start justify-between min-w-0">
               <p className="text-xs font-medium truncate">
-                {fullName.split(" ").slice(0, 2).join(" ")}
+                {fullName.split(' ').slice(0, 2).join(' ')}
               </p>
               <span
                 className={`border text-[9px] rounded font-semibold text-center uppercase px-1 py-0.5 ${
                   role === USER_ROLES.admin
-                    ? "border-border-admin bg-bg-admin text-text-admin"
-                    : "border-border-focus bg-accent-subtle text-text-secondary"
+                    ? 'border-border-admin bg-bg-admin text-text-admin'
+                    : 'border-border-focus bg-accent-subtle text-text-secondary'
                 }`}
               >
                 {role === USER_ROLES.admin
-                  ? "ADMINISTRATZAILEA"
-                  : "DISTRIBUIDOREA"}
+                  ? 'ADMINISTRATZAILEA'
+                  : 'DISTRIBUIDOREA'}
               </span>
             </div>
             <button

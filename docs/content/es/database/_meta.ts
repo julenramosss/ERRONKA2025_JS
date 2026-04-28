@@ -1,3 +1,3 @@
 export default {
-  index: "Base de datos",
+  index: 'Base de datos',
 };

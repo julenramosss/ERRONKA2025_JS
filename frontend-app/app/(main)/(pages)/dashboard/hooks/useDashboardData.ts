@@ -1,8 +1,8 @@
-import { useMe } from "../../../../hooks/auth/useMe";
-import { useMyPackages } from "../../../../hooks/packages/useMyPackages";
-import { usePreferences } from "../../../../hooks/usePreferences";
-import { formatDate } from "../../../../utils/date.utils";
-import { PACKAGE_STATUSES } from "../../../../utils/types";
+import { useMe } from '../../../../hooks/auth/useMe';
+import { useMyPackages } from '../../../../hooks/packages/useMyPackages';
+import { usePreferences } from '../../../../hooks/usePreferences';
+import { formatDate } from '../../../../utils/date.utils';
+import { PACKAGE_STATUSES } from '../../../../utils/types';
 
 export function useDashboardData() {
   const { data: userData, isLoading: isUserLoading } = useMe();

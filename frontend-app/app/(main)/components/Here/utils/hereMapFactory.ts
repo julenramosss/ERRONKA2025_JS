@@ -1,4 +1,4 @@
-import type { Coords } from "../types";
+import type { Coords } from '../types';
 
 export function createHerePlatform(apiKey: string): HerePlatform | null {
   const H = window.H as HereMapsNamespace | undefined;
@@ -25,7 +25,9 @@ export function createRasterHereMap({
   const layers = platform.createDefaultLayers();
   // Raster tiles only work correctly with P2D engine.
   // When P2D is unavailable, Tangram (vector renderer) is default → must use vector tiles.
-  const baseLayer = engineType ? layers.raster.normal.map : layers.vector.normal.map;
+  const baseLayer = engineType
+    ? layers.raster.normal.map
+    : layers.vector.normal.map;
 
   const options: HereMapOptions = {
     zoom,

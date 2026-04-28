@@ -1,5 +1,5 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket } from "mysql2/promise";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket } from 'mysql2/promise';
 
 interface RouteHeaderRow extends RowDataPacket {
   id: number;

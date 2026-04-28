@@ -1,6 +1,6 @@
-import { queryOptions } from "@tanstack/react-query";
-import { getTracking } from "../../lib/api/tracking-api";
-import { trackingKeys } from "../keys/tracking.keys";
+import { queryOptions } from '@tanstack/react-query';
+import { getTracking } from '../../lib/api/tracking-api';
+import { trackingKeys } from '../keys/tracking.keys';
 
 const STALE_TIME = 10 * 60 * 1000;
 

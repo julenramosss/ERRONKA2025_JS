@@ -1,4 +1,4 @@
-import { RowDataPacket } from "mysql2/promise";
+import { RowDataPacket } from 'mysql2/promise';
 
 export interface ChangeMyPwdDto {
   currentPassword: string;

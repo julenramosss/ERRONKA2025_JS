@@ -1,3 +1,3 @@
 export default {
-  index: "Endpoint catalog",
+  index: 'Endpoint catalog',
 };

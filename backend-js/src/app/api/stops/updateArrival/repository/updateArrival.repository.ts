@@ -1,6 +1,6 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import { StopWithRoute, UpdatedStop } from "../types";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import { StopWithRoute, UpdatedStop } from '../types';
 
 interface StopRow extends RowDataPacket {
   id: number;
@@ -21,7 +21,9 @@ interface UpdatedStopRow extends RowDataPacket {
   actual_arrival: string | null;
 }
 
-export async function findStopWithRoute(stopId: number): Promise<StopWithRoute | null> {
+export async function findStopWithRoute(
+  stopId: number
+): Promise<StopWithRoute | null> {
   const db = await connect();
   const [rows] = await db.query<StopRow[]>(
     `SELECT rs.id, rs.route_id, rs.package_id, rs.stop_order,
@@ -38,12 +40,14 @@ export async function findStopWithRoute(stopId: number): Promise<StopWithRoute |
 export async function markActualArrival(stopId: number): Promise<void> {
   const db = await connect();
   await db.query<ResultSetHeader>(
-    "UPDATE route_stops SET actual_arrival = TIME(NOW()) WHERE id = ?",
+    'UPDATE route_stops SET actual_arrival = TIME(NOW()) WHERE id = ?',
     [stopId]
   );
 }
 
-export async function findStopById(stopId: number): Promise<UpdatedStop | null> {
+export async function findStopById(
+  stopId: number
+): Promise<UpdatedStop | null> {
   const db = await connect();
   const [rows] = await db.query<UpdatedStopRow[]>(
     `SELECT id, route_id, package_id, stop_order, estimated_arrival, actual_arrival

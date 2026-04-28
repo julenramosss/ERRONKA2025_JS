@@ -1,19 +1,19 @@
-import type { ReactNode } from "react";
-import { Icons } from "../../../../../components/icons";
-import { formatDate } from "../../../../../utils/date.utils";
-import { usePreferences } from "../../../../../hooks/usePreferences";
-import type { DetailRowProps, PackageInfoCardProps } from "../types";
-import { StatusBadge } from "../../../../components/StatusBadge";
+import type { ReactNode } from 'react';
+import { Icons } from '../../../../../components/icons';
+import { formatDate } from '../../../../../utils/date.utils';
+import { usePreferences } from '../../../../../hooks/usePreferences';
+import type { DetailRowProps, PackageInfoCardProps } from '../types';
+import { StatusBadge } from '../../../../components/StatusBadge';
 
 function DetailRow({ label, value, icon, span }: DetailRowProps) {
   return (
-    <div className={span ? "sm:col-span-2" : ""}>
+    <div className={span ? 'sm:col-span-2' : ''}>
       <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-text-disabled mb-1.5">
         {icon as ReactNode}
         {label}
       </div>
       <div className="text-sm font-medium text-text-primary">
-        {value !== null && value !== undefined && value !== "" ? value : "—"}
+        {value !== null && value !== undefined && value !== '' ? value : '—'}
       </div>
     </div>
   );
@@ -63,7 +63,9 @@ export function PackageInfoCard({ pkg }: PackageInfoCardProps) {
         />
         <DetailRow
           label="ETA"
-          value={pkg.estimated_delivery ? formatDate(pkg.estimated_delivery) : "—"}
+          value={
+            pkg.estimated_delivery ? formatDate(pkg.estimated_delivery) : '—'
+          }
           icon={<Icons.Clock size={12} />}
         />
       </div>

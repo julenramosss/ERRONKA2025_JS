@@ -1,6 +1,6 @@
-import { NotFoundError } from "@/app/lib/errors";
-import { GetMyDailyRouteResult } from "../types";
-import { findRouteWithStops } from "../repository/getMyDaily.repository";
+import { NotFoundError } from '@/app/lib/errors';
+import { GetMyDailyRouteResult } from '../types';
+import { findRouteWithStops } from '../repository/getMyDaily.repository';
 
 export async function getMyDailyService(
   userId: number,

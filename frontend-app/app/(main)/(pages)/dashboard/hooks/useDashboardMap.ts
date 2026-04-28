@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { AssignedPackageLatLng } from "../types";
-import { usePreferences } from "../../../../hooks/usePreferences";
-import type { PackageWithAddress } from "../../../../utils/types/api/package.types";
+import { useEffect, useRef, useState } from 'react';
+import { AssignedPackageLatLng } from '../types';
+import { usePreferences } from '../../../../hooks/usePreferences';
+import type { PackageWithAddress } from '../../../../utils/types/api/package.types';
 
 export function useDashboardMap() {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -35,7 +35,7 @@ export function useDashboardMap() {
 
       window.scrollTo({
         top: scrollTop,
-        behavior: animations === "off" ? "auto" : "smooth",
+        behavior: animations === 'off' ? 'auto' : 'smooth',
       });
     }, 400);
 

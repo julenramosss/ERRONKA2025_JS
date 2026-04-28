@@ -1,8 +1,8 @@
 export const SETTINGS_ROUTES = {
-  general: "general",
-  security: "security",
-  appearance: "appearance",
-  documentation: "documentation",
+  general: 'general',
+  security: 'security',
+  appearance: 'appearance',
+  documentation: 'documentation',
 } as const;
 
 export type SettingsRoute =

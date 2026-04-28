@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { AppProviders } from "./providers/AppProviders";
-import "./globals.css";
-import { RouteGuard } from "./components/RouteGuard";
+import type { Metadata } from 'next';
+import { AppProviders } from './providers/AppProviders';
+import './globals.css';
+import { RouteGuard } from './components/RouteGuard';
 
 export const metadata: Metadata = {
-  title: "pakAG",
-  description: "pakAG delivery tracking",
+  title: 'pakAG',
+  description: 'pakAG delivery tracking',
 };
 
 export default function RootLayout({

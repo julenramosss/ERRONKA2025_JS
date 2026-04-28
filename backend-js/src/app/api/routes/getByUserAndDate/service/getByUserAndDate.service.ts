@@ -1,6 +1,6 @@
-import { NotFoundError } from "@/app/lib/errors";
-import { GetByUserAndDateResult } from "../types";
-import { findRouteWithStops } from "../repository/getByUserAndDate.repository";
+import { NotFoundError } from '@/app/lib/errors';
+import { GetByUserAndDateResult } from '../types';
+import { findRouteWithStops } from '../repository/getByUserAndDate.repository';
 
 export async function getByUserAndDateService(
   userId: number,
@@ -8,7 +8,8 @@ export async function getByUserAndDateService(
 ): Promise<GetByUserAndDateResult> {
   const data = await findRouteWithStops(userId, date);
 
-  if (!data) throw new NotFoundError(`No route found for user ${userId} on ${date}`);
+  if (!data)
+    throw new NotFoundError(`No route found for user ${userId} on ${date}`);
 
   const stops = data.stops.map((s) => ({
     id: s.id,
@@ -28,5 +29,8 @@ export async function getByUserAndDateService(
     },
   }));
 
-  return { route: { id: data.route.id, route_date: data.route.route_date }, stops };
+  return {
+    route: { id: data.route.id, route_date: data.route.route_date },
+    stops,
+  };
 }

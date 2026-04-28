@@ -1,11 +1,11 @@
-import { Pool, createPool } from "mysql2/promise";
+import { Pool, createPool } from 'mysql2/promise';
 import {
   mysql_database,
   mysql_host,
   mysql_password,
   mysql_port,
   mysql_user,
-} from "./envConfig";
+} from './envConfig';
 
 let pool: Pool | null = null;
 

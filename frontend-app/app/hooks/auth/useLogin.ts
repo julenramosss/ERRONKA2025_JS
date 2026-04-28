@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { login } from "../../lib/api/auth-api";
-import { setAccessToken } from "../../lib/api/helpers/auth-token";
-import { AppError } from "../../utils/types/api/common.types";
-import { LoginRequest, LoginResponse } from "../../utils/types/api/auth.types";
-import { meQueryOptions } from "../../query/options/auth.options";
-import { authKeys } from "../../query/keys/auth.keys";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { login } from '../../lib/api/auth-api';
+import { setAccessToken } from '../../lib/api/helpers/auth-token';
+import { AppError } from '../../utils/types/api/common.types';
+import { LoginRequest, LoginResponse } from '../../utils/types/api/auth.types';
+import { meQueryOptions } from '../../query/options/auth.options';
+import { authKeys } from '../../query/keys/auth.keys';
 
 export function useLogin() {
   const queryClient = useQueryClient();

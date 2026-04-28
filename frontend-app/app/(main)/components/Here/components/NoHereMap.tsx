@@ -1,12 +1,12 @@
-import { forwardRef } from "react";
-import type { NoHereMapProps } from "../types";
+import { forwardRef } from 'react';
+import type { NoHereMapProps } from '../types';
 
 export const NoHereMap = forwardRef<HTMLDivElement, NoHereMapProps>(
   function NoHereMap({ height }, ref) {
     return (
       <div
         ref={ref}
-        style={{ width: "100%", height }}
+        style={{ width: '100%', height }}
         className="relative flex items-center justify-center overflow-hidden rounded-xl bg-bg-darkest"
       >
         <svg
@@ -44,14 +44,14 @@ export const NoHereMap = forwardRef<HTMLDivElement, NoHereMapProps>(
         <div
           className="relative z-10 flex flex-col items-center gap-2 rounded-xl px-5 py-3"
           style={{
-            background: "rgba(35,29,53,0.9)",
-            border: "1px solid var(--border-normal)",
+            background: 'rgba(35,29,53,0.9)',
+            border: '1px solid var(--border-normal)',
           }}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6"
-            style={{ color: "var(--accent-light)" }}
+            style={{ color: 'var(--accent-light)' }}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

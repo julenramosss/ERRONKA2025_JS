@@ -1,4 +1,4 @@
-import { RouteStatus } from "../updateStatus/types";
+import { RouteStatus } from '../updateStatus/types';
 
 export interface PendingPastRouteRow {
   id: number;

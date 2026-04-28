@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { Skeleton } from "boneyard-js/react";
-import { useHistoryPage } from "./hooks/useHistoryPage";
-import { HistoryHeader } from "./components/HistoryHeader";
-import { HistoryStats } from "./components/HistoryStats";
-import { HistoryChart } from "./components/HistoryChart";
-import { HistoryList } from "./components/HistoryList";
-import { HistoryLoader } from "./components/loaders/History.loader";
+import { Skeleton } from 'boneyard-js/react';
+import { useHistoryPage } from './hooks/useHistoryPage';
+import { HistoryHeader } from './components/HistoryHeader';
+import { HistoryStats } from './components/HistoryStats';
+import { HistoryChart } from './components/HistoryChart';
+import { HistoryList } from './components/HistoryList';
+import { HistoryLoader } from './components/loaders/History.loader';
 
 export default function HistoryPage() {
   const {

@@ -1,3 +1,3 @@
 export default {
-  index: "Sistemaren arkitektura",
+  index: 'Sistemaren arkitektura',
 };

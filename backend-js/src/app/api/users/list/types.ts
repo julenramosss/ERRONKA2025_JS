@@ -1,5 +1,5 @@
-import { UserRole } from "@/app/types";
-import { RowDataPacket } from "mysql2";
+import { UserRole } from '@/app/types';
+import { RowDataPacket } from 'mysql2';
 
 export interface UserListFilters {
   role?: UserRole;

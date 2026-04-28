@@ -1,6 +1,6 @@
-import { PackageStatus } from "@/app/types";
-import type { PackageWithAddress } from "../types";
-import { PackageStatusChange } from "../../../lib/packageStatus/types";
+import { PackageStatus } from '@/app/types';
+import type { PackageWithAddress } from '../types';
+import { PackageStatusChange } from '../../../lib/packageStatus/types';
 
 export type { PackageWithAddress };
 

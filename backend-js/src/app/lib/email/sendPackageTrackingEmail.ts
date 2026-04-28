@@ -1,10 +1,10 @@
-import { PACKAGE_STATUSES, SendPackageTrackingEmailParams } from "@/app/types";
-import { emailService } from "./email.service";
+import { PACKAGE_STATUSES, SendPackageTrackingEmailParams } from '@/app/types';
+import { emailService } from './email.service';
 
 function formatEmailDateTime(date: Date): string {
-  return new Intl.DateTimeFormat("eu-ES", {
-    dateStyle: "medium",
-    timeStyle: "short",
+  return new Intl.DateTimeFormat('eu-ES', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
   }).format(date);
 }
 
@@ -27,7 +27,7 @@ export async function sendPackageTrackingEmail(
 
   if (packageStatus === PACKAGE_STATUSES.pending) {
     if (!trackingUrl) {
-      throw new Error("Tracking URL is required for pending package emails");
+      throw new Error('Tracking URL is required for pending package emails');
     }
 
     await emailService.sendPendingEmail({
@@ -40,7 +40,7 @@ export async function sendPackageTrackingEmail(
 
   if (packageStatus === PACKAGE_STATUSES.assigned) {
     if (!trackingUrl) {
-      throw new Error("Tracking URL is required for assigned package emails");
+      throw new Error('Tracking URL is required for assigned package emails');
     }
 
     await emailService.sendAssignedEmail({
@@ -56,8 +56,8 @@ export async function sendPackageTrackingEmail(
     await emailService.sendInTransitEmail({
       to: recipientEmail,
       recipientName,
-      distributorName: distributorName ?? "PakAG banatzailea",
-      estimatedDelivery: estimatedDelivery ?? "Seguraski gaur",
+      distributorName: distributorName ?? 'PakAG banatzailea',
+      estimatedDelivery: estimatedDelivery ?? 'Seguraski gaur',
       trackingUrl,
     });
     return;

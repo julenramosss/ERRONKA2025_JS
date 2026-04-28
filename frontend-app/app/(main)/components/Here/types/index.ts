@@ -1,11 +1,11 @@
-import type { Ref } from "react";
+import type { Ref } from 'react';
 
 export type GpsStatus =
-  | "requesting"
-  | "granted"
-  | "denied"
-  | "unavailable"
-  | "arrived";
+  | 'requesting'
+  | 'granted'
+  | 'denied'
+  | 'unavailable'
+  | 'arrived';
 
 export type CoordinateValue = number | string | null | undefined;
 export type Coordinates = { lat: number; lng: number };

@@ -1,17 +1,17 @@
-import axios from "axios";
-import type { AppError } from "../../../utils/types/api/common.types";
-import { isApiErrorResponse } from "./response-helpers";
+import axios from 'axios';
+import type { AppError } from '../../../utils/types/api/common.types';
+import { isApiErrorResponse } from './response-helpers';
 
 export function isAppError(error: unknown): error is AppError {
-  if (typeof error !== "object" || error === null) {
+  if (typeof error !== 'object' || error === null) {
     return false;
   }
 
   const maybeError = error as Partial<AppError>;
 
   return (
-    typeof maybeError.message === "string" &&
-    typeof maybeError.isNetworkError === "boolean"
+    typeof maybeError.message === 'string' &&
+    typeof maybeError.isNetworkError === 'boolean'
   );
 }
 
@@ -25,7 +25,7 @@ export function toAppError(error: unknown): AppError {
     const status = error.response?.status;
     const message = isApiErrorResponse(payload)
       ? payload.error
-      : error.message || "Unexpected API error";
+      : error.message || 'Unexpected API error';
 
     return {
       message,
@@ -43,7 +43,7 @@ export function toAppError(error: unknown): AppError {
   }
 
   return {
-    message: "Unexpected API error",
+    message: 'Unexpected API error',
     isNetworkError: false,
     payload: error,
   };

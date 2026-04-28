@@ -1,10 +1,10 @@
-import { requireAuth } from "@/app/lib/jwt";
-import { handleError, res } from "@/app/lib/response";
-import { USER_ROLES } from "@/app/types";
+import { requireAuth } from '@/app/lib/jwt';
+import { handleError, res } from '@/app/lib/response';
+import { USER_ROLES } from '@/app/types';
 import {
   continueFromPastService,
   findPendingPastRouteForUser,
-} from "./service/continueFromPast.service";
+} from './service/continueFromPast.service';
 
 export async function GET(request: Request) {
   try {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    return handleError("[GET /api/routes/continueFromPast]", error);
+    return handleError('[GET /api/routes/continueFromPast]', error);
   }
 }
 
@@ -31,6 +31,6 @@ export async function POST(request: Request) {
     const result = await continueFromPastService(caller.sub);
     return res.ok(result);
   } catch (error) {
-    return handleError("[POST /api/routes/continueFromPast]", error);
+    return handleError('[POST /api/routes/continueFromPast]', error);
   }
 }

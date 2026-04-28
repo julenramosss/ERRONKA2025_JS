@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
-import { useUpdateArrival } from "../../../../hooks/routes/useUpdateArrival";
-import { useUpdatePackageStatus } from "../../../../hooks/packages/useUpdatePackageStatus";
-import { useUpdateRouteStatus } from "../../../../hooks/routes/useUpdateRouteStatus";
-import type { AppError } from "../../../../utils/types/api/common.types";
-import type { PackageStatus } from "../../../../utils/types/api/package.types";
-import type { RouteStop } from "../../../../utils/types/api/route.types";
-import { isTerminalPackageStatus } from "../constants";
-import { getActionErrorMessage } from "./routeUtils";
-import { pointToString } from "../utils/utils";
+import { useMemo, useState } from 'react';
+import { useMyDailyRoute } from '../../../../hooks/routes/useMyDailyRoute';
+import { useUpdateArrival } from '../../../../hooks/routes/useUpdateArrival';
+import { useUpdatePackageStatus } from '../../../../hooks/packages/useUpdatePackageStatus';
+import { useUpdateRouteStatus } from '../../../../hooks/routes/useUpdateRouteStatus';
+import type { AppError } from '../../../../utils/types/api/common.types';
+import type { PackageStatus } from '../../../../utils/types/api/package.types';
+import type { RouteStop } from '../../../../utils/types/api/route.types';
+import { isTerminalPackageStatus } from '../constants';
+import { getActionErrorMessage } from './routeUtils';
+import { pointToString } from '../utils/utils';
 
-type TerminalStatus = Extract<PackageStatus, "delivered" | "failed">;
+type TerminalStatus = Extract<PackageStatus, 'delivered' | 'failed'>;
 
 const PAKAG_ORIGIN = { lat: 43.1253804, lng: -2.0619009 };
 const originString = `${PAKAG_ORIGIN.lat},${PAKAG_ORIGIN.lng}`;
@@ -40,9 +40,9 @@ export function useRouteStopsList() {
 
   function canUpdateStop(stop: RouteStop): boolean {
     return (
-      routeData?.route.status === "in_progress" &&
+      routeData?.route.status === 'in_progress' &&
       activeStop?.id === stop.id &&
-      stop.package.status === "in_transit"
+      stop.package.status === 'in_transit'
     );
   }
 
@@ -75,11 +75,11 @@ export function useRouteStopsList() {
       if (
         openStops.length === 1 &&
         openStops[0]?.id === stop.id &&
-        routeData?.route.status === "in_progress"
+        routeData?.route.status === 'in_progress'
       ) {
         await updateRouteStatus.mutateAsync({
           routeId: routeData.route.id,
-          payload: { status: "completed" },
+          payload: { status: 'completed' },
         });
       }
     } catch (error) {
@@ -87,9 +87,9 @@ export function useRouteStopsList() {
     }
   }
 
-  const base = "https://www.google.com/maps/dir/?api=1";
+  const base = 'https://www.google.com/maps/dir/?api=1';
   const originParam = `origin=${encodeURIComponent(originString)}`;
-  const travelModeParam = "travelmode=driving";
+  const travelModeParam = 'travelmode=driving';
 
   const orderedStops = [...stops].sort((a, b) => a.stop_order - b.stop_order);
 
@@ -106,16 +106,16 @@ export function useRouteStopsList() {
       ? `&waypoints=${encodeURIComponent(
           intermediateStops
             .map((stop) => pointToString(stop.package.address))
-            .join("|")
+            .join('|')
         )}`
-      : "";
+      : '';
 
   const googleMapsRouteUrl = `${base}&${originParam}&${destinationParam}${waypointsParam}&${travelModeParam}`;
 
   return {
     stops,
     activeStop,
-    routeStatus: routeData?.route.status ?? ("planned" as const),
+    routeStatus: routeData?.route.status ?? ('planned' as const),
     isUpdatingStop:
       updatePackageStatus.isPending ||
       updateArrival.isPending ||

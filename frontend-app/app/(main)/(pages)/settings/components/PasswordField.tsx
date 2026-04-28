@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Icons } from "../../../../components/icons";
+import type { ReactNode } from 'react';
+import { Icons } from '../../../../components/icons';
 
 export function PasswordField({
   label,
@@ -30,7 +30,7 @@ export function PasswordField({
       <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-base px-4 transition-colors focus-within:border-border-focus focus-within:ring-1 focus-within:ring-border-focus">
         <span className="shrink-0 text-text-secondary">{icon}</span>
         <input
-          type={visible ? "text" : "password"}
+          type={visible ? 'text' : 'password'}
           value={value}
           autoComplete={autoComplete}
           onChange={(event) => onChange(event.target.value)}
@@ -41,14 +41,12 @@ export function PasswordField({
           type="button"
           onClick={onToggleVisibility}
           className="shrink-0 rounded-full p-1 text-text-secondary transition-colors hover:text-text-primary cursor-pointer"
-          aria-label={visible ? "Pasahitza ezkutatu" : "Pasahitza erakutsi"}
+          aria-label={visible ? 'Pasahitza ezkutatu' : 'Pasahitza erakutsi'}
         >
           {visible ? <Icons.EyeOff size={18} /> : <Icons.Eye size={18} />}
         </button>
       </div>
-      {helper && (
-        <p className="text-xs text-text-secondary">{helper}</p>
-      )}
+      {helper && <p className="text-xs text-text-secondary">{helper}</p>}
     </div>
   );
 }

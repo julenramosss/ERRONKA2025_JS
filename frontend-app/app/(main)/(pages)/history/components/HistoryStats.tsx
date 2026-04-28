@@ -1,35 +1,35 @@
-import { Icons } from "../../../../components/icons";
-import type { HistoryStatCardProps, HistoryStatsProps } from "../types";
+import { Icons } from '../../../../components/icons';
+import type { HistoryStatCardProps, HistoryStatsProps } from '../types';
 
 export function HistoryStats({ stats }: HistoryStatsProps) {
   const cards: HistoryStatCardProps[] = [
     {
-      label: "Guztira",
+      label: 'Guztira',
       value: stats.total,
       icon: <Icons.Package size={18} />,
-      iconColor: "var(--accent-light)",
-      iconBg: "var(--accent-subtle)",
+      iconColor: 'var(--accent-light)',
+      iconBg: 'var(--accent-subtle)',
     },
     {
-      label: "Entreg.",
+      label: 'Entreg.',
       value: stats.delivered,
       icon: <Icons.Check size={18} />,
-      iconColor: "var(--st-delivered-fg)",
-      iconBg: "var(--st-delivered-bg)",
+      iconColor: 'var(--st-delivered-fg)',
+      iconBg: 'var(--st-delivered-bg)',
     },
     {
-      label: "Huts",
+      label: 'Huts',
       value: stats.failed,
       icon: <Icons.AlertCircle size={18} />,
-      iconColor: "var(--st-failed-fg)",
-      iconBg: "var(--st-failed-bg)",
+      iconColor: 'var(--st-failed-fg)',
+      iconBg: 'var(--st-failed-bg)',
     },
     {
-      label: "Tasa",
+      label: 'Tasa',
       value: `${stats.rate}%`,
       icon: <Icons.TrendingUp size={18} />,
-      iconColor: "var(--accent-light)",
-      iconBg: "var(--accent-subtle)",
+      iconColor: 'var(--accent-light)',
+      iconBg: 'var(--accent-subtle)',
     },
   ];
 

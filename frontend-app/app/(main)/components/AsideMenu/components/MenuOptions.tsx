@@ -1,7 +1,7 @@
-"use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Icons } from "../../../../components/icons";
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Icons } from '../../../../components/icons';
 
 export function MenuOptions({
   isMinimized,
@@ -13,25 +13,25 @@ export function MenuOptions({
   const pathname = usePathname();
 
   const items = [
-    { href: "/dashboard", label: "Dashboard", icon: <Icons.Home size={20} /> },
+    { href: '/dashboard', label: 'Dashboard', icon: <Icons.Home size={20} /> },
     {
-      href: "/myPackages",
-      label: "Nire Paketeak",
+      href: '/myPackages',
+      label: 'Nire Paketeak',
       icon: <Icons.Package size={20} />,
     },
     {
-      href: "/myRoute",
-      label: "Nire Bidea",
+      href: '/myRoute',
+      label: 'Nire Bidea',
       icon: <Icons.Route size={20} />,
     },
     {
-      href: "/history",
-      label: "Historia",
+      href: '/history',
+      label: 'Historia',
       icon: <Icons.History size={20} />,
     },
     {
-      href: "/settings",
-      label: "Ezarpenak",
+      href: '/settings',
+      label: 'Ezarpenak',
       icon: <Icons.Settings size={20} />,
     },
   ];
@@ -46,16 +46,16 @@ export function MenuOptions({
               key={href}
               className={`w-full rounded-md ${
                 isActive
-                  ? "bg-accent-subtle border-l-2 border-border-focus text-accent-light cursor-default"
-                  : "hover:bg-bg-elevated cursor-pointer"
+                  ? 'bg-accent-subtle border-l-2 border-border-focus text-accent-light cursor-default'
+                  : 'hover:bg-bg-elevated cursor-pointer'
               }`}
             >
               <Link
                 onClick={() => onClose && onClose()}
                 href={href}
                 className={`flex text-base font-semibold items-center gap-3 py-2 ${
-                  isMinimized ? "justify-center px-2" : "px-4"
-                } ${isActive ? "cursor-default pointer-events-none" : ""}`}
+                  isMinimized ? 'justify-center px-2' : 'px-4'
+                } ${isActive ? 'cursor-default pointer-events-none' : ''}`}
                 title={isMinimized ? label : undefined}
               >
                 {icon}

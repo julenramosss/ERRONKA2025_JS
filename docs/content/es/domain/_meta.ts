@@ -1,3 +1,3 @@
 export default {
-  index: "Modelo de dominio",
+  index: 'Modelo de dominio',
 };

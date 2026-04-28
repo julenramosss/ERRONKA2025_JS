@@ -1,5 +1,5 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader } from "mysql2";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader } from 'mysql2';
 
 export async function revokeRefreshToken(
   token: string,

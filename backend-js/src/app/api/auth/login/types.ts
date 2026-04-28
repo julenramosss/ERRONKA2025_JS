@@ -1,4 +1,4 @@
-import { UserRole } from "@/app/types";
+import { UserRole } from '@/app/types';
 
 export interface LoginDto {
   email: string;

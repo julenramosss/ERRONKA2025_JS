@@ -1,7 +1,7 @@
-import { queryOptions } from "@tanstack/react-query";
-import { getPackageLogs } from "../../lib/api/logs-api";
-import { logsKeys } from "../keys/logs.keys";
-import type { PackageLogsRequest } from "../../utils/types/api/log.types";
+import { queryOptions } from '@tanstack/react-query';
+import { getPackageLogs } from '../../lib/api/logs-api';
+import { logsKeys } from '../keys/logs.keys';
+import type { PackageLogsRequest } from '../../utils/types/api/log.types';
 
 const STALE_TIME = 10 * 60 * 1000;
 

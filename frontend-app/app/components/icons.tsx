@@ -1,8 +1,8 @@
-import type { ReactElement, SVGProps } from "react";
+import type { ReactElement, SVGProps } from 'react';
 
 type SvgIconProps = Omit<
   SVGProps<SVGSVGElement>,
-  "children" | "d" | "stroke"
+  'children' | 'd' | 'stroke'
 > & {
   size?: number;
   stroke?: number;
@@ -19,7 +19,7 @@ const Icon = ({ d, size = 18, stroke = 2, fill, ...rest }: IconProps) => (
     width={size}
     height={size}
     viewBox="0 0 24 24"
-    fill={fill || "none"}
+    fill={fill || 'none'}
     stroke="currentColor"
     strokeWidth={stroke}
     strokeLinecap="round"

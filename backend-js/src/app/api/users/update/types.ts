@@ -1,5 +1,5 @@
-import { UserRole } from "@/app/types";
-import { RowDataPacket } from "mysql2/promise";
+import { UserRole } from '@/app/types';
+import { RowDataPacket } from 'mysql2/promise';
 
 export interface UpdateUserDto {
   id: number;

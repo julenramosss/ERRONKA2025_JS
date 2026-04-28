@@ -1,10 +1,10 @@
-import { NotFoundError } from "@/app/lib/errors";
-import { selectUserById } from "../repository/getById.repository";
-import { UserDetail } from "../types";
+import { NotFoundError } from '@/app/lib/errors';
+import { selectUserById } from '../repository/getById.repository';
+import { UserDetail } from '../types';
 
 export async function getUserByIdService(id: number): Promise<UserDetail> {
   const row = await selectUserById(id);
-  if (!row) throw new NotFoundError("User not found");
+  if (!row) throw new NotFoundError('User not found');
   return {
     id: row.id,
     name: row.name,

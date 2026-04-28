@@ -1,24 +1,24 @@
-import { PACKAGE_STATUSES } from "@/app/types";
-import { ConflictError, NotFoundError } from "@/app/lib/errors";
-import { applyPackageStatusSideEffects } from "@/app/lib/packageStatus/packageStatusSideEffects.service";
+import { PACKAGE_STATUSES } from '@/app/types';
+import { ConflictError, NotFoundError } from '@/app/lib/errors';
+import { applyPackageStatusSideEffects } from '@/app/lib/packageStatus/packageStatusSideEffects.service';
 import {
   migratePastPendingStopsIntoRoute,
   setRoutePendingPackagesInTransit,
-} from "../../updateStatus/repository/updateRouteStatus.repo";
+} from '../../updateStatus/repository/updateRouteStatus.repo';
 import {
   clearStopArrivalsForPendingPackages,
   findLatestPastPendingRoute,
   findTodayRoute,
   insertTodayRetryRoute,
   setRouteInProgress,
-} from "../repository/continueFromPast.repo";
-import { ContinueFromPastResult, PendingPastRouteRow } from "../types";
+} from '../repository/continueFromPast.repo';
+import { ContinueFromPastResult, PendingPastRouteRow } from '../types';
 
 function todayIso(): string {
   const now = new Date();
   const year = now.getFullYear();
-  const month = `${now.getMonth() + 1}`.padStart(2, "0");
-  const day = `${now.getDate()}`.padStart(2, "0");
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -33,20 +33,20 @@ export async function continueFromPastService(
 ): Promise<ContinueFromPastResult> {
   const todayRoute = await findTodayRoute(userId);
   if (
-    todayRoute?.status === "planned" ||
-    todayRoute?.status === "in_progress"
+    todayRoute?.status === 'planned' ||
+    todayRoute?.status === 'in_progress'
   ) {
-    throw new ConflictError("You already have an active route for today");
+    throw new ConflictError('You already have an active route for today');
   }
 
   const past = await findLatestPastPendingRoute(userId);
   if (!past) {
-    throw new NotFoundError("No past route with undelivered packages");
+    throw new NotFoundError('No past route with undelivered packages');
   }
 
   const routeId = todayRoute?.id ?? (await insertTodayRetryRoute(userId));
 
-  if (todayRoute?.status === "completed") {
+  if (todayRoute?.status === 'completed') {
     await setRouteInProgress(routeId);
   }
 

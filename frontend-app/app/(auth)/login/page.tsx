@@ -1,8 +1,8 @@
-"use client";
-import { PakLogo } from "../../components/PackLogo";
-import { GlowAmbient } from "./components/GlowAmbient";
-import { LoginForm } from "./components/LoginForm";
-import { RightPanel } from "./components/RightPanel";
+'use client';
+import { PakLogo } from '../../components/PackLogo';
+import { GlowAmbient } from './components/GlowAmbient';
+import { LoginForm } from './components/LoginForm';
+import { RightPanel } from './components/RightPanel';
 
 // Login, 2FA, Error pages — with interactive state switcher
 
@@ -10,7 +10,7 @@ export default function LoginPage() {
   return (
     <main
       className="grid grid-cols-1 lg:grid-cols-2 h-screen"
-      style={{ background: "var(--bg-darkest)" }}
+      style={{ background: 'var(--bg-darkest)' }}
     >
       <div className="relative flex w-full items-center justify-between px-6 flex-col p-10 overflow-hidden">
         <GlowAmbient />

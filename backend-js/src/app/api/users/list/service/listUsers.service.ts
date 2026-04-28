@@ -1,5 +1,5 @@
-import { selectUsers } from "../repository/listUsers.repository";
-import { UserListFilters, UserListResult } from "../types";
+import { selectUsers } from '../repository/listUsers.repository';
+import { UserListFilters, UserListResult } from '../types';
 
 export async function listUsersService(
   filters: UserListFilters
@@ -8,16 +8,21 @@ export async function listUsersService(
   const params: unknown[] = [];
 
   if (filters.role) {
-    clauses.push("role = ?");
+    clauses.push('role = ?');
     params.push(filters.role);
   }
 
   if (filters.is_active !== undefined) {
-    clauses.push("is_active = ?");
+    clauses.push('is_active = ?');
     params.push(filters.is_active);
   }
 
-  const { rows, total } = await selectUsers(clauses, params, filters.page, filters.limit);
+  const { rows, total } = await selectUsers(
+    clauses,
+    params,
+    filters.page,
+    filters.limit
+  );
   const users = rows.map((row) => ({
     id: row.id,
     name: row.name,

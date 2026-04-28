@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useChangeMyPwd } from "../../../../hooks/auth/useChangeMyPwd";
+import { useState } from 'react';
+import { useChangeMyPwd } from '../../../../hooks/auth/useChangeMyPwd';
 
 function mapApiMessage(message: string): string {
   switch (message) {
-    case "Current password is incorrect":
-      return "Uneko pasahitza ez da zuzena.";
-    case "new_password must be at least 6 characters":
-      return "Pasahitz berriak gutxienez 6 karaktere izan behar ditu.";
-    case "new_password must be different from current_password":
-      return "Pasahitz berria ezin da unekoaren berdina izan.";
-    case "Password changed successfully":
-      return "Pasahitza ondo eguneratu da.";
+    case 'Current password is incorrect':
+      return 'Uneko pasahitza ez da zuzena.';
+    case 'new_password must be at least 6 characters':
+      return 'Pasahitz berriak gutxienez 6 karaktere izan behar ditu.';
+    case 'new_password must be different from current_password':
+      return 'Pasahitz berria ezin da unekoaren berdina izan.';
+    case 'Password changed successfully':
+      return 'Pasahitza ondo eguneratu da.';
     default:
       return message;
   }
 }
 
 export function useSecuritySettings() {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -57,22 +57,22 @@ export function useSecuritySettings() {
     setSuccessMessage(null);
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setClientError("Hiru eremuak bete pasahitza eguneratzeko.");
+      setClientError('Hiru eremuak bete pasahitza eguneratzeko.');
       return;
     }
 
     if (newPassword.length < 6) {
-      setClientError("Pasahitz berriak gutxienez 6 karaktere izan behar ditu.");
+      setClientError('Pasahitz berriak gutxienez 6 karaktere izan behar ditu.');
       return;
     }
 
     if (currentPassword === newPassword) {
-      setClientError("Pasahitz berria ezin da unekoaren berdina izan.");
+      setClientError('Pasahitz berria ezin da unekoaren berdina izan.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setClientError("Pasahitzak ez datoz bat.");
+      setClientError('Pasahitzak ez datoz bat.');
       return;
     }
 
@@ -82,10 +82,10 @@ export function useSecuritySettings() {
         new_password: newPassword,
       });
 
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setSuccessMessage("Pasahitza ondo eguneratu da.");
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSuccessMessage('Pasahitza ondo eguneratu da.');
     } catch {
       // El error queda expuesto en el mutation para la UI.
     }

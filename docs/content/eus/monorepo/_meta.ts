@@ -1,3 +1,3 @@
 export default {
-  index: "Monorepoaren egitura",
+  index: 'Monorepoaren egitura',
 };

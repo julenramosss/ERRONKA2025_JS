@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { myPackagesQueryOptions } from "../../query/options/packages.options";
+import { useQuery } from '@tanstack/react-query';
+import { myPackagesQueryOptions } from '../../query/options/packages.options';
 
 export function useMyPackages() {
   return useQuery(myPackagesQueryOptions());

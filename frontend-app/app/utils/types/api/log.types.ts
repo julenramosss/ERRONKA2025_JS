@@ -1,5 +1,5 @@
-import type { ApiDateTimeString } from "./common.types";
-import type { PackageStatus } from "./package.types";
+import type { ApiDateTimeString } from './common.types';
+import type { PackageStatus } from './package.types';
 
 export interface PackageLogEntry {
   id: number;

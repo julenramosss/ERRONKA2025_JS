@@ -1,6 +1,6 @@
-import { connect } from "@/app/config/dbConfig";
-import { ResultSetHeader, RowDataPacket } from "mysql2";
-import { UserRole } from "@/app/types";
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { UserRole } from '@/app/types';
 
 export interface RefreshRow extends RowDataPacket {
   id: number;
@@ -29,7 +29,7 @@ export async function findRefreshToken(
 export async function revokeTokenById(id: number): Promise<void> {
   const db = await connect();
   await db.execute<ResultSetHeader>(
-    "UPDATE tokens SET revoked = TRUE WHERE id = ?",
+    'UPDATE tokens SET revoked = TRUE WHERE id = ?',
     [id]
   );
 }

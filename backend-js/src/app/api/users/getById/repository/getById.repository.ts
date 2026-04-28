@@ -1,6 +1,6 @@
-import { connect } from "@/app/config/dbConfig";
-import { RowDataPacket } from "mysql2";
-import { UserRole } from "@/app/types";
+import { connect } from '@/app/config/dbConfig';
+import { RowDataPacket } from 'mysql2';
+import { UserRole } from '@/app/types';
 
 export interface UserDetailRow extends RowDataPacket {
   id: number;

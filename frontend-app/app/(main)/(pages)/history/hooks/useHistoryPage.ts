@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { usePreferences } from "../../../../hooks/usePreferences";
-import { useMyPackages } from "../../../../hooks/packages/useMyPackages";
-import type { PackageWithAddress } from "../../../../utils/types/api/package.types";
+import { useMemo, useState } from 'react';
+import { usePreferences } from '../../../../hooks/usePreferences';
+import { useMyPackages } from '../../../../hooks/packages/useMyPackages';
+import type { PackageWithAddress } from '../../../../utils/types/api/package.types';
 import {
   formatCompactDate,
   formatDayLabel,
@@ -11,13 +11,13 @@ import {
   formatPeriodLabel,
   formatTime,
   toDateKey,
-} from "../../../../utils/date.utils";
+} from '../../../../utils/date.utils';
 import {
   formatCompactGroupSummary,
   formatGroupSummary,
   getRecipientInitial,
   HISTORY_FILTERS,
-} from "../constants";
+} from '../constants';
 import type {
   HistoryChartBar,
   HistoryDayGroup,
@@ -27,13 +27,13 @@ import type {
   HistoryListItem,
   HistoryPeriod,
   HistoryStats,
-} from "../types";
+} from '../types';
 
-const HISTORY_STATUSES = new Set<HistoryFinalStatus>(["delivered", "failed"]);
+const HISTORY_STATUSES = new Set<HistoryFinalStatus>(['delivered', 'failed']);
 type HistoryPackage = PackageWithAddress & { status: HistoryFinalStatus };
 
 function isHistoryFinalStatus(
-  status: PackageWithAddress["status"]
+  status: PackageWithAddress['status']
 ): status is HistoryFinalStatus {
   return HISTORY_STATUSES.has(status as HistoryFinalStatus);
 }
@@ -41,8 +41,8 @@ function isHistoryFinalStatus(
 export function useHistoryPage() {
   const { data: packagesData, isLoading } = useMyPackages();
   const { dateFormat } = usePreferences();
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<HistoryFilterStatus>("all");
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<HistoryFilterStatus>('all');
 
   const allHistory = useMemo<HistoryPackage[]>(
     () =>
@@ -60,9 +60,9 @@ export function useHistoryPage() {
   const stats = useMemo<HistoryStats>(() => {
     const total = allHistory.length;
     const delivered = allHistory.filter(
-      (pkg) => pkg.status === "delivered"
+      (pkg) => pkg.status === 'delivered'
     ).length;
-    const failed = allHistory.filter((pkg) => pkg.status === "failed").length;
+    const failed = allHistory.filter((pkg) => pkg.status === 'failed').length;
     const rate = total > 0 ? Math.round((delivered / total) * 100) : 0;
 
     return { total, delivered, failed, rate };
@@ -74,9 +74,9 @@ export function useHistoryPage() {
         key,
         label,
         count:
-          key === "all"
+          key === 'all'
             ? stats.total
-            : key === "delivered"
+            : key === 'delivered'
               ? stats.delivered
               : stats.failed,
       })),
@@ -88,7 +88,7 @@ export function useHistoryPage() {
       return {
         start: null,
         end: null,
-        label: "Ez dago daturik",
+        label: 'Ez dago daturik',
       };
     }
 
@@ -106,7 +106,7 @@ export function useHistoryPage() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return allHistory.filter((pkg) => {
-      if (filter !== "all" && pkg.status !== filter) return false;
+      if (filter !== 'all' && pkg.status !== filter) return false;
       if (!normalizedQuery) return true;
 
       return (
@@ -130,9 +130,9 @@ export function useHistoryPage() {
 
     return Array.from(map.entries()).map(([dateKey, items]) => {
       const delivered = items.filter(
-        (item) => item.status === "delivered"
+        (item) => item.status === 'delivered'
       ).length;
-      const failed = items.filter((item) => item.status === "failed").length;
+      const failed = items.filter((item) => item.status === 'failed').length;
 
       return {
         dateKey,
@@ -187,8 +187,8 @@ export function useHistoryPage() {
 
       const current = map.get(key)!;
 
-      if (pkg.status === "delivered") current.delivered += 1;
-      if (pkg.status === "failed") current.failed += 1;
+      if (pkg.status === 'delivered') current.delivered += 1;
+      if (pkg.status === 'failed') current.failed += 1;
     }
 
     return Array.from(map.entries())

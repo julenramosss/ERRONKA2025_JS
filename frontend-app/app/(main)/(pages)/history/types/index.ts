@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
-import type { PackageStatus } from "../../../../utils/types/api/package.types";
+import type { ReactNode } from 'react';
+import type { PackageStatus } from '../../../../utils/types/api/package.types';
 
-export type HistoryFilterStatus = "all" | "delivered" | "failed";
-export type HistoryFinalStatus = Extract<PackageStatus, "delivered" | "failed">;
+export type HistoryFilterStatus = 'all' | 'delivered' | 'failed';
+export type HistoryFinalStatus = Extract<PackageStatus, 'delivered' | 'failed'>;
 
 export interface HistoryStats {
   total: number;

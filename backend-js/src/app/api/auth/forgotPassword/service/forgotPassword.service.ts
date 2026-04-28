@@ -1,11 +1,11 @@
-import { emailService } from "@/app/lib/email/email.service";
+import { emailService } from '@/app/lib/email/email.service';
 import {
   findUserByEmail,
   insertResetToken,
   revokeExistingResetTokens,
   isResetPasswordTokenExists,
-} from "../repository/forgotPassword.repo";
-import { reset_base_url, reset_expires_minutes } from "@/app/config/envConfig";
+} from '../repository/forgotPassword.repo';
+import { reset_base_url, reset_expires_minutes } from '@/app/config/envConfig';
 
 export async function forgotPasswordService(email: string): Promise<void> {
   const user = await findUserByEmail(email);

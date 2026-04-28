@@ -1,9 +1,9 @@
-import type { AppError } from "../../../../utils/types/api/common.types";
-import type { Coords } from "../../../components/Here/types";
+import type { AppError } from '../../../../utils/types/api/common.types';
+import type { Coords } from '../../../components/Here/types';
 
 export function requestBrowserPosition(): Promise<Coords> {
-  if (!("geolocation" in navigator)) {
-    return Promise.reject(new Error("Nabigatzaileak ez du GPSa onartzen."));
+  if (!('geolocation' in navigator)) {
+    return Promise.reject(new Error('Nabigatzaileak ez du GPSa onartzen.'));
   }
 
   return new Promise((resolve, reject) => {
@@ -22,13 +22,13 @@ export function requestBrowserPosition(): Promise<Coords> {
 export function getActionErrorMessage(error: unknown): string {
   if (isGeolocationError(error)) {
     if (error.code === error.PERMISSION_DENIED) {
-      return "GPS baimena ukatu da.";
+      return 'GPS baimena ukatu da.';
     }
     if (error.code === error.POSITION_UNAVAILABLE) {
-      return "Ezin izan da kokapena lortu.";
+      return 'Ezin izan da kokapena lortu.';
     }
     if (error.code === error.TIMEOUT) {
-      return "Kokapena lortzea gehiegi luzatu da.";
+      return 'Kokapena lortzea gehiegi luzatu da.';
     }
   }
 
@@ -36,7 +36,7 @@ export function getActionErrorMessage(error: unknown): string {
   if (appError?.message) return appError.message;
 
   if (error instanceof Error) return error.message;
-  return "Ekintza ezin izan da osatu.";
+  return 'Ekintza ezin izan da osatu.';
 }
 
 export function getErrorStatus(error: unknown): number | undefined {
@@ -45,9 +45,9 @@ export function getErrorStatus(error: unknown): number | undefined {
 
 function isGeolocationError(error: unknown): error is GeolocationPositionError {
   return (
-    typeof error === "object" &&
+    typeof error === 'object' &&
     error !== null &&
-    "code" in error &&
-    "message" in error
+    'code' in error &&
+    'message' in error
   );
 }

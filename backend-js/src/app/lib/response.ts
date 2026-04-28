@@ -1,16 +1,16 @@
-import { isDev } from "../config/envConfig";
+import { isDev } from '../config/envConfig';
 import {
   ValidationError,
   NotFoundError,
   UnauthorizedError,
   ForbiddenError,
   ConflictError,
-} from "./errors";
+} from './errors';
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -22,23 +22,23 @@ export const res = {
   ): Response {
     const response = new Response(JSON.stringify(data), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
     });
 
-    const sameSite = isDev ? "Lax" : "None";
-    const secureFlag = isDev ? "" : "; Secure";
+    const sameSite = isDev ? 'Lax' : 'None';
+    const secureFlag = isDev ? '' : '; Secure';
 
     if (cookies) {
       cookies.forEach(({ name, value, httpOnly = false }) => {
-        const cookieStr = `${name}=${value}; Path=/; ${httpOnly ? "HttpOnly; " : ""}SameSite=${sameSite}${secureFlag}`;
-        response.headers.append("Set-Cookie", cookieStr);
+        const cookieStr = `${name}=${value}; Path=/; ${httpOnly ? 'HttpOnly; ' : ''}SameSite=${sameSite}${secureFlag}`;
+        response.headers.append('Set-Cookie', cookieStr);
       });
     }
 
     if (deleteCookies) {
       deleteCookies.forEach((name) => {
         response.headers.append(
-          "Set-Cookie",
+          'Set-Cookie',
           `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=${sameSite}${secureFlag}`
         );
       });
@@ -55,19 +55,19 @@ export const res = {
   validationError(message: string): Response {
     return jsonResponse({ error: message }, 400);
   },
-  unauthorized(message = "Unauthorized"): Response {
+  unauthorized(message = 'Unauthorized'): Response {
     return jsonResponse({ error: message }, 401);
   },
-  forbidden(message = "Forbidden"): Response {
+  forbidden(message = 'Forbidden'): Response {
     return jsonResponse({ error: message }, 403);
   },
-  notFound(message = "Not found"): Response {
+  notFound(message = 'Not found'): Response {
     return jsonResponse({ error: message }, 404);
   },
   conflict(message: string): Response {
     return jsonResponse({ error: message }, 409);
   },
-  serverError(message = "Internal server error"): Response {
+  serverError(message = 'Internal server error'): Response {
     return jsonResponse({ error: message }, 500);
   },
 };

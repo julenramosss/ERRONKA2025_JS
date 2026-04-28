@@ -1,3 +1,3 @@
-import type { PackageWithAddress } from "../types";
+import type { PackageWithAddress } from '../types';
 
 export type { PackageWithAddress };

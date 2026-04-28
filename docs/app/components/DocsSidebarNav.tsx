@@ -1,6 +1,6 @@
-"use client";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+'use client';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface NavItem {
   href: string;
@@ -25,9 +25,9 @@ export function DocsSidebarNav({
     e.preventDefault();
     onClose?.();
 
-    const scrollContainer = document.getElementById("docs-scroll");
+    const scrollContainer = document.getElementById('docs-scroll');
 
-    if (typeof document !== "undefined" && "startViewTransition" in document) {
+    if (typeof document !== 'undefined' && 'startViewTransition' in document) {
       document.startViewTransition(() => {
         scrollContainer?.scrollTo({ top: 0 });
         router.push(href);
@@ -41,9 +41,9 @@ export function DocsSidebarNav({
   return (
     <ul className="flex flex-col gap-0.5">
       {navItems.map(({ href, label }) => {
-        const fullHref = `/${locale}${href === "/" ? "" : href}`;
+        const fullHref = `/${locale}${href === '/' ? '' : href}`;
         const isActive =
-          href === "/"
+          href === '/'
             ? pathname === `/${locale}` || pathname === `/${locale}/`
             : pathname.startsWith(fullHref);
 
@@ -54,13 +54,13 @@ export function DocsSidebarNav({
               onClick={(e) => navigate(e, fullHref)}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-accent-subtle border-l-2 border-border-focus text-accent-light cursor-default pointer-events-none"
-                  : "text-text-secondary hover:text-text-primary hover:bg-bg-elevated"
+                  ? 'bg-accent-subtle border-l-2 border-border-focus text-accent-light cursor-default pointer-events-none'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-bg-elevated'
               }`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                  isActive ? "bg-accent-light" : "bg-text-disabled"
+                  isActive ? 'bg-accent-light' : 'bg-text-disabled'
                 }`}
               />
               {label}

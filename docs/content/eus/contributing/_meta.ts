@@ -1,3 +1,3 @@
 export default {
-  index: "Nola lagundu",
+  index: 'Nola lagundu',
 };

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useQuery } from "@tanstack/react-query";
-import { refreshTokenQueryOptions } from "../query/options/auth.options";
+import { useQuery } from '@tanstack/react-query';
+import { refreshTokenQueryOptions } from '../query/options/auth.options';
 
 /**
  * Keeps the access token fresh by running the refresh query in the background.

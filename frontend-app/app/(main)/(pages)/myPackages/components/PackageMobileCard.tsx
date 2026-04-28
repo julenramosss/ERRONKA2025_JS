@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { Icons } from "../../../../components/icons";
-import { formatListDate } from "../constants";
-import type { PackageMobileCardProps } from "../types";
-import { StatusBadge } from "../../../components/StatusBadge";
+import Link from 'next/link';
+import { Icons } from '../../../../components/icons';
+import { formatListDate } from '../constants';
+import type { PackageMobileCardProps } from '../types';
+import { StatusBadge } from '../../../components/StatusBadge';
 
 export function PackageMobileCard({ pkg }: PackageMobileCardProps) {
   return (

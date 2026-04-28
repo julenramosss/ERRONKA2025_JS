@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore } from 'react';
 import {
   getDefaultTutorialState,
   getTutorialState,
   subscribeTutorialState,
   TutorialState,
-} from "../utils/tutorial.storage";
+} from '../utils/tutorial.storage';
 
 export function useTutorialSeen(pathName: keyof TutorialState): boolean {
   return useSyncExternalStore(

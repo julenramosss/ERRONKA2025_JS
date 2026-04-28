@@ -1,14 +1,14 @@
-"use client";
-import { Icons } from "../../../../components/icons";
-import { CONFIRM_ICON_BG, CONFIRM_LABEL } from "../constants";
-import type { ConfirmModalProps } from "../types";
+'use client';
+import { Icons } from '../../../../components/icons';
+import { CONFIRM_ICON_BG, CONFIRM_LABEL } from '../constants';
+import type { ConfirmModalProps } from '../types';
 
 const CONFIRM_BTN_CLASS: Record<string, string> = {
-  in_transit: "bg-accent hover:bg-accent-hover text-white",
+  in_transit: 'bg-accent hover:bg-accent-hover text-white',
   delivered:
-    "bg-[var(--st-delivered-bg)] text-[var(--st-delivered-fg)] border border-[var(--st-delivered-fg)] hover:opacity-90",
+    'bg-[var(--st-delivered-bg)] text-[var(--st-delivered-fg)] border border-[var(--st-delivered-fg)] hover:opacity-90',
   failed:
-    "bg-[var(--st-failed-bg)] text-[var(--st-failed-fg)] border border-[var(--st-failed-fg)] hover:opacity-90",
+    'bg-[var(--st-failed-bg)] text-[var(--st-failed-fg)] border border-[var(--st-failed-fg)] hover:opacity-90',
 };
 
 export function ConfirmModal({
@@ -36,18 +36,18 @@ export function ConfirmModal({
           <div
             className={`w-14 h-14 rounded-2xl flex items-center justify-center ${iconBg}`}
           >
-            {to === "in_transit" && <Icons.Truck size={22} />}
-            {to === "delivered" && <Icons.Check size={22} />}
-            {to === "failed" && <Icons.AlertCircle size={22} />}
+            {to === 'in_transit' && <Icons.Truck size={22} />}
+            {to === 'delivered' && <Icons.Check size={22} />}
+            {to === 'failed' && <Icons.AlertCircle size={22} />}
           </div>
           <div>
             <h3 className="text-lg font-bold">{label}</h3>
             <p className="text-sm text-text-secondary mt-1">
-              {to === "delivered" &&
+              {to === 'delivered' &&
                 `${pkg.recipient_name}-ri entrega berrestea?`}
-              {to === "in_transit" &&
+              {to === 'in_transit' &&
                 `${pkg.recipient_name}-ri entrega hasten ari zara.`}
-              {to === "failed" && "Paketeak ezin du entregatu izan."}
+              {to === 'failed' && 'Paketeak ezin du entregatu izan.'}
             </p>
           </div>
         </div>
@@ -63,7 +63,7 @@ export function ConfirmModal({
             {pkg.street}, {pkg.city}
           </p>
           <p className="text-text-disabled text-xs">
-            {pkg.weight_kg} kg · {pkg.description ?? "Deskripziorik gabe"}
+            {pkg.weight_kg} kg · {pkg.description ?? 'Deskripziorik gabe'}
           </p>
         </div>
 

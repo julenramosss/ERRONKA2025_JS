@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { Icons } from "../../../../components/icons";
-import { PackageWithAddress } from "../../../../utils/types/api/package.types";
+import Link from 'next/link';
+import { Icons } from '../../../../components/icons';
+import { PackageWithAddress } from '../../../../utils/types/api/package.types';
 
 export function DashboardHeader({
   todayDay,
@@ -18,15 +18,15 @@ export function DashboardHeader({
           {todayDay}
         </h3>
         <h1 className="text-2xl sm:text-3xl font-bold text-text-primary mt-2">
-          Egun on, {userName?.split(" ").slice(0, 1).join(" ")}! 👋
+          Egun on, {userName?.split(' ').slice(0, 1).join(' ')}! 👋
         </h1>
         {todayPackagesData.length > 0 && (
           <p className="text-xs sm:text-base text-text-secondary text-balance mt-5">
-            Gaur{" "}
+            Gaur{' '}
             <span className="font-semibold text-accent-light text-balance">
               {todayPackagesData?.length} pakete pendiente
-            </span>{" "}
-            entregatzeko dituzu{" "}
+            </span>{' '}
+            entregatzeko dituzu{' '}
           </p>
         )}
       </div>

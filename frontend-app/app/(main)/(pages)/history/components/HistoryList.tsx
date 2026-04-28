@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { Icons } from "../../../../components/icons";
-import { StatusBadge } from "../../../components/StatusBadge";
+import { useState } from 'react';
+import Link from 'next/link';
+import { Icons } from '../../../../components/icons';
+import { StatusBadge } from '../../../components/StatusBadge';
 import type {
   HistoryDaySectionProps,
   HistoryListProps,
   HistoryListRowProps,
-} from "../types";
+} from '../types';
 
 export function HistoryList({ groups, total }: HistoryListProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<
@@ -71,14 +71,14 @@ function DaySection({
       <button
         onClick={onToggle}
         className={`flex w-full items-center justify-between gap-3 bg-bg-elevated px-4 py-2.5 text-left transition-colors hover:bg-[rgba(124,58,237,0.04)] sm:px-5 sm:py-3 ${
-          isFirst ? "" : "border-t border-border"
+          isFirst ? '' : 'border-t border-border'
         } border-b border-border`}
       >
         <span className="flex min-w-0 items-center gap-2 text-xs font-semibold uppercase text-text-secondary sm:tracking-[0.12em]">
           <Icons.ChevronDown
             size={14}
             className={`text-accent-light transition-transform duration-200 ${
-              collapsed ? "-rotate-90" : ""
+              collapsed ? '-rotate-90' : ''
             }`}
           />
           <span className="truncate sm:hidden">{group.compactDateLabel}</span>
@@ -110,7 +110,7 @@ function HistoryRow({ item, isLast }: HistoryListRowProps) {
     <Link
       href={item.href}
       className={`block px-4 py-3 transition-colors hover:bg-[rgba(124,58,237,0.05)] sm:px-5 sm:py-4 ${
-        isLast ? "" : "border-b border-border"
+        isLast ? '' : 'border-b border-border'
       }`}
     >
       <div className="md:hidden">

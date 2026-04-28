@@ -1,7 +1,7 @@
 export interface CreateUserDto {
   name: string;
   email: string;
-  role: "admin" | "distributor";
+  role: 'admin' | 'distributor';
 }
 
 export interface CreateUserResponse extends CreateUserDto {

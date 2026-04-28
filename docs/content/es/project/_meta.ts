@@ -1,3 +1,3 @@
 export default {
-  index: "Visión general",
+  index: 'Visión general',
 };

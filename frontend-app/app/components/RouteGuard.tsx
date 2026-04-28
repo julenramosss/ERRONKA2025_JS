@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { getAccessToken } from "../lib/api/helpers/auth-token";
+import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { getAccessToken } from '../lib/api/helpers/auth-token';
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ['/login'];
 
 function isTokenValid(token: string): boolean {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const payload = JSON.parse(atob(token.split('.')[1]));
     return payload.exp * 1000 > Date.now();
   } catch {
     return false;
@@ -28,14 +28,14 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
 
       // Si estás en login y tienes token válido → redirigir a /
       if (isPublicRoute && token && isTokenValid(token)) {
-        router.replace("/");
+        router.replace('/');
         return;
       }
 
       // Si estás en ruta protegida sin token → redirigir a login
       if (!isPublicRoute && (!token || !isTokenValid(token))) {
-        sessionStorage.setItem("redirect_after_login", pathname);
-        router.replace("/login");
+        sessionStorage.setItem('redirect_after_login', pathname);
+        router.replace('/login');
       }
     };
 

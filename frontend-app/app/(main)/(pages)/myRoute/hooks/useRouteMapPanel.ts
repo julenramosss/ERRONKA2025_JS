@@ -1,12 +1,9 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
-import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
-import {
-  normalizeDateKey,
-  toLocalDateKey,
-} from "../../../../utils/date.utils";
-import { isTerminalPackageStatus } from "../constants";
+import { useMemo } from 'react';
+import { useMyDailyRoute } from '../../../../hooks/routes/useMyDailyRoute';
+import { normalizeDateKey, toLocalDateKey } from '../../../../utils/date.utils';
+import { isTerminalPackageStatus } from '../constants';
 
 export function useRouteMapPanel(selectedStopId: number | null) {
   const routeQuery = useMyDailyRoute();

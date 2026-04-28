@@ -1,3 +1,3 @@
 export default {
-  index: "Configuración local",
+  index: 'Configuración local',
 };

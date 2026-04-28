@@ -1,5 +1,5 @@
-import { Icons } from "../../../../components/icons";
-import { useMyRouteHeader } from "../hooks/useMyRouteHeader";
+import { Icons } from '../../../../components/icons';
+import { useMyRouteHeader } from '../hooks/useMyRouteHeader';
 
 export function MyRouteHeader() {
   const {
@@ -21,7 +21,7 @@ export function MyRouteHeader() {
       <div className="flex flex-col gap-4 md:flex-row items-start md:items-center md:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-accent-light">
-            <span>{isToday ? "Gaurko ruta" : "Hurrengo ruta"}</span>
+            <span>{isToday ? 'Gaurko ruta' : 'Hurrengo ruta'}</span>
             <span className="h-1 w-1 rounded-full bg-text-disabled" />
             <span>{routeDateLabel}</span>
           </div>
@@ -50,8 +50,8 @@ export function MyRouteHeader() {
 
       {!isToday && isPlanned && (
         <div className="rounded-lg border border-border bg-bg-surface px-4 py-3 text-sm text-text-secondary">
-          Ruta hau beste egun batekoa da. Planifikatuta dago, baina gaur ezin
-          da hasi.
+          Ruta hau beste egun batekoa da. Planifikatuta dago, baina gaur ezin da
+          hasi.
         </div>
       )}
 

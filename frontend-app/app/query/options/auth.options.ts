@@ -1,7 +1,7 @@
-import { queryOptions } from "@tanstack/react-query";
-import { getMe, refresh } from "../../lib/api/auth-api";
-import { authKeys } from "../keys/auth.keys";
-import { setAccessToken } from "../../lib/api/helpers/auth-token";
+import { queryOptions } from '@tanstack/react-query';
+import { getMe, refresh } from '../../lib/api/auth-api';
+import { authKeys } from '../keys/auth.keys';
+import { setAccessToken } from '../../lib/api/helpers/auth-token';
 
 const ME_STALE_TIME = 10 * 60 * 1000;
 

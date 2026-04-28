@@ -1,3 +1,3 @@
 export default {
-  index: "Datu-basea",
+  index: 'Datu-basea',
 };

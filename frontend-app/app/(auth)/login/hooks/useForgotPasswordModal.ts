@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
-import { useForgotPassword } from "../../../hooks/auth/useForgotPassword";
+import { useEffect, useRef, useState } from 'react';
+import { useForgotPassword } from '../../../hooks/auth/useForgotPassword';
 
 export function useForgotPasswordModal(onClose: () => void) {
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const { isSuccess, isPending, error, isError, mutateAsync } =
     useForgotPassword();
   const emailRef = useRef<HTMLInputElement>(null);
@@ -15,6 +16,7 @@ export function useForgotPasswordModal(onClose: () => void) {
   async function onClickForgotPassword() {
     const email = emailRef.current?.value;
     if (email) {
+      setIsButtonDisabled(true);
       try {
         await mutateAsync(email);
       } catch {
@@ -29,6 +31,7 @@ export function useForgotPasswordModal(onClose: () => void) {
     isPending,
     isError,
     error,
+    isButtonDisabled,
     onClickForgotPassword,
   };
 }

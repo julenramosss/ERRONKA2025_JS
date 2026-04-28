@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useRef, useState } from "react";
-import { usePreferences } from "../../../../hooks/usePreferences";
-import { useMyDailyRoute } from "../../../../hooks/routes/useMyDailyRoute";
-import { ROUTE_STATUSES } from "../../../../utils/types";
-import { getErrorStatus } from "./routeUtils";
+import { useRef, useState } from 'react';
+import { usePreferences } from '../../../../hooks/usePreferences';
+import { useMyDailyRoute } from '../../../../hooks/routes/useMyDailyRoute';
+import { ROUTE_STATUSES } from '../../../../utils/types';
+import { getErrorStatus } from './routeUtils';
 
 export function useMyRoutePage() {
   const routeQuery = useMyDailyRoute();
@@ -27,7 +27,7 @@ export function useMyRoutePage() {
       const scrollTop = window.scrollY + mapRect.top - 96;
       window.scrollTo({
         top: scrollTop,
-        behavior: animations === "off" ? "auto" : "smooth",
+        behavior: animations === 'off' ? 'auto' : 'smooth',
       });
     });
   }

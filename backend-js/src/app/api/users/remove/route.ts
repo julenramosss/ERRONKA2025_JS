@@ -1,8 +1,8 @@
-import { requireAuth } from "@/app/lib/jwt";
-import { handleError, res } from "@/app/lib/response";
-import { USER_ROLES } from "@/app/types";
-import { removeUserDto } from "./dto/remove.dto";
-import { removeUserService } from "./service/remove.service";
+import { requireAuth } from '@/app/lib/jwt';
+import { handleError, res } from '@/app/lib/response';
+import { USER_ROLES } from '@/app/types';
+import { removeUserDto } from './dto/remove.dto';
+import { removeUserService } from './service/remove.service';
 
 export async function DELETE(request: Request) {
   try {
@@ -12,6 +12,6 @@ export async function DELETE(request: Request) {
     await removeUserService(id);
     return res.noContent();
   } catch (error) {
-    return handleError("[DELETE /api/users/remove]", error);
+    return handleError('[DELETE /api/users/remove]', error);
   }
 }

@@ -1,18 +1,18 @@
-import { theme } from "./_theme";
+import { theme } from './_theme';
 import type {
   EmailCta,
   EmailInfoCard,
   EmailLayoutParams,
   EmailProgressStep,
-} from "./types";
+} from './types';
 
 export function escapeHtml(input: string): string {
   return input
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // PakAG package icon (matches PackLogo.tsx)
@@ -23,9 +23,9 @@ function renderProgressSteps(steps: EmailProgressStep[]): string {
 
   const stepCells = steps
     .map((step) => {
-      const isCompleted = step.status === "completed";
-      const isCurrent = step.status === "current";
-      const isError = step.status === "error";
+      const isCompleted = step.status === 'completed';
+      const isCurrent = step.status === 'current';
+      const isError = step.status === 'error';
 
       let dotBorder: string;
       let dotBg: string;
@@ -37,25 +37,25 @@ function renderProgressSteps(steps: EmailProgressStep[]): string {
         dotBorder = theme.status.delivered.fg;
         dotBg = theme.status.delivered.bg;
         labelColor = theme.text.secondary;
-        fontWeight = "500";
+        fontWeight = '500';
         dotInner = `<span style="display:inline-block;color:${theme.status.delivered.fg};font-size:14px;font-weight:700;line-height:1;">&#10003;</span>`;
       } else if (isCurrent) {
         dotBorder = theme.accent.light;
         dotBg = theme.accent.subtle;
         labelColor = theme.text.primary;
-        fontWeight = "700";
+        fontWeight = '700';
         dotInner = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${theme.accent.light};"></span>`;
       } else if (isError) {
         dotBorder = theme.status.failed.fg;
         dotBg = theme.status.failed.bg;
         labelColor = theme.status.failed.fg;
-        fontWeight = "600";
+        fontWeight = '600';
         dotInner = `<span style="display:inline-block;color:${theme.status.failed.fg};font-size:14px;font-weight:700;line-height:1;">&#10007;</span>`;
       } else {
         dotBorder = theme.border.normal;
         dotBg = theme.bg.elevated;
         labelColor = theme.text.muted;
-        fontWeight = "400";
+        fontWeight = '400';
         dotInner = `<span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${theme.border.normal};"></span>`;
       }
 
@@ -63,7 +63,7 @@ function renderProgressSteps(steps: EmailProgressStep[]): string {
         ? `box-shadow:0 0 14px ${theme.accent.light}55;`
         : isError
           ? `box-shadow:0 0 10px ${theme.status.failed.fg}44;`
-          : "";
+          : '';
 
       return `
       <td align="center" valign="top" style="width:${stepWidth};padding:0 3px;">
@@ -82,7 +82,7 @@ function renderProgressSteps(steps: EmailProgressStep[]): string {
         </table>
       </td>`;
     })
-    .join("");
+    .join('');
 
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 28px;">
@@ -153,14 +153,14 @@ function renderInfoCards(cards: EmailInfoCard[]): string {
 
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:0 0 20px;">
-      ${cards.map((card) => renderSingleCard(card)).join("")}
+      ${cards.map((card) => renderSingleCard(card)).join('')}
     </table>`;
 }
 
 function renderCta(cta: EmailCta): string {
   const fallbackHint =
     cta.fallbackHint ??
-    "Botoiak ez badu funtzionatzen, kopiatu eta itsatsi esteka hau zure nabigatzailean:";
+    'Botoiak ez badu funtzionatzen, kopiatu eta itsatsi esteka hau zure nabigatzailean:';
 
   return `
     <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin:4px 0 28px;">
@@ -194,7 +194,7 @@ export function renderEmailLayout(params: EmailLayoutParams): string {
     title,
     preheader,
     statusBadge,
-    greetingLabel = "Kaixo,",
+    greetingLabel = 'Kaixo,',
     greetingName,
     headline,
     paragraphs,
@@ -208,7 +208,7 @@ export function renderEmailLayout(params: EmailLayoutParams): string {
 
   const year = new Date().getFullYear();
   const defaultFooter = [
-    "Mezu hau automatikoki bidali da. Mesedez, ez erantzun helbide honetara.",
+    'Mezu hau automatikoki bidali da. Mesedez, ez erantzun helbide honetara.',
     `&copy; ${year} PakAG &mdash; Tolosako banaketa zerbitzua`,
   ];
   const footer = footerLines ?? defaultFooter;
@@ -218,15 +218,15 @@ export function renderEmailLayout(params: EmailLayoutParams): string {
       (p) =>
         `<p style="margin:0 0 16px;color:${theme.text.secondary};font-size:15px;line-height:1.8;font-family:${theme.font};">${p}</p>`
     )
-    .join("");
+    .join('');
 
   const infoCardsHtml =
-    infoCards && infoCards.length > 0 ? renderInfoCards(infoCards) : "";
-  const ctaHtml = cta ? renderCta(cta) : "";
+    infoCards && infoCards.length > 0 ? renderInfoCards(infoCards) : '';
+  const ctaHtml = cta ? renderCta(cta) : '';
   const progressHtml =
     progressSteps && progressSteps.length > 0
       ? renderProgressSteps(progressSteps)
-      : "";
+      : '';
 
   const heroIconHtml = heroIconSvg
     ? `
@@ -238,7 +238,7 @@ export function renderEmailLayout(params: EmailLayoutParams): string {
         </td>
       </tr>
     </table>`
-    : "";
+    : '';
 
   const secondaryNoteHtml = secondaryNote
     ? `
@@ -249,14 +249,14 @@ export function renderEmailLayout(params: EmailLayoutParams): string {
         </td>
       </tr>
     </table>`
-    : "";
+    : '';
 
   const footerHtml = footer
     .map(
       (line) =>
         `<p style="margin:0 0 4px;color:${theme.text.muted};font-size:11px;line-height:1.7;font-family:${theme.font};">${line}</p>`
     )
-    .join("");
+    .join('');
 
   return `<!DOCTYPE html>
 <html lang="eu">

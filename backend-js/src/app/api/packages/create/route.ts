@@ -1,8 +1,8 @@
-import { requireAuth } from "@/app/lib/jwt";
-import { handleError, res } from "@/app/lib/response";
-import { createPackageDto } from "./dto/createPackage.dto";
-import { createPackageService } from "./service/createPackage.service";
-import { USER_ROLES } from "@/app/types";
+import { requireAuth } from '@/app/lib/jwt';
+import { handleError, res } from '@/app/lib/response';
+import { createPackageDto } from './dto/createPackage.dto';
+import { createPackageService } from './service/createPackage.service';
+import { USER_ROLES } from '@/app/types';
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +15,6 @@ export async function POST(request: Request) {
     );
     return res.created(createdPackage);
   } catch (error) {
-    return handleError("[POST /api/packages/create]", error);
+    return handleError('[POST /api/packages/create]', error);
   }
 }

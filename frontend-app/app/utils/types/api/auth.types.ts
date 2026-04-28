@@ -1,6 +1,6 @@
-import type { ApiDateTimeString } from "./common.types";
+import type { ApiDateTimeString } from './common.types';
 
-export type UserRole = "admin" | "distributor";
+export type UserRole = 'admin' | 'distributor';
 
 export interface AuthUser {
   id: number;
