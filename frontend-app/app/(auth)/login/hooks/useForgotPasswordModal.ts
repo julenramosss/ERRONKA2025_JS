@@ -8,10 +8,10 @@ export function useForgotPasswordModal(onClose: () => void) {
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isSuccess) return;
+    if (!isSuccess && !isButtonDisabled) return;
     const timer = setTimeout(onClose, 4000);
     return () => clearTimeout(timer);
-  }, [isSuccess, onClose]);
+  }, [isSuccess, isButtonDisabled, onClose]);
 
   async function onClickForgotPassword() {
     const email = emailRef.current?.value;

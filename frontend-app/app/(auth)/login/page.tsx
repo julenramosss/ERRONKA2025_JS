@@ -8,10 +8,7 @@ import { RightPanel } from './components/RightPanel';
 
 export default function LoginPage() {
   return (
-    <main
-      className="grid grid-cols-1 lg:grid-cols-2 h-screen"
-      style={{ background: 'var(--bg-darkest)' }}
-    >
+    <main className="grid grid-cols-1 lg:grid-cols-2 h-screen bg-bg-darkest">
       <div className="relative flex w-full items-center justify-between px-6 flex-col p-10 overflow-hidden">
         <GlowAmbient />
 

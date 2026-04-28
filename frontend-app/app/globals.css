@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* ─── Tailwind v4 theme tokens ──────────────────────────────────────────── */
 @theme inline {
@@ -106,8 +106,8 @@
   --sh-glow-sm: 0 0 0 3px rgba(124, 58, 237, 0.18);
 
   /* Type */
-  --ff-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --ff-mono: "JetBrains Mono", ui-monospace, monospace;
+  --ff-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --ff-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 body {
@@ -117,7 +117,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "cv11", "ss01", "ss03";
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
 }
 
 /* ─── Typography ─────────────────────────────────────────────────────────── */
@@ -130,9 +130,9 @@ button {
 }
 
 /* ─── Animations off preference ──────────────────────────────────────────── */
-html[data-animations="off"] *,
-html[data-animations="off"] *::before,
-html[data-animations="off"] *::after {
+html[data-animations='off'] *,
+html[data-animations='off'] *::before,
+html[data-animations='off'] *::after {
   animation: none !important;
   transition-property: none !important;
   transition-duration: 0s !important;
