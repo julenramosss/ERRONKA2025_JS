@@ -35,8 +35,6 @@ export async function createPackageService(
 
   await addPackageIdToToken(createdToken.id, createdPackage.id);
 
-  await createPackageLog(createdPackage);
-
   await applyPackageStatusSideEffects(
     [
       {
