@@ -7,7 +7,6 @@ import {
   addPackageIdToToken,
   createAddress,
   createPackage,
-  createPackageLog,
   createPackageToken,
 } from '../repository/createPackage.repo';
 import { mapsService } from '@/app/lib/maps/maps.service';

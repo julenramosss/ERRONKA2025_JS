@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAccessToken } from './app/lib/jwt';
 import { isDev } from './app/config/envConfig';
-import { UnauthorizedError } from './app/lib/errors';
-import { handleError } from './app/lib/response';
 
 const ALLOWED_ORIGINS = [
   'https://api.tolosaerronka.es',
@@ -79,10 +77,10 @@ export function proxy(request: NextRequest) {
 
   if (!header?.startsWith('Bearer ')) {
     const response = NextResponse.json(
-      handleError(
-        'Authorization header missing or malformed',
-        UnauthorizedError
-      )
+      'Missing or invalid Authorization header',
+      {
+        status: 401,
+      }
     );
     addCorsHeaders(response, origin);
     return response;
@@ -95,9 +93,9 @@ export function proxy(request: NextRequest) {
     return response;
   } catch {
     // Token invalid or expired
-    const response = NextResponse.json(
-      handleError('Token was invalid or expired', UnauthorizedError)
-    );
+    const response = NextResponse.json('Invalid or expired token', {
+      status: 401,
+    });
     addCorsHeaders(response, origin);
     return response;
   }

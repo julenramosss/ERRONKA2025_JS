@@ -44,7 +44,6 @@ function isTutorialState(value: unknown): value is TutorialState {
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   return (
-    typeof v.hasSeen === 'boolean' &&
     typeof v.dashboard === 'object' &&
     typeof v.myPackages === 'object' &&
     typeof v.myRoute === 'object' &&
