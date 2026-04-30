@@ -13,7 +13,7 @@ export function RoleGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const allowedRolesForPath = pathname.split('/')[1] as AllowedRolesPath;
 
-  if (isLoading) return null;
+  if (isLoading || !user) return null;
 
   if (user && !ALLOWED_ROLES[allowedRolesForPath]?.includes(user.role)) {
     const redirectTo = ROLE_GUARD_REDIRECTS[allowedRolesForPath];

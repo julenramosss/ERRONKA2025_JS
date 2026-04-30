@@ -1,7 +1,7 @@
 'use client';
 import { Skeleton } from 'boneyard-js/react';
 import { PackageDetailLoader } from './components/loaders/PackageDetail.loader';
-import { redirect } from 'next/dist/client/components/navigation';
+import { notFound } from 'next/dist/client/components/navigation';
 import { usePackageDetails } from './hooks/usePackageDetails';
 import { PackageStatusHistory } from './components/PackageStatusHistory';
 import { PackageInfoCard } from './components/PackageInfoCard';
@@ -11,7 +11,7 @@ import { DeliveryLocation } from './components/DeliveryLocation';
 export default function PackageDetailPage() {
   const { pkg, logs, logsLoading, isLoading, isError } = usePackageDetails();
 
-  if (!isLoading && isError) redirect('/404');
+  if (!isLoading && isError) notFound();
 
   return (
     <div className="px-4 md:px-8 lg:px-10 flex flex-col gap-6">

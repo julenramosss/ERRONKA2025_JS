@@ -1,4 +1,4 @@
-import { redirect, useParams } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { usePackageById } from '../../../../../hooks/packages/usePackageById';
 import { usePackageLogs } from '../../../../../hooks/packages/usePackageLogs';
 
@@ -7,7 +7,7 @@ export function usePackageDetails() {
   const packageId = parseInt(packageIdParam);
 
   if (!/^\d+$/.test(packageIdParam) || Number.isNaN(packageId)) {
-    redirect('/404');
+    notFound();
   }
 
   const {
