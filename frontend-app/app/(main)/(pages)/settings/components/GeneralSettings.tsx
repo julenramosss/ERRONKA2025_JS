@@ -48,7 +48,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
                 >
                   {userData?.role === USER_ROLES.admin
                     ? 'ADMINISTRATZAILEA'
-                    : 'DISTRIBUIDOREA'}
+                    : 'BANATZAILEA'}
                 </span>
                 <span>
                   {userData?.is_active ? (
@@ -70,7 +70,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-text-secondary font-medium uppercase tracking-wide">
-                  Nombre completo
+                  Izen osoa
                 </label>
                 <div className="bg-bg-base border border-border rounded-lg px-4 py-3 text-text-primary text-sm">
                   {userData?.name ?? '—'}
@@ -99,7 +99,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-text-secondary font-medium uppercase tracking-wide">
-                  ID de usuario
+                  Erabiltzaile IDa
                 </label>
                 <div className="bg-bg-base border border-border rounded-lg px-4 py-3 text-text-primary text-sm font-mono">
                   #{userData?.id ?? '—'}
@@ -107,7 +107,7 @@ export function GeneralSettings({ isActive }: { isActive: boolean }) {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs text-text-secondary font-medium uppercase tracking-wide">
-                  Cuenta creada
+                  Kontua sortuta
                 </label>
                 <div className="bg-bg-base border border-border rounded-lg px-4 py-3 text-text-primary text-sm">
                   {userData?.created_at ? formatDate(userData.created_at) : '—'}
