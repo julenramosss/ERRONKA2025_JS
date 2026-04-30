@@ -1,6 +1,6 @@
 # Frontend dokumentazioa
 
-## Teknologia-pila
+## Tech stack
 
 - Next.js App Router
 - React 19
@@ -8,76 +8,76 @@
 - Axios
 - Tailwind CSS v4
 - HERE Maps integrazioa
-- `boneyard-js` eskeletoaren osagaiak
+- `boneyard-js` skeleton loader osagaiak
 
-## Aplikazioaren egitura
+## App egitura
 
-Karpeta nagusiak `frontend-app/app`-n:
+Karpeta nagusiak `frontend-app/app` azpian:
 
-- `(auth)` ibilbide-taldea: saioa hasteko esperientzia.
-- `(main)` ibilbide-taldea: autentifikatutako panel-fluxuak.
-- `lib/api`: Axios bezeroak eta API laguntzaileak.
-- `hooks`: domeinuz query/mutation hookak.
-- `providers`: React Query eta tutorial hornitzaileak.
-- `utils/types/api`: idatzitako erantzun eta eskaera-kontratuak.
+- `(auth)` route group-a: login esperientzia.
+- `(main)` route group-a: autentikatutako dashboard fluxuak.
+- `lib/api`: Axios bezeroak eta API helper-ak.
+- `hooks`: query/mutation hook-ak domeinuka.
+- `providers`: React Query eta tutorial provider-ak.
+- `utils/types/api`: request eta response kontratu tipatuak.
 
-## Layout eta hornitzaileak
+## Layout eta providers
 
-`app/layout.tsx`-k edukia honakoekin inguratzen du:
+`app/layout.tsx`-ek edukia honekin biltzen du:
 
-- `AppProviders` → `ReactQueryProvider`
-- `RouteGuard` (autentifikazio-atea)
+- `AppProviders` -> `ReactQueryProvider`
+- `RouteGuard` (auth atea)
 
-`(main)/layout.tsx`-k gehitzen ditu:
+`(main)/layout.tsx`-ek hau gehitzen du:
 
-- `SessionKeepAlive` (atzeko planoko saio-freskatzeko kontsulta)
+- `SessionKeepAlive` (saioa freskatzeko background query-a)
 - `PreferencesSync`
 - `AsideMenu` + `Header` + footer
 - `TutorialProvider`
 
 ## React Query erabilera
 
-- Kontsulta-gakoak `app/query/keys/*`-n antolatuta.
-- Kontsulta-aukerak `app/query/options/*`-n.
-- HTTP egoera ez-errepikakorretarako lehenetsitako saiakerak desgaituta (400/401/403/404/409).
+- Query key-ak `app/query/keys/*` barruan antolatuta daude.
+- Query options `app/query/options/*` barruan daude.
+- Retry-ak desgaituta daude ohiko HTTP egoera ez-errepikagarrietarako (400/401/403/404/409).
 
 ## Axios API bezeroa
 
-`apiClient` konfigurazioak honakoak ditu:
+`apiClient` konfigurazioak hau dauka:
 
 - `withCredentials: true`.
-- `Authorization: Bearer <access_token>` injektatzeko eskaera-interceptora.
-- `401`-ean freskatzen duen erantzun-interceptora (login/refresh/forgot-password/tracking kenduta), behin errepikatzen du eta hutsegiteetan tokena garbitzen du.
+- request interceptor bat `Authorization: Bearer <access_token>` injektatzeko.
+- response interceptor bat `401` jasotzean refresh egiteko (login/refresh/forgot-password/tracking endpoint-ak izan ezik), behin berriro saiatzeko eta huts eginez gero token-a garbitzeko.
 
-## Autentifikazio-tokenaren biltegiratzea
+## Auth token biltegiratzea
 
-- Frontend-ak sarbide-tokena `access_token` cookiean gordetzen du (`SameSite=Strict`, `max-age=15m`).
-- Freskatze-tokena backend-ek kudeatutako HTTP-only cookie-n gelditzen da.
+- Frontend-ak access token-a `access_token` cookiean gordetzen du (`SameSite=Strict`, `max-age=15m`).
+- Refresh token-a backend-ak kudeatutako HTTP-only cookiean geratzen da.
 
-## Freskatze-tokenaren fluxua
+## Refresh-token fluxua
 
-- Atzeko planoko freskatze-kontsulta (`refreshTokenQueryOptions`) 12 minuturo exekutatzen da.
-- Axios interceptora freskatze bat abiarazten du ustekabeko 401 batean eta jatorrizko eskera behin errepikatzen du.
+- Background refresh query-a (`refreshTokenQueryOptions`) 12 minuturo exekutatzen da.
+- Axios interceptor-ak refresh-a pizten du ustekabeko 401ean eta jatorrizko request-a behin berriro bidaltzen du.
 
 ## RouteGuard portaera
 
-- Ibilbide publikoen zerrendan gaur egun `/login` bakarrik dago.
-- Erabiltzaileak token baliodunik gabe babestutako ibilbide batera iristen bada, aplikazioa `/login`-era berbideratzen du.
-- Erabiltzaileak token balioduna badu eta `/login`-era sartzen bada, aplikazioa `/`-ra berbideratzen du.
+- Ruta publikoen zerrendak gaur egun `/login` bakarrik dauka.
+- Erabiltzaileak token baliorik gabe ruta babestu bat irekitzen badu, app-ak `/login`-era birbideratzen du.
+- Erabiltzaileak token baliozkoa badu eta `/login` irekitzen badu, app-ak `/`-era birbideratzen du.
 
-## Orrialde/pantaila nagusiak
+## Orri/pantaila nagusiak
 
-- `/dashboard`: profil-laburpena, estatistikak, hurrengo entregatze-planak, mapa-panela.
-- `/myPackages`: zerrenda/sare-ikuspegiak eta iragazketa.
-- `/myPackages/[packageId]`: pakete-xehetasuna eta log-historia.
-- `/myRoute`: eguneroko ibilbide-exekuzioa, aurrerapena, geralekuak, mapa.
-- `/history`: pakete-jardueren analisi historikoa.
-- `/settings`: profil/segurtasun/itxura kontrolak.
-- `/login`: autentifikazioa + pasahitz ahaztua modala.
+- `/dashboard`: profilaren laburpena, estatistikak, hurrengo entregak eta mapa panela.
+- `/myPackages`: paketeen list/grid ikuspegiak, bilaketa eta filtratzea esleitutako paketeetarako.
+- `/myPackages/[packageId]`: paketearen xehetasuna, helbidea, uneko egoera eta log historia.
+- `/myRoute`: eguneroko ruta exekutatzeko ikuspegia, progresua, stop ordenatuak eta mapa.
+- `/history`: pakete jardueraren historikoa eta analitika.
+- `/settings`: profila, segurtasuna eta itxura kontrolak.
+- `/login`: autentikazioa eta password berreskuratze modala.
 
-## Hookak eta API moduluak
+## Hooks eta API moduluak
 
-Hookak domeinuz taldekatuta daude:
+Hook-ak domeinuka taldekatuta daude:
 
 - `hooks/auth/*`
 - `hooks/packages/*`
@@ -94,4 +94,23 @@ API moduluak:
 
 ## Motak
 
-API eredu kanonikoak `app/utils/types/api/*.ts`-n daude.
+API modelo kanonikoak `app/utils/types/api/*.ts` barruan daude.
+
+## Estiloen ikuspegia eta PakAG identitatea
+
+`app/globals.css`-ek PakAG paleta eta token semantikoak definitzen ditu (more iluneko gainazalak, violet accents, egoera koloreak). `/docs`-eko theme-ak paleta hori nahita islatzen du.
+
+## Skeleton/loading estrategia
+
+Orriek `Skeleton` wrapper osagaiak erabiltzen dituzte domeinuaren araberako loader osagaiekin (adibidez dashboard, my-route eta history loader-ak).
+
+## Tracking UI
+
+Frontend-ak tracking API bezeroa (`tracking-api.ts`) eta `TRACKING_PATH_PREFIX` konstanteak ditu. Tracking publikoaren portaerak backend-eko `/api/tracking/:trackingToken` endpoint-a erabiltzen du.
+
+## Dashboard/distributor/admin fluxuak
+
+Uneko frontend ruta multzoa banatzaileari begira dago (dashboard, myPackages, myRoute, history, settings). Admin gaitasunak batez ere backend API-en bidez daude eskuragarri eta UI azalera bereiziak behar izan ditzakete.
+
+> [!NOTE]
+> Admin-erako web pantailak ez dira argi agertzen `frontend-app/app` rutetan eta produktu irismenaren osotasunerako **Needs verification** gisa tratatu behar dira.

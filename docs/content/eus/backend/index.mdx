@@ -1,17 +1,17 @@
 # Backend dokumentazioa
 
-## Teknologia-pila
+## Tech stack
 
 - Next.js Route Handlers (`src/app/api/*`)
 - TypeScript
-- MySQL `mysql2/promise`-ren bidez
+- MySQL `mysql2/promise` bidez
 - JWT (`jsonwebtoken`)
 - Emaila Resend-en bidez
 - Google Maps Directions + Geocoding
 
-## API ibilbide-antolaketa
+## API route antolaketa
 
-Domeinu-karpetak `backend-js/src/app/api`-n:
+Domeinu karpetak `backend-js/src/app/api` azpian:
 
 - `auth`
 - `users`
@@ -21,80 +21,116 @@ Domeinu-karpetak `backend-js/src/app/api`-n:
 - `logs`
 - `tracking`
 
-Erabilera-kasu bakoitzak geruza-eredu bat jarraitzen du:
+Use-case bakoitzak geruzatutako patroia jarraitzen du:
 
-- `route.ts` (garraioa)
-- `dto`/`dtos` (baliozkotzea)
-- `service` (negozio-logika)
+- `route.ts` (transport)
+- `dto`/`dtos` (balidazioa)
+- `service` (negozio logika)
 - `repository` (SQL sarbidea)
 
-## DTO balidazio-eredua
+## DTO balidazio patroia
 
-DTO moduluek query/body sarrerak balioztatzen dituzte zerbitzua exekutatu aurretik eta `ValidationError` botatzern dute baliogabeak direnean. Ibilbide-kudeatzaileek erroreak zentralizatzen dituzte `handleError` bidez `lib/response.ts`-n.
+DTO moduluek query/body input-ak balidatzen dituzte service-a exekutatu aurretik eta `ValidationError` botatzen dute balio ez dutenean. Route handler-ek erroreak `lib/response.ts`-eko `handleError` bidez zentralizatzen dituzte.
 
-## Zerbitzu eta biltegi-ereduak
+## Service eta repository patroiak
 
-- Zerbitzuek arauak, trantsizioak eta alboko efektuak koordinatzen dituzte.
-- Biltegiek SQL kontsultak enkapsulatu eta domeinu-mapaturiko objektuak itzultzen dituzte.
-- Domeinu arteko portaera partekatua erauzten da (adibidez, pakete-egoeraren alboko efektuak).
+- Service-ek arauak, trantsizioak eta albo-efektuak koordinatzen dituzte.
+- Repository-ek SQL kontsultak kapsulatzen dituzte eta row-mapped objektuak itzultzen dituzte.
+- Domeinuen arteko portaera partekatua erauzten da (adibidez pakete egoeren albo-efektuak).
 
-## Errore-kudeaketa eta erantzun-laguntzaileak
+## Error handling eta response helper-ak
 
-- Errore pertsonalizatuak: `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`.
-- `handleError(tag, error)`-k erroreak HTTP egoerara eta `{ error }` forma koherentera mapeatzen ditu.
-- `res.ok`-ek cookieak ezarri/ezabatzea onartzen du.
+- Error pertsonalizatuak: `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`.
+- `handleError(tag, error)`-ek erroreak HTTP status-etara eta `{ error }` forma koherentera mapatzen ditu.
+- `res.ok`-ek cookieak ezartzea/ezabatzea onartzen du.
 
 ## Autentikazioa eta baimena
 
-- Sarbide-tokena: JWT Bearer babesten diren endpoint-etarako beharrezkoa.
-- `requireAuth(request, allowedRoles?)`-k tokena eta rol-murrizketak egiaztatu.
-- Rolak `src/app/types/index.ts`-n daude definituta `admin` eta `distributor` gisa.
+- Access token-a: Bearer JWT behar da endpoint babestuetarako.
+- `requireAuth(request, allowedRoles?)`-ek token-a eta aukerako rol murrizketak egiaztatzen ditu.
+- Rolak `src/app/types/index.ts`-n definituta daude: `admin` eta `distributor`.
 
 ## MySQL konexioa
 
-`connect()`-k 10 konexio-mugarekin pool bat eraikitzen eta cachean gordetzen du. SSL gaituta dago `rejectUnauthorized: false`-rekin uneko inplementazioan.
+`connect()`-ek pool bat modu lazy-an sortu eta cacheatzen du, connection limit 10 erabilita. SSL gaituta dago `rejectUnauthorized: false` ezarpenarekin uneko inplementazioan.
 
-## Emailak bidaltzea
+## Email bidalketa
 
-Resend bezeroa hau erabiltzeko da:
+Resend bezeroa honetarako erabiltzen da:
 
-- kontuaren aktibatzea,
-- pasahitza berrezartzea,
-- saioa hasteko jakinarazpenak,
-- pakete-egoera emailak (pending/assigned/in_transit/delivered/undelivered/failed).
+- kontu aktibazioa,
+- password reset-a,
+- login jakinarazpenak,
+- pakete egoera emailak (pending/assigned/in_transit/delivered/undelivered/failed).
 
 ## Google Directions integrazioa
 
 `mapsService.optimizeRoute`:
 
-- Google Directions deitzen du waypoint-optimizazioarekin,
-- ordenatutako geralekuak + ETA kalkulatzen ditu,
-- iraupen eta distantzia osoak itzultzen ditu.
+- Google Directions-era deitzen du waypoint optimization erabilita,
+- stop ordenatuak + ETA kalkulatzen ditu,
+- total duration eta distance itzultzen ditu.
 
-`mapsService.geocodeAddress`-ek testu-helbide bat koordenatutan bihurtzen du pakete sortzeko/eguneratzeko fluxuetarako.
+`mapsService.geocodeAddress`-ek testuzko helbidea koordenatu bihurtzen du pakete sortze/eguneratze fluxuetarako.
 
-## Pakete-egoeraren alboko efektuak
+## Pakete egoeren albo-efektuak
 
-`applyPackageStatusSideEffects`-ek egiten du:
+`applyPackageStatusSideEffects`-ek hau egiten du:
 
-1. `package_status_logs`-era log txertatzea,
-2. jarraipen-tokenaren bilaketa,
-3. banatzailearen izenaren bilaketa,
-4. egoera-emaila hartzaileari bidali.
+1. log txertaketa `package_status_logs` taulan,
+2. tracking token lookup-a,
+3. distributor name lookup-a,
+4. egoera emaila hartzaileei bidaltzea.
 
-## Jarraipen-estekak
+## Tracking link-ak
 
-Jarraipen-tokenak `tokens` taulan gordetzen dira `tracking_token` motarekin, paketeari lotuta, eta endpoint publiko honek erabiltzen ditu:
+Tracking token-ak `tokens` taulan gordetzen dira `tracking_token` motarekin, paketeari lotuta, eta endpoint publikoak erabiltzen ditu:
 
 - `GET /api/tracking/:trackingToken`
 
-## Pasahitza berrezartzeko fluxua
+## Reset password fluxua
 
-1. `POST /api/auth/forgotPassword`-ek berrezartzeko tokena sortu/errebokatu eta emaila bidaltzen du.
+1. `POST /api/auth/forgotPassword`-ek reset token-a sortu/ezeztatu eta emaila bidaltzen du.
 2. `PATCH /api/auth/changePwd`:
-   - token soilarekin: balioztatze-egiaztapena,
-   - `newPassword`-rekin: pasahitza eguneratzen du, erabiltzailea aktibatzen du, berrezartzeko/aktibatzeko tokenak errebokatu.
+   - token-arekin bakarrik: balidazio check-a,
+   - `newPassword`-ekin: password-a eguneratzen du, erabiltzailea aktibatzen du, reset/activation token-ak ezeztatzen ditu.
 
-## Kontua aktibatzeko fluxua
+## Kontu aktibazio fluxua
 
-Erabiltzaile-sorkerak aktibatze-emaila sortzen du `sendActivationEmailService`-ren bidez. Aktibatzeko token-mota `activate_account_token` da eta `changePwd`-ren token-egiaztapen mekanismo berak balioztatzen du.
+Erabiltzailea sortzeak aktibazio emailaren sorrera pizten du `sendActivationEmailService` bidez. Aktibazio token mota `activate_account_token` da eta `changePwd` token-verification mekanismo berak balidatzen du.
+
+> [!WARNING]
+> Aktibazio URL-ak une honetan `RESET_BASE_URL` berrerabiltzen du kodean. Kontuan hartu email link-ak konfiguratzean.
+
+## Logak
+
+Egoera aldaketak `package_status_logs`-en idazten dira eta honen bidez agertzen dira:
+
+- `GET /api/logs/listAll` (admin)
+- `GET /api/logs/listByPackage` (admin/distributor)
+
+## Routes/stops/packages domeinu fluxuak
+
+### Ruta sorrera
+
+- Distributor user-a eta eguneko-ruta-bakarra constraint-a balidatzen ditu.
+- Carryover package-ak bateratzen ditu.
+- Stop ordena Google Directions bidez optimizatzen du.
+- Ruta + route stops txertatzen ditu eta paketeen estimated delivery eguneratzen du.
+
+### Iraganeko rutatik jarraitzea
+
+- Azken iraganeko ruta pendientea aurkitzen du.
+- Stop pendienteak egungo eguneko rutara migratzen ditu.
+- Pending pakete egoerak `in_transit`-era mugitzen ditu albo-efektuekin.
+
+### Stop operazioak
+
+- `PATCH /api/stops/reorder` (admin) stop ordena eguneratzen du.
+- `PATCH /api/stops/updateArrival` (distributor) bere stop-aren `actual_arrival` zigilatzen du.
+
+### Package operazioak
+
+- Paketea + helbidea + tracking token-a + hasierako log-a + tracking emaila sortzen ditu.
+- Pakete xehetasunak/helbidea eta lotutako albo-efektuak eguneratzen ditu.
+- Distributor egoera trantsizioak allowed-transition matrix eta route-order constraint-ekin behartzen dira.

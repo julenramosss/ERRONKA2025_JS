@@ -1,59 +1,185 @@
 # Arazoak konpontzea
 
-## Ingurune-aldagaiak falta
+## Backend-a ez da abiarazten
 
-Sintomak: abiatzeko erroreak, gako-definitu gabeko hutsegiteak, DB konexio-hutsegiteak.
+**Sintoma**: `Error: Cannot find module '@/app/...'` edo antzekoa `pnpm backend:dev` exekutatzean.
 
-- Backend aldagaiak egiaztatu `backend-js/.env.example`-tik.
-- Frontend `NEXT_PUBLIC_API_BASE_URL` eta HERE gakoa egiaztatu.
+**Kausa**: Path alias-ak ez dira ebazten edo `tsconfig.json` fitxategiko `paths` ez datoz bat.
 
-## API URL desegokitasuna
+**Konponbidea**: Egiaztatu `backend-js/tsconfig.json` fitxategiak `"@/*": ["./src/*"]` duela `compilerOptions.paths` barruan. Falta bada, begiratu `backend-js/tsconfig.json`-ek base egokia hedatzen duen.
 
-Sintomak: frontend 404/Sare-erroreak host okerrari.
+---
 
-- Exekuzio-denboran `API_BASE_URL` berretsi `frontend-app/app/config/envConfig.ts`-n.
+## Ingurune-aldagaiak falta dira edo `undefined` dira
 
-## CORS/cookie/saio arazoak
+**Sintoma**: `undefined` balioak logetan, DB konexio erroreak, email bidalketa erroreak edo JWT erroreak, adibidez `secretOrPrivateKey must have a value`.
 
-Sintomak: 401 errepikakorra, freskatze-ak saioa berreskuratzen ez.
+**Konponbidea**:
+1. Kopiatu `.env.example` -> `.env.local` `backend-js/` barruan.
+2. Bete balio guztiak; ez utzi adibideko balioak bere horretan.
+3. Berrabiarazi garapen zerbitzaria aldaketen ondoren.
 
-- Eskaerak kredentzial-rekin bidaltzen direla ziurtatu.
-- Backend-ak jatorri arteko kredentzialak onartzen dituela ziurtatu.
-- Produkzioan HTTPS ziurtatu Secure cookie onarpenerako.
+Fallback hardcodeatua duten aldagai kritikoak (produkzioan ez seguruak, baina garapenean isilik funtzionatuko dute):
+- `JWT_SECRET`: ez badago, fallback ezagun bat erabiltzen du
+- `DEFAULT_USER_PASSWORD`: ez badago, fallback ezagun bat erabiltzen du
 
-## JWT iraungitzeko begiztak
+Fallback-ik ez duten eta runtime-an huts egingo duten aldagaiak:
+- `RESEND_API_KEY`: email bidalketak huts egingo du
+- `GOOGLE_DIRECTIONS_API_KEY`: geocoding-ak eta ruta optimizazioak huts egingo dute
+- MySQL aldagaiak: DB pool-ak lehen kontsultan huts egingo du
 
-Sintomak: erabiltzailea `/login`-era maiz bidal.
+---
 
-- Sarbide-token gehienezko adina (15m) eta freskatze-tartea (12m) egiaztatu.
-- Nabigatzailearen cookie biltegiratzea eta erloju-desfasea aztertu.
+## Datu-base konexio erroreak
 
-## Freskatze-tokena ez dabil
+**Sintoma**: `ECONNREFUSED`, `ER_ACCESS_DENIED_ERROR` edo `Unknown database` runtime-an.
 
-- `refresh_token` cookiea existitzen dela eta bidaltzen dela berretsi.
-- `/api/auth/refresh` CORS/proxy-ak blokeatuta ez dagoela berretsi.
-- Token-errenkada ez dagoela iraungituta/errebokaturik DB-an berretsi.
+**Checklist**:
+1. MySQL zerbitzaria martxan dago `MYSQL_HOST:MYSQL_PORT` helbidean.
+2. `MYSQL_USER` / `MYSQL_PASSWORD` kredentzialak zuzenak dira.
+3. Datu-basea existitzen da. `schema.sql`-ek `erronka` izenarekin sortzen du; behar bada exekutatu `CREATE DATABASE IF NOT EXISTS erronka`.
+4. `MYSQL_DATABASE` aldagaiak benetako izenarekin bat egiten du (`erronka` vs `pakag`; `schema.sql` eta `.env.example` artean desberdinak dira).
+5. SSL ezarpena: `backend-js/src/app/config/dbConfig.ts` fitxategiak `ssl: { rejectUnauthorized: false }` jartzen du. Zure MySQL instantziak ziurtagiri zehatz bat behar badu, egokitu.
 
-## MySQL konexio-erroreak
+---
 
-- Host/portua/erabiltzailea/pasahitza/datu-basea env egiaztatu.
-- Exekuzio-denboratik DB-ra sareko bidea balioztatui.
-- SSL eskakizunak uneko `ssl: { rejectUnauthorized: false }` konfigurazioarekin alderatu.
+## TypeScript egiaztapenak huts egiten du (`tsc --noEmit`)
 
-## Resend/email erroreak
+**Sintoma**: Type erroreak `pnpm tsc --noEmit` exekutatzean `backend-js/` barruan.
 
-- `RESEND_API_KEY` balizkotasuna eta igorlearen domeinuaren konfigurazioa (`no-reply@tolosaerronka.es`) berretsi.
+**Kausa eta konponbide ohikoak**:
 
-## Google Directions/Geocoding erroreak
+| Errorea | Konponbidea |
+| --- | --- |
+| `Property 'X' does not exist on type 'Y'` | Egiaztatu DTO interfazea eta types fitxategia sinkronizatuta daudela |
+| `Argument of type 'any' is not assignable` | Ez erabili `any`; gehitu interfaze esplizitu bat |
+| `Cannot find module '@/app/...'` | Egiaztatu `tsconfig.json`-eko `paths` |
+| Type errorea `route.ts`-n | Egiaztatu `requireAuth`-en return type-a ondo erabiltzen dela |
 
-- `GOOGLE_DIRECTIONS_API_KEY` beharrezko APIetarako aktibo dagoela berretsi.
-- Kuota-mugak eta fakturatze-egoera egiaztatu.
+---
 
-## Next.js build-erroreak
+## 401 eskaera guztietan login ondoren
 
-- Pakete-tokiko build komandoak exekutatu backend/frontend/docs arazoak isolatzeko.
+**Sintoma**: Login-ak funtzionatzen du (`access_token` itzultzen du), baina ondorengo API deiek 401 itzultzen dute.
 
-## Pakete-kudeatzailearen arazoak
+**Checklist**:
+1. Frontend-ak access token-a `access_token` cookian gordetzen du.
+2. Axios interceptor-ak cookiea irakurtzen du eta `Authorization: Bearer <token>` ezartzen du.
+3. Token-a ez dago iraungita; access token-ak 15 minutuko bizitza du.
+4. Backend-a beste jatorri batean dago; egiaztatu CORS konfigurazioa eta `withCredentials: true`.
 
-- `pnpm` erabili koherenteki monorepo honetan.
-- Lockfile/workspace desbideratu bada `pnpm install`-ekin berrinstalatu sustraian.
+---
+
+## Refresh token-ak ez du funtzionatzen / erabiltzailea login-era doa behin eta berriz
+
+**Sintoma**: Erabiltzailea 15 minutu ondoren saioz kanpo geratzen da, nahiz eta `SessionKeepAlive` aktibo egon.
+
+**Checklist**:
+1. Ireki DevTools -> Application -> Cookies. Egiaztatu `refresh_token` cookiea existitzen dela `HttpOnly` flag-arekin.
+2. Egiaztatu `POST /api/auth/refresh` ez duela CORS-ek blokeatzen. Garapenean backend-ak frontend jatorria onartu behar du `credentials: true` erabilita.
+3. Egiaztatu refresh token-aren errenkada ez dagoela ezeztatuta edo iraungita `tokens` taulan.
+4. Begiratu erloju-desfasea; zerbitzariaren eta bezeroaren orduak token-aren bizitza baino gehiago desberdintzen badira, token-ak berehala iraungita ager daitezke.
+5. Egiaztatu Axios bezeroan `withCredentials: true` dagoela.
+
+---
+
+## CORS erroreak
+
+**Sintoma**: `Access-Control-Allow-Origin` goiburua falta da edo preflight-ak huts egiten du.
+
+**Konponbidea**: `backend-js/next.config.ts`-n (edo CORS middleware baliokidean), ziurtatu:
+- Frontend jatorria esplizituki onartuta dagoela (ez `*` kredentzialak erabiltzean).
+- `Access-Control-Allow-Credentials: true` ezarrita dagoela.
+- Preflight `OPTIONS` eskaerek 200 itzultzen dutela.
+
+Produkzioan, bi aplikazioek HTTPS erabili behar dute `SameSite=None; Secure` cookiek funtzionatzeko.
+
+---
+
+## Ez da emailik bidaltzen paketea sortu edo egoera aldatu ondoren
+
+**Sintoma**: Ez da emailik iristen, baina operazioa ondo bukatzen da.
+
+**Checklist**:
+1. `RESEND_API_KEY` ezarrita eta baliozkoa da.
+2. Bidaltzailearen domeinua (`no-reply@tolosaerronka.es`) Resend-en egiaztatuta dago.
+3. Begiratu Resend dashboard-ean bidalketa erroreak edo bounce-ak.
+4. Egoera aldaketa emailak baldintzazkoak dira; trantsizio zehatz batzuek bakarrik bidaltzen dituzte emailak. Ikusi [Domeinu eredua](/eus/domain) trigger taularako.
+
+---
+
+## Ruta sortzeak huts egiten du (Google Maps errorea)
+
+**Sintoma**: `POST /api/routes/create`-k 500 edo Directions API-rekin lotutako errorea itzultzen du.
+
+**Checklist**:
+1. `GOOGLE_DIRECTIONS_API_KEY` ezarrita dago eta gakoak **Directions API** eta **Geocoding API** gaituta ditu Google Cloud Console-n.
+2. Fakturazioa aktibo dago Google Cloud proiektuan.
+3. API gakoak ez du backend zerbitzariaren IP-a blokeatzen duen IP/referer mugarik.
+4. Paketeen helbideak ondo geokodetu ziren sorkuntzan; `latitude`/`longitude` 0 edo NULL badira, geocoding-ak huts egin zuen paketea sortzean.
+
+---
+
+## Geocoding-ak kokapen okerra itzultzen du
+
+**Sintoma**: Paketea koordenatu okerretan agertzen da mapan.
+
+**Kausa**: Google Geocoding-ek beste helbide bat parekatu du, edo helbidea anbiguoa da.
+
+**Konponbidea**: Begiratu paketearen `addresses` errenkada DB-an. Behar bada zuzendu `latitude`/`longitude` eskuz DB update zuzen batekin (une honetan ez dago koordenatu gordinak editatzeko endpoint-ik).
+
+---
+
+## Ruta optimizazioak gehienezko geldialdi kopurua gainditzen du
+
+**Sintoma**: Ruta sortzea baztertzen da espero baino pakete gutxiagorekin ere.
+
+**Kausa**: Ruta zerbitzuak **aurreko egunetako paketeak** (banatzaile berarentzat aurreko egunetatik esleituta daudenak) automatikoki gehitzen ditu stop zerrendara. Guztira 20 stop dira gehienez.
+
+**Konponbidea**: Murriztu `package_ids` eskaeran aurreko paketeentzako tokia uzteko, edo garbitu banatzailearen backlog-a lehenik.
+
+---
+
+## Egoera log-a falta da update ondoren
+
+**Sintoma**: `GET /api/logs/listByPackage`-k ez du logik itzultzen `updateStatus` deiaren ondoren.
+
+**Kausa**: Log txertaketa `packageStatusSideEffects.service.ts`-n gertatzen da. Errorea bota eta isilik harrapatzen bada, egoera eguneratzea ondo joan daiteke baina logik ez da idatziko.
+
+**Konponbidea**: Begiratu backend kontsolan `[packageStatusSideEffects]` erroreak. Egiaztatu DB murrizketek log txertaketa onartzen dutela (adibidez, `changed_by` erabiltzailea existitzen dela).
+
+---
+
+## Frontend build-ak huts egiten du
+
+**Sintoma**: `pnpm frontend:dev`-ek TypeScript edo modulu erroreak ematen ditu.
+
+**Konponbidea**:
+```bash
+# Monorepoaren errotik:
+pnpm install
+pnpm --filter @repo/frontend-app tsc --noEmit
+```
+
+---
+
+## Docs bilaketak ez du orria aurkitzen
+
+**Sintoma**: Ctrl+K bilaketak ez du emaitzarik ematen ezaguna den orri baterako.
+
+**Kausa**: Bilaketa estatikoa da eta `docs/app/[lang]/layout.tsx`-eko `navItems` tituluetan oinarritzen da. Orri berria `navItems`-era gehitu gabe sortzen bada, ez da bilaketan agertuko.
+
+**Konponbidea**: Gehitu orri berria `layout.tsx`-eko `navItems`-era eta eguneratu hiru i18n hiztegiak. Ikusi [Docs auditoria](/eus/audit) prozedura osorako.
+
+---
+
+## pnpm bertsio gatazkak
+
+**Sintoma**: `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND` edo workspace script-a ez da aurkitzen.
+
+**Konponbidea**:
+```bash
+pnpm install   # monorepoaren errotik
+```
+
+Workspace paketeen komando guztiak monorepoaren errotik exekutatu behar dira `--filter` flag-ak edo `package.json`-eko root script-ak erabiliz.

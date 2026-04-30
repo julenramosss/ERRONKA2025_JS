@@ -1,59 +1,140 @@
-# Autentikazioa eta segurtasuna
+# Auth eta segurtasuna
 
-## Sarbide-tokenaren fluxua
+## Token arkitektura
 
-- Backend-ak JWT sarbide-tokena emiten du saioa hastean/freskatzerakoan.
-- Frontend-ak token hau bezero-cookiean gordetzen du (`access_token`) eta Bearer header gisa bidaltzen du Axios interceptoraren bidez.
-- `RouteGuard`-ek JWT iraungitzea balioztatzen du nabigatzailean babestutako nabigazioa baimentzeko aurretik.
+Login-ean bi token ematen dira eta `tokens` taulan mantentzen dira:
 
-## Freskatze-token cookiearen fluxua
+| Token | Biltegiratzea | Bizitza | Helburua |
+| --- | --- | --- | --- |
+| Access token (JWT) | Frontend cookie `access_token` | 15 min (`JWT_ACCESS_EXPIRES_IN`) | Request guztietan `Authorization: Bearer` gisa bidaltzen da |
+| Refresh token (hex opakoa) | Backend HTTP-only cookie | 7 egun (`JWT_REFRESH_EXPIRES_DAYS`) | Erabilera bakoitzean biratzen da `/api/auth/refresh` bidez |
 
-- Backend-ak `refresh_token` ezartzen du HTTP-only cookie gisa `res.ok(...cookies)`-ren bidez.
-- Freskatzerakoan, backend-ak token-errenkada zaharra errebokatu eta freskatze-token erregistro berri bat txertatzen du.
-- Saioa ixteak uneko freskatze-tokena errebokatu eta cookiea garbitzen du.
+## Login fluxua
 
-## Frontend-eko cookie portaera
+```
+1. POST /api/auth/login { email, password }
+   -> Backend-ak bcrypt hash-a egiaztatzen du
+   -> Sinatutako JWT access token-a ematen du (15 min)
+   -> Refresh token-a sortu eta tokens taulan gordetzen du
+   -> refresh_token HttpOnly cookie gisa ezartzen du
+   -> { user, access_token } itzultzen du body-an
 
-- Sarbide-token cookiea: `SameSite=Strict`, `max-age=900`, `Secure` produkzioan.
-- Freskatzeko dei-eskaerak `withCredentials: true`-rekin bidaltzen dira.
+2. Frontend-ak access_token cookiean gordetzen du:
+   SameSite=Strict, max-age=900, Secure produkzioan
+```
 
-## Backend-eko cookie portaera
+## Refresh fluxua
 
-`res.ok`-ek ezartzen du:
+```
+3. Background query-a 12 minuturo exekutatzen da (SessionKeepAlive bidez)
+   -> POST /api/auth/refresh (cookiea automatikoki bidaltzen da)
+   -> Backend-ak refresh token-a balidatzen du (ez ezeztatua, ez iraungia)
+   -> DB-ko refresh token zaharraren errenkada ezeztatzen du
+   -> Refresh token errenkada berria txertatzen du
+   -> { access_token } berria itzultzen du + cookie berria ezartzen du
 
-- `SameSite=Lax` garapenean
-- `SameSite=None; Secure` produkzioan
+4. Axios interceptor-a ustekabeko 401ean:
+   -> Refresh egiten du eta jatorrizko request-a behin berriro bidaltzen du
+   -> Bigarren hutsegitean: access_token garbitu eta /login-era birbideratzen du
+```
 
-backend laguntzaileak ezarritako/ezabatutako cookietarako.
+## Logout fluxua
 
-## Babestutako eta ibilbide publikoak
+```
+5. POST /api/auth/logout
+   -> Backend-ak refresh_token DB-an ezeztatzen du
+   -> refresh_token cookiea garbitzen du
+   -> Frontend-ak access_token cookiea garbitzen du
+```
 
-### Backend ibilbide publikoak
+## Cookie ezarpenak
+
+Backend-eko `res.ok()` helper-ak hau aplikatzen du:
+
+| Ingurunea | access_token cookiea | refresh_token cookiea |
+| --- | --- | --- |
+| Garapena | `SameSite=Strict` | `SameSite=Lax; HttpOnly` |
+| Produkzioa | `SameSite=Strict; Secure` | `SameSite=None; Secure; HttpOnly` |
+
+Frontend-ak access token cookiea zuzenean ezartzen du (ez HttpOnly). Hau esposizio azalera ezaguna da; ikusi beheko arriskuak.
+
+## Rol eredua
+
+Bi rol daude, route handler guztietan `requireAuth(request, allowedRoles)` bidez aplikatuta:
+
+| Rola | Sarbidea |
+| --- | --- |
+| `admin` | Erabiltzaile kudeaketa, pakete kudeaketa, ruta sorrera, logak |
+| `distributor` | Bere paketeak, bere eguneroko ruta, stop iritsiera, pakete egoera eguneraketak |
+
+## Ruta publikoak (auth gabe)
 
 - `POST /api/auth/login`
 - `POST /api/auth/forgotPassword`
-- `PATCH /api/auth/changePwd`
-- `GET /api/tracking/:trackingToken`
+- `PATCH /api/auth/changePwd` (token bidezkoa, ez Bearer)
+- `GET /api/tracking/:trackingToken` (tracking orri publikoa)
 
-### Backend ibilbide babestuak
+## Password reset fluxua
 
-Gainerako domeinu-ibilbide guztiek bearer autentifikazioa behar dute; askok rolaren arabera ere murrizten dute.
+```
+1. POST /api/auth/forgotPassword { email }
+   -> Beti mezu neutroarekin erantzuten du (email enumeraziorik gabe)
+   -> Emaila existitzen bada: reset_pwd_token sortzen du (24h), emaila bidaltzen du
 
-## Rol-eredua
+2. PATCH /api/auth/changePwd { reset_pwd_token }
+   -> { valid: true } itzultzen du (token egiaztapena, password aldaketarik gabe)
 
-- `admin`
-- `distributor`
+3. PATCH /api/auth/changePwd { reset_pwd_token, new_password }
+   -> Token-a ez ezeztatua eta ez iraungia dela balidatzen du
+   -> password_hash eguneratzen du, token-a ezeztatzen du
+   -> { message: "Password changed successfully" } itzultzen du
+```
 
-Rol-egiaztapenak `requireAuth(request, allowedRoles)`-ren bidez egiten dira route handler-etan.
+## Kontu aktibazio fluxua
 
-## Segurtasun-oharrak
+```
+1. Admin: POST /api/users/create { name, email, role }
+   -> Erabiltzailea is_active=FALSE-rekin sortzen da
+   -> activate_account_token sortzen da (24h iraungipena)
+   -> Aktibazio emaila erabiltzaileari bidaltzen zaio
 
-- Freskatze-tokenak `tokens` taulan iraunkortzen dira iraungitzea eta errebokatzeko flag-ekin.
-- Pasahitzak bcrypt laguntzaileekin hasheatzen dira.
-- Pasahitz-ahaztua endpoint-ak erantzun neutro bat itzultzen du ezezagunak diren emailentzat.
+2. Erabiltzaileak link-a klikatzen du -> POST /api/auth/activateAccount?token=...
+   -> Erabiltzaileak bere password-a ezartzen du
+   -> is_active=TRUE, token-a ezeztatuta
+```
 
-## Arrisku ezagunak / TODOs
+## Arrisku ezagunak
 
-- Hardcodetutako fallback sekretu/pasahitz balioak daude backend env konfigurazioan (produkzioan gainidatzi behar dira).
-- Aktibatze-URLa oraindik berrezartzeko oinarri URLtik eratorria da (espero den produktu-portaera berretsi).
-- Frontend-eko sarbide-tokena ez-HTTP-only cookiean egoteak XSS esposizio-gainazala handitzen du zerbitzari-soilik biltegiratzearekiko alderatuta.
+| Larritasuna | Arriskua | Iturria |
+| --- | --- | --- |
+| High | `JWT_SECRET`-ek fallback hardcodeatua du `envConfig.ts`-n. Produkzioan ez bada ezartzen, repoarekin edonork access token-ak faltsutu ditzake. | `backend-js/src/app/config/envConfig.ts:14` |
+| High | `DEFAULT_USER_PASSWORD`-ek fallback hardcodeatu bera du. Env var-a falta bada, erabiltzaile berriek password ezagun bat jasotzen dute. | `backend-js/src/app/config/envConfig.ts:37` |
+| Medium | `handleError`-ek barneko `error.message` HTTP 500 erantzunetan aurrera bidaltzen du. MySQL edo liburutegi erroreek taula izenak eta stack xehetasunak filtratu ditzakete. | `backend-js/src/app/lib/response.ts:83` |
+| Medium | `@upstash/ratelimit` eta `@upstash/redis` instalatuta daude baina ez konektatuta. Login, forgotPassword eta tracking endpoint-ak brute force-ren aurka babesik gabe daude. | `backend-js/package.json` |
+| Medium | Access token-a ez-HttpOnly cookiean gordetzen da (`access_token`). XSS-k irakur dezake. Refresh token-a HttpOnly cookiean seguruago dago. | `frontend-app/app/lib/api/helpers/client.ts` |
+| Low | `GOOGLE_DIRECTIONS_API_KEY`-ek TypeScript `!` assertion-a erabiltzen du startup guard gabe. Var-a falta bada `undefined` isila runtime-an. | `backend-js/src/app/config/envConfig.ts:9` |
+| Low | MySQL env aldagaiak ez dira startup-ean balidatzen. Pool-ak `undefined` isilik onartzen du; lehen query-ak huts egiten du startup errore deskriptiborik gabe. | `backend-js/src/app/config/envConfig.ts:1-5` |
+
+## Sekretu hardcodeatuak konpontzea
+
+`envConfig.ts`-n behar den gutxieneko aldaketa:
+
+```ts
+// Unekoa (ez segurua):
+export const jwt_secret = process.env.JWT_SECRET ?? "kjhaf7ya...";
+
+// Honela izan behar du:
+const jwt_secret = process.env.JWT_SECRET;
+if (!jwt_secret) throw new Error("JWT_SECRET env var is required");
+export { jwt_secret };
+```
+
+Aplikatu patroi bera `DEFAULT_USER_PASSWORD` eta `GOOGLE_DIRECTIONS_API_KEY` aldagaietan.
+
+## Rate limiting inplementatzea
+
+`@upstash/ratelimit` dagoeneko `package.json`-en dago. Aktibatzeko:
+
+1. Gehitu `UPSTASH_REDIS_REST_URL` eta `UPSTASH_REDIS_REST_TOKEN` `.env.local`-era.
+2. Sortu `backend-js/src/app/lib/rateLimit.ts` `Ratelimit` instantzia batekin.
+3. Deitu limiter-ari hasieran: `POST /api/auth/login`, `POST /api/auth/forgotPassword`, `GET /api/tracking/:token`.

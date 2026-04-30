@@ -1,39 +1,73 @@
-# Dokumentazio ikuskaritza
+# Docs auditoria
 
-Orrialde honek dokumentazio-gunearen egungo egoera erregistratzen du: zer egiaztatu den, zer oraindik ez den baieztatuta, arrisku ezagunak eta etorkizuneko mantentzegileen arkitektura-erabakiak.
+Orri honek dokumentazio gunearen uneko egoera jasotzen du: zer egiaztatu den, zer dagoen oraindik baieztatu gabe, arrisku ezagunak eta etorkizuneko mantentzaileentzako arkitektura erabakiak.
 
-> [!NOTE]
-> Ingelesezko bertsioa egia-iturri nagusia da eta osatuena. Ikusi [ingelesezko bertsioa](/en/audit) xehetasun guztietarako.
+## Zer egiaztatu da
 
-## Zer egiaztatu den
+Ondorengo baieztapenak `backend-js/`, `frontend-app/` eta `docs/` barruko benetako kodearekin kontrastatu dira:
 
-- Monorepoaren egitura (`pnpm-workspace.yaml`)
-- Backend endpoint-en inbentarioa (`route.ts` fitxategietatik egiaztatuta)
-- Autentikazio-fluxuak (JWT + HTTP-only cookiea)
-- Pakete-estatuen makina
-- Email albo-efektuak egoera-aldaketetan
-- Token motak
+- **Monorepo egitura**: hiru pakete (`backend-js`, `frontend-app`, `docs`) pnpm workspaces barruan. `pnpm-workspace.yaml`-etik egiaztatua.
+- **Backend endpoint inbentarioa**: API erreferentziako endpoint guztiak `backend-js/src/app/api/*/route.ts` fitxategien aurka egiaztatu dira.
+- **Auth fluxuak**: access token-a (Bearer JWT, 15 min) + refresh token-a (HTTP-only cookie, 7 egun) `backend-js/src/app/lib/jwt.ts` eta `backend-js/src/app/config/envConfig.ts`-etik baieztatu dira.
+- **Pakete egoera makina**: `pending -> assigned -> in_transit -> delivered | undelivered | failed` `backend-js/src/app/types/index.ts`-etik baieztatua.
+- **Egoera aldaketan email albo-efektuak**: `backend-js/src/app/lib/packageStatus/packageStatusSideEffects.service.ts`-etik baieztatuak.
+- **Token motak**: `refresh_token`, `tracking_token`, `reset_pwd_token`, `activate_account_token` `backend-js/src/app/types/index.ts`-etik baieztatuak.
+- **DB izenaren inkoherentzia**: `schema.sql`-ek datu-basea `erronka` gisa sortzen du; `backend-js/.env.example`-ek `pakag` dokumentatzen du. Environment docs-en **Needs verification** gisa markatuta.
+- **Google Directions jatorria**: koordenatuak hardcodeatuta daude `backend-js/src/app/api/routes/create/service/create.service.ts`-n; arrisku baieztatua security eta environment orrietan dokumentatuta.
+- **Frontend API bezeroaren fitxategi path-ak**: `app/lib/api/*` path guztiak dokumentatu bezala daude; TypeScript moten kokapen zehatzak `app/utils/types/api/`-tik egiaztatu dira.
 
-## Zer egiaztatu behar den oraindik
+## Oraindik egiaztatu gabe dagoena (Needs verification)
 
-- Soilik administratzaileentzako endpoint-en eskaera/erantzun eskema zehatzak
-- Zerrendatze endpoint-en orrikatze lehenetsiak
-- Ekoizpeneko domeinu eta CORS konfigurazioa
+Ondorengo elementuak ezin izan dira baieztatu exekuzio ingurune bat edo integrazio test oso bat gabe:
+
+- Uneko frontend-ak deitzen ez dituen admin-only endpoint-en request/response schema zehatzak (`/api/packages/create`, `/api/packages/update`, `/api/routes/create`, etab.).
+- Zerrenda endpoint-en paginazio default-ak (`/api/packages/list`, `/api/users/list`, `/api/logs/listAll`).
+- `{ error: string }` baino harago dauden error response aldaerak: status code bakoitzeko forma osoa.
+- Produkzio domeinua eta CORS konfigurazioa (arrisku gisa dokumentatua, ez baieztatua).
+- Aktibazio URL-a: docsek `RESET_BASE_URL` berrerabiltzen duela diote; ingurune biziko portaera zehatza ez dago egiaztatuta.
+- Frontend admin UI pantailak: domain/frontend orrietan aipatutako pantaila kokapen batzuk ezin izan dira path zehatzekin lotu.
 
 ## Arrisku ezagunak
 
-| Larritasuna | Arriskua |
+| Larritasuna | Arriskua | Erreferentzia |
+| --- | --- | --- |
+| High | `JWT_SECRET`-ek fallback hardcodeatua du `envConfig.ts`-n; produkzioan ez bada ezartzen, fallback-a repoan publikoki ikus daiteke | Security page, CLAUDE.md §4.2 |
+| High | `DEFAULT_USER_PASSWORD`-ek fallback hardcodeatu arazo bera du | Security page, CLAUDE.md §4.3 |
+| Medium | `handleError`-ek barneko error mezuak HTTP 500 erantzunetan aurrera bidaltzen ditu | CLAUDE.md §4.5 |
+| Medium | Rate limiting paketeak instalatuta daude (`@upstash/ratelimit`) baina ez daude inplementatuta | CLAUDE.md §7.2 |
+| Low | MySQL env aldagaiak ez dira startup-ean balidatzen; hutsegite isilak gerta daitezke | CLAUDE.md §4.4 |
+| Low | `GOOGLE_DIRECTIONS_API_KEY`-ek TypeScript `!` assertion-a erabiltzen du startup guard gabe | CLAUDE.md §4.10 |
+
+## Docs guneko arkitektura erabakiak
+
+- **Custom layout-a**: docsek ez dute `nextra-theme-docs` layout-a erabiltzen. Horren ordez, `docs/app/[lang]/layout.tsx`-ek sidebar, header eta content layout guztiz custom-a inplementatzen ditu diseinu kontrol osoa izateko.
+- **Locale routing-a**: locale-a URL-ko lehen segmentua da (`/en/`, `/es/`, `/eus/`). `docs/middleware.ts`-eko middleware-ak locale gabeko path-ak `/en/`-era birbideratzen ditu.
+- **Bilaketa**: `DocsSearch.tsx` bidez client-side orri tituluko bilaketa estatiko gisa inplementatua. Ez dago full-text indizerik. Ctrl+K / Cmd+K-k bilaketa modala irekitzen du.
+- **Edukien taula**: `PageToc.tsx`-ek DOM headings-ak irakurtzen ditu mount ondoren (`.docs-content`-era mugatuta). Headings-ek ID egonkorrak jasotzen dituzte `mdx-components.tsx`-eko `slugify` funtzioaren bidez.
+- **Mugikorreko TOC**: `MobilePageTools.tsx`-ek header azpian botoia renderizatzen du; beheko drawer bat irekitzen du TOC-arekin eta bilaketarako lasterbidearekin.
+- **i18n**: hiztegiak `docs/app/i18n/` barruan daude. Nav item berri bat gehitzeko `DocsDictionary` interfazea eta hiru locale fitxategiak eguneratu behar dira.
+- **MDX heading ID-ak**: `h2`, `h3`, `h4` MDX osagaiak `docs/mdx-components.tsx`-n gainidatzita daude `slugify` bidez `id` atributuak automatikoki sortzeko.
+
+## Build eta bilaketa egoera
+
+| Feature | Egoera |
 | --- | --- |
-| Altua | `JWT_SECRET` biltegian ikusgai dagoen fallback hardcodeatu batekin |
-| Altua | `DEFAULT_USER_PASSWORD` arazo berdinarekin |
-| Ertaina | `handleError`-k barne errore-mezuak bidaltzen ditu 500 erantzunetan |
+| Root `/` redirect-a `/en`-era | Funtzionatzen du `docs/app/page.tsx` + middleware bidez |
+| Locale-prefixed routing-a | Funtzionatzen du: `/en/`, `/es/`, `/eus/` |
+| Locale fallback-a (adib. `/backend` -> `/en/backend`) | Funtzionatzen du `docs/middleware.ts` bidez |
+| Orriko TOC-a (desktop) | Funtzionatzen du: eskuineko sticky `PageToc.tsx` bidez |
+| Orriko TOC-a (mugikorra) | Funtzionatzen du: beheko drawer `MobilePageTools.tsx` bidez |
+| Ctrl+K bilaketa | Funtzionatzen du: titulu bilaketa estatikoa `DocsSearch.tsx` bidez |
+| Heading anchor links | Funtzionatzen dute: ID-ak `mdx-components.tsx`-eko `slugify` bidez sortuta |
+| Code block copy botoia | Funtzionatzen du `CodeBlock.tsx` bidez |
+| Mugikorreko sidebar-a | Funtzionatzen du `MobileMenu.tsx` bidez |
+| View transitions | Funtzionatzen dute: CSS view transitions nabigazioan |
 
-## Dokumentazio-gunearen arkitektura erabakiak
+## Etorkizuneko agenteek docs-ak nola eguneratu behar dituzten
 
-- Layout guztiz pertsonalizatua (ez `nextra-theme-docs`)
-- Lokale-bidezko bideratzea (`/en/`, `/es/`, `/eus/`)
-- Middleware-ak lokalerik gabeko bideak `/en/`-ra bideratzen ditu
-- Bilaketa estatikoa orrialde-izenburuetan (Ctrl+K)
-- Edukien taula DOM-etik sortua
-
-Ikusi [ingelesezko bertsioa](/en/audit) erabaki bakoitzaren deskribapen osoa lortzeko.
+1. **Backend endpoint berri bat gehitzean**: eguneratu `docs/content/en/api/index.mdx`. Gehitu request/response adibideak. Egiaztatu benetako `route.ts` eta `dtos/` fitxategietatik. Egiaztatu gabe dagoena markatu `> [!NOTE] Needs verification` erabilita.
+2. **Frontend orri edo hook berri bat gehitzean**: eguneratu `docs/content/en/frontend/index.mdx`.
+3. **Docs atal berri bat gehitzean**: sortu `docs/content/en/{section}/index.mdx` eta `docs/content/en/{section}/_meta.ts`. Gehitu atala `docs/content/en/_meta.ts`-ra. Gehitu nav item bat `docs/app/[lang]/layout.tsx`-n eta eguneratu hiru i18n hiztegiak.
+4. **ES/EUS parekoak sortzean**: sortu edukia `docs/content/es/` eta `docs/content/eus/` azpian. Itzulpen osoa bukatu gabe badago, gehitu goiburu itzulia eta markatu orria pendiente gisa.
+5. **Link hautsi bat konpontzean**: barne link guztiek locale prefijoa eraman behar dute (adibidez `/eus/setup`). Locale gabeko linkek ere funtzionatzen dute middleware redirect bidez, baina locale esplizitudun linkak hobesten dira.
+6. **Docs-ak egiazko mantentzea**: ez dokumentatu kodetik egiaztatu ezin den jokabiderik. Erabili `> [!NOTE]` callout-ak "Needs verification" testuarekin zalantzazko edozerentzat.

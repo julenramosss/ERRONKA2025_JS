@@ -1,49 +1,282 @@
-# Nola lagundu
+# Ekarpena eta garapen errezetak
 
-## Adarrak
+Monorepo honetako garapen lan ohikoenetarako urratsez urratseko gidak. Errezeta guztiek [Arkitektura](/eus/architecture) eta [Backend](/eus/backend) orrietan deskribatutako konbentzioak jarraitzen dituzte.
 
-Jarraitu biltegiko adar-politikak eta mantendu lana pakete bakoitzaren arabera mugatuta (`backend-js`, `frontend-app`, `docs`).
+## Fluxu orokorra
 
-## Garapen-fluxu segurua
+1. Ekarri `main` adarreko azken aldaketak.
+2. Sortu aldatuko duzun paketera mugatutako adarra (`backend/`, `frontend/`, `docs/`).
+3. Inplementatu aldaketak beheko konbentzioak jarraituz.
+4. Exekutatu `tsc --noEmit` kaltetutako paketean commit egin aurretik.
+5. Jokabide aldaketarik badago, eguneratu docs-ak `/docs/content/en/` barruan.
 
-1. Azken aldaketak jaitsi.
-2. Adar zentratua sortu.
-3. Aldaketa minimo eta mugatuak inplementatu.
-4. Pakete-espezifikoko egiaztapenak exekutatu.
-5. Portaera-aldaketentzako dokumentazioa eguneratu `/docs`-n.
+---
 
-## Backend endpoint bat gehitu
+## Errezeta: backend endpoint bat gehitu
 
-1. Erabilera-kasuaren karpeta sortu `backend-js/src/app/api/<domeinua>/<ekintza>`-n.
-2. `dto`/`dtos` balioztatze gehitu.
-3. Zerbitzu-arauak inplementatu.
-4. Biltegi-kontsultak inplementatu.
-5. `route.ts` gehitu `requireAuth` + `handleError`-rekin.
-6. Frontend API modulua eta motak gehitu/zabaldu UIs kontsumitzen badu.
+Erreferentziazko inplementazioa: `backend-js/src/app/api/users/create/`.
 
-## Frontend API dei bat gehitu
+### 1 - Karpeta egitura sortu
 
-1. Metodoa gehitu `app/lib/api/*-api.ts`-ri.
-2. Eskaera/erantzun motak gehitu `app/utils/types/api`-n.
-3. Hookea gehitu `app/hooks/<domeinua>`-n.
-4. Kontsulta-gakoak/aukerak gehitu query-oinarritua bada.
+```
+backend-js/src/app/api/<domain>/<action>/
+  dtos/
+    <action>.dto.ts
+  repository/
+    <action>.repo.ts
+  service/
+    <action>.service.ts
+  route.ts
+  types.ts
+```
 
-## Orrialde berri bat gehitu
+Karpeta izenaren konbentzioa: `dtos/` (plurala). Salbuespenik gabe.
 
-1. Ibilbidea sortu App Router talde egokian.
-2. Datuak lotu lehendik dauden hooks/query-ereduekin.
-3. `globals.css`-ko paleta/tokenak berrerabili.
-4. Karga/eskeletoaren egoerak gehitu behar den lekuan.
+### 2 - Domeinu motak definitu (`types.ts`)
 
-## Dokumentazioari hizkuntza berri bat gehitu
+```ts
+export interface CreateFooDto {
+  name: string;
+  // ... balidatutako field-ak
+}
 
-1. Hiztegi-fitxategia sortu `docs/app/i18n/<locale>.ts`-n.
-2. `DocsDictionary` egitura bete.
-3. Locale erregistratu `docs/app/i18n/index.ts`-n.
-4. MDX eduki-itzulpenak gehitu `docs/content/<locale>/`-n.
+export interface FooRow {
+  id: number;
+  name: string;
+  created_at: string;
+}
+```
 
-## Dokumentazioa kodeekin sinkronizatuta mantendu
+### 3 - DTO balidatzailea idatzi (`dtos/<action>.dto.ts`)
 
-- API erreferentzia eguneratu ibilbideak gehitu/aldatu ondoren.
-- Ingurune-orria eguneratu konfigurazio-aldaketen ondoren.
-- Ziurgabeak diren alderdiak **Egiaztapena behar du** gisa markatu portaera asmatu beharrean.
+```ts
+import { isString } from "@/app/lib/dto";
+import { ValidationError } from "@/app/lib/errors";
+import { CreateFooDto } from "../types";
+
+export function validateCreateFooDto(body: unknown): CreateFooDto {
+  if (!body || typeof body !== "object") {
+    throw new ValidationError("Invalid request body");
+  }
+  const { name } = body as Record<string, unknown>;
+  if (!isString(name)) throw new ValidationError("name is required");
+  return { name: name as string };
+}
+```
+
+Arauak:
+- Funtzio izena: `validateXxxDto(body: unknown): XxxDto`.
+- Ez egin SQL deirik DTO barruan.
+- Erabili `src/app/lib/dto.ts`-eko guard-ak: `isString`, `isEmail`, `isNumber`, `isBoolean`, `isUserRole`, `isPackageValidStatus`.
+- Input baliogaberako `ValidationError` bota.
+
+### 4 - Repository-a idatzi (`repository/<action>.repo.ts`)
+
+```ts
+import { connect } from "@/app/config/dbConfig";
+import { ResultSetHeader } from "mysql2";
+import { FooRow } from "../types";
+
+export async function insertFoo(name: string): Promise<number> {
+  const db = await connect();
+  const [result] = await db.execute<ResultSetHeader>(
+    "INSERT INTO foos (name) VALUES (?)",
+    [name]
+  );
+  return result.insertId;
+}
+
+export async function findFooById(id: number): Promise<FooRow | null> {
+  const db = await connect();
+  const [rows] = await db.query<(FooRow & import("mysql2").RowDataPacket)[]>(
+    "SELECT id, name, created_at FROM foos WHERE id = ?",
+    [id]
+  );
+  return rows[0] ?? null;
+}
+```
+
+Arauak:
+- Hemen SQL bakarrik. Ez negozio logikarik.
+- Erabili beti prepared statements (`?` placeholder-ak).
+- Ez deitu repository-a zuzenean `route.ts`-tik; pasa service-etik.
+
+### 5 - Service-a idatzi (`service/<action>.service.ts`)
+
+```ts
+import { NotFoundError } from "@/app/lib/errors";
+import { insertFoo, findFooById } from "../repository/<action>.repo";
+import { CreateFooDto, FooRow } from "../types";
+
+export async function createFooService(dto: CreateFooDto): Promise<FooRow> {
+  const id = await insertFoo(dto.name);
+  const foo = await findFooById(id);
+  if (!foo) throw new NotFoundError("Foo not created");
+  return foo;
+}
+```
+
+Arauak:
+- Negozio logika bakarrik. Ez SQL-rik.
+- Bota `src/app/lib/errors.ts`-eko erroreak.
+
+### 6 - Route handler-a idatzi (`route.ts`)
+
+```ts
+import { requireAuth } from "@/app/lib/jwt";
+import { handleError, res } from "@/app/lib/response";
+import { validateCreateFooDto } from "./dtos/<action>.dto";
+import { createFooService } from "./service/<action>.service";
+import { USER_ROLES } from "@/app/types";
+
+export async function POST(request: Request) {
+  try {
+    const auth = requireAuth(request, [USER_ROLES.admin]);
+    const body = await request.json();
+    const dto = validateCreateFooDto(body);
+    const result = await createFooService(dto);
+    return res.created(result);
+  } catch (error) {
+    return handleError("[POST /api/<domain>/<action>]", error);
+  }
+}
+```
+
+Arauak:
+- `requireAuth` -> `validateDto` -> `service` -> `res.xxx`.
+- Ez SQL-rik, ez negozio logikarik.
+- Pasatu beti endpoint etiketa `handleError`-i.
+
+### 7 - Docs-ak eguneratu
+
+Gehitu endpoint berria `docs/content/en/api/index.mdx` fitxategian dagokion taldean. Sartu request body eta response shape-a. Egiaztatu gabe dagoena markatu `> [!NOTE] Needs verification` erabilita.
+
+---
+
+## Errezeta: frontend API dei bat gehitu
+
+Erreferentzia: `frontend-app/app/lib/api/auth-api.ts`.
+
+### 1 - Request/response motak gehitu
+
+Sortu edo eguneratu `frontend-app/app/utils/types/api/<domain>.types.ts`:
+
+```ts
+export interface CreateFooRequest { name: string }
+export interface CreateFooResponse { id: number; name: string; created_at: string }
+```
+
+### 2 - API funtzioa gehitu
+
+`frontend-app/app/lib/api/<domain>-api.ts` barruan:
+
+```ts
+import { apiClient } from "./helpers/client";
+import type { CreateFooRequest, CreateFooResponse } from "../../utils/types/api/foo.types";
+
+export async function createFoo(payload: CreateFooRequest): Promise<CreateFooResponse> {
+  const response = await apiClient.post<CreateFooResponse>("/foos/create", payload);
+  return response.data;
+}
+```
+
+### 3 - React Query hook bat gehitu
+
+`frontend-app/app/hooks/<domain>/use<Action>.ts` barruan:
+
+```ts
+import { useMutation } from "@tanstack/react-query";
+import { createFoo } from "../../lib/api/foo-api";
+
+export function useCreateFoo() {
+  return useMutation({ mutationFn: createFoo });
+}
+```
+
+Queries (GET) direnean, gehitu query key bat `app/query/keys/` barruan eta options `app/query/options/` barruan, dagoen patroia jarraituz.
+
+---
+
+## Errezeta: frontend orri bat gehitu
+
+### 1 - Page fitxategia sortu
+
+Dagokion App Router taldean `frontend-app/app/` barruan:
+- Autentikatutako orriak `(main)/(pages)/<page-name>/page.tsx` barruan doaz.
+- Auth orriak `(auth)/` barruan doaz.
+
+### 2 - Datuak konektatu
+
+Erabili `app/hooks/`-eko hook existitzen direnak. Behar bada gehitu hook berria (ikusi goian).
+
+### 3 - Loading egoera gehitu
+
+Gehitu skeleton loader osagai bat `(main)/(pages)/<page-name>/components/loaders/<Page>.loader.tsx` bidean, orri existitzen direnek erabiltzen duten `boneyard-js` `Skeleton` patroia jarraituz.
+
+### 4 - Alboko nabigaziora gehitu
+
+Orria aside menuan agertu behar bada, gehitu `(main)/components/AsideMenu/components/MenuOptions.tsx`-eko `MenuOptions` osagaian.
+
+---
+
+## Errezeta: docs atal berri bat gehitu (EN + ES + EUS)
+
+### 1 - Eduki fitxategiak sortu
+
+```
+docs/content/en/<section>/index.mdx
+docs/content/en/<section>/_meta.ts
+docs/content/es/<section>/index.mdx
+docs/content/es/<section>/_meta.ts
+docs/content/eus/<section>/index.mdx
+docs/content/eus/<section>/_meta.ts
+```
+
+`_meta.ts` gutxieneko forma:
+```ts
+export default { index: { title: "Section Title" } };
+```
+
+### 2 - Root `_meta.ts`-n erregistratu
+
+Gehitu `<section>: { title: "..." }` `docs/content/en/_meta.ts`, `docs/content/es/_meta.ts` eta `docs/content/eus/_meta.ts` fitxategietan.
+
+### 3 - Nav item-a gehitu
+
+`docs/app/[lang]/layout.tsx` barruan, gehitu `navItems`-era:
+```ts
+{ href: "/<section>", label: nav.<sectionKey> },
+```
+
+### 4 - i18n string-ak gehitu
+
+`docs/app/i18n/en.ts` barruan, gehitu `<sectionKey>: "Section Title"` `navigation`-era bai `DocsDictionary` interfazean bai `en` objektuan. Errepikatu `es.ts` eta `eus.ts` fitxategietan.
+
+### 5 - Edukia idatzi
+
+Idatzi ingelesez lehenik. ES eta EUS-rako, idatzi itzulpen osoak edo gehitu laburpena + EN bertsiorako oharra:
+
+```mdx
+> [!NOTE]
+> Ingelesezko bertsioa iturri autoritatiboa da. Ikusi [English version](/en/<section>) xehetasun guztietarako.
+```
+
+---
+
+## Errezeta: onartutako locale berri bat gehitu
+
+1. Sortu `docs/app/i18n/<locale>.ts`, `DocsDictionary` interfaze osoarekin bat eginez.
+2. Erregistratu locale-a `docs/app/i18n/index.ts`-eko `getDictionary` funtzioan.
+3. Gehitu `<locale>` `SUPPORTED_LOCALES` zerrendara `docs/middleware.ts`-n.
+4. Gehitu `<locale>` `generateStaticParams`-era `docs/app/[lang]/[[...mdxPath]]/page.tsx` barruan erabiltzen bada.
+5. Sortu `docs/content/<locale>/` atal guztietako edukiekin.
+
+---
+
+## Docs-ak egiazko mantentzea
+
+- **Ez dokumentatu inoiz source code-an egiaztatu ez duzun jokabiderik.**
+- Erabili `> [!NOTE] Needs verification` ziur ez zauden guztirako.
+- Endpoint bat gehitu ondoren: egiaztatu request/response-a benetako `route.ts` eta `dtos/` fitxategien aurka, eta eguneratu `docs/content/en/api/index.mdx`.
+- Ingurune aldagaiak aldatzean: eguneratu `docs/content/en/environment/index.mdx`.
+- DB eskema aldatzean: eguneratu `docs/content/en/database/index.mdx`.

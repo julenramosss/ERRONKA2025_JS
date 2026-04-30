@@ -98,3 +98,39 @@ Los tokens de seguimiento se almacenan en la tabla `tokens` con tipo `tracking_t
 ## Flujo de activación de cuenta
 
 La creación de usuario dispara la generación del email de activación mediante `sendActivationEmailService`. El tipo de token de activación es `activate_account_token` y es validado por el mismo mecanismo de verificación de tokens de `changePwd`.
+
+> [!WARNING]
+> La URL de activación actualmente reutiliza `RESET_BASE_URL` en el código. Tenlo en cuenta al configurar enlaces de email.
+
+## Logs
+
+Los cambios de estado se escriben en `package_status_logs` y se exponen mediante:
+
+- `GET /api/logs/listAll` (admin)
+- `GET /api/logs/listByPackage` (admin/distributor)
+
+## Flujos de dominio routes/stops/packages
+
+### Creación de rutas
+
+- Valida el usuario repartidor y la restricción de una ruta por día.
+- Fusiona paquetes arrastrados de días anteriores.
+- Optimiza el orden de paradas mediante Google Directions.
+- Inserta ruta + route stops y actualiza la entrega estimada del paquete.
+
+### Continuación de ruta pasada
+
+- Encuentra la última ruta pasada pendiente.
+- Migra paradas pendientes a la ruta del día actual.
+- Mueve paquetes pendientes a `in_transit` con efectos secundarios.
+
+### Operaciones de paradas
+
+- `PATCH /api/stops/reorder` (admin) actualiza el orden de paradas.
+- `PATCH /api/stops/updateArrival` (distributor) marca `actual_arrival` para una parada propia.
+
+### Operaciones de paquetes
+
+- Crear paquete + dirección + tracking token + log inicial + email de tracking.
+- Actualizar detalles/dirección de paquete y efectos secundarios relacionados.
+- Las transiciones de estado de distributor se fuerzan con matriz de transiciones permitidas y restricciones de orden de ruta.

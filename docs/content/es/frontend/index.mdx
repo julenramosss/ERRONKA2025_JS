@@ -1,90 +1,90 @@
-# Documentación del frontend
+# Documentacion frontend
 
-## Stack tecnológico
+## Tech stack
 
 - Next.js App Router
 - React 19
 - TanStack React Query
 - Axios
 - Tailwind CSS v4
-- Integración con mapas HERE
-- Componentes de esqueleto `boneyard-js`
+- Integracion HERE Maps
+- Componentes skeleton loader de `boneyard-js`
 
-## Estructura de la aplicación
+## Estructura de la app
 
-Carpetas principales en `frontend-app/app`:
+Carpetas principales bajo `frontend-app/app`:
 
-- `(auth)` grupo de rutas: experiencia de inicio de sesión.
-- `(main)` grupo de rutas: flujos del panel autenticado.
-- `lib/api`: clientes Axios y helpers de API.
-- `hooks`: hooks de query/mutation por dominio.
-- `providers`: React Query y proveedores de tutorial.
-- `utils/types/api`: contratos de respuesta y solicitud tipados.
+- Grupo de rutas `(auth)`: experiencia de login.
+- Grupo de rutas `(main)`: flujos autenticados de dashboard.
+- `lib/api`: clientes Axios y helpers API.
+- `hooks`: query/mutation hooks por dominio.
+- `providers`: providers de React Query y tutorial.
+- `utils/types/api`: contratos tipados de request y response.
 
-## Layout y proveedores
+## Layout y providers
 
 `app/layout.tsx` envuelve el contenido con:
 
-- `AppProviders` → `ReactQueryProvider`
-- `RouteGuard` (barrera de autenticación)
+- `AppProviders` -> `ReactQueryProvider`
+- `RouteGuard` (puerta de auth)
 
-`(main)/layout.tsx` añade:
+`(main)/layout.tsx` anade:
 
-- `SessionKeepAlive` (query de refresco de sesión en segundo plano)
+- `SessionKeepAlive` (query background para refrescar sesion)
 - `PreferencesSync`
 - `AsideMenu` + `Header` + footer
 - `TutorialProvider`
 
 ## Uso de React Query
 
-- Claves de query organizadas en `app/query/keys/*`.
-- Opciones de query en `app/query/options/*`.
-- Reintentos predeterminados deshabilitados para los estados HTTP no reintentables comunes (400/401/403/404/409).
+- Query keys organizadas en `app/query/keys/*`.
+- Query options en `app/query/options/*`.
+- Reintentos desactivados por defecto para estados HTTP normalmente no reintentables (400/401/403/404/409).
 
-## Cliente Axios API
+## Cliente API Axios
 
-La configuración de `apiClient` incluye:
+La configuracion de `apiClient` incluye:
 
 - `withCredentials: true`.
-- Interceptor de solicitud que inyecta `Authorization: Bearer <access_token>`.
-- Interceptor de respuesta que refresca en `401` (excepto login/refresh/forgot-password/tracking), reintenta una vez y limpia el token en caso de fallo.
+- interceptor de request que inyecta `Authorization: Bearer <access_token>`.
+- interceptor de response que refresca ante `401` (excepto endpoints login/refresh/forgot-password/tracking), reintenta una vez y borra el token si falla.
 
-## Almacenamiento del token de autenticación
+## Almacenamiento de tokens auth
 
-- El frontend guarda el token de acceso en la cookie `access_token` (`SameSite=Strict`, `max-age=15m`).
-- El token de refresco permanece gestionado en el backend como cookie HTTP-only.
+- El frontend guarda el access token en la cookie `access_token` (`SameSite=Strict`, `max-age=15m`).
+- El refresh token permanece gestionado por backend en cookie HTTP-only.
 
-## Flujo del token de refresco
+## Flujo de refresh-token
 
-- La query de refresco en segundo plano (`refreshTokenQueryOptions`) se ejecuta cada 12 minutos.
-- El interceptor Axios dispara el refresco ante un 401 inesperado y repite la solicitud original una vez.
+- La query background (`refreshTokenQueryOptions`) se ejecuta cada 12 minutos.
+- El interceptor Axios dispara refresh ante 401 inesperado y repite la request original una vez.
 
 ## Comportamiento de RouteGuard
 
-- La lista de rutas públicas actualmente incluye solo `/login`.
-- Si el usuario accede a una ruta protegida sin token válido, la aplicación redirige a `/login`.
-- Si el usuario tiene token válido y accede a `/login`, la aplicación redirige a `/`.
+- La lista de rutas publicas incluye actualmente solo `/login`.
+- Si el usuario entra en una ruta protegida sin token valido, la app redirige a `/login`.
+- Si el usuario tiene token valido y entra en `/login`, la app redirige a `/`.
 
-## Páginas/pantallas principales
+## Paginas/pantallas principales
 
-- `/dashboard`: resumen del perfil, estadísticas, próximas entregas, panel de mapa.
-- `/myPackages`: vistas de lista/cuadrícula y filtrado.
-- `/myPackages/[packageId]`: detalle del paquete e historial de logs.
-- `/myRoute`: vista de ejecución de ruta diaria, progreso, paradas, mapa.
-- `/history`: análisis histórico de actividad de paquetes.
-- `/settings`: controles de perfil/seguridad/apariencia.
-- `/login`: autenticación + modal de contraseña olvidada.
+- `/dashboard`: resumen de perfil, estadisticas, proximas entregas y panel de mapa.
+- `/myPackages`: vistas lista/grid de paquetes, busqueda y filtrado para paquetes asignados.
+- `/myPackages/[packageId]`: detalle del paquete, direccion, estado actual e historial de logs.
+- `/myRoute`: vista de ejecucion de ruta diaria con progreso, paradas ordenadas y mapa.
+- `/history`: analitica e historial de actividad de paquetes.
+- `/settings`: controles de perfil, seguridad y apariencia.
+- `/login`: autenticacion y modal de recuperacion de password.
 
-## Hooks y módulos API
+## Hooks y modulos API
 
-Los hooks están agrupados por dominio:
+Hooks agrupados por dominio:
 
 - `hooks/auth/*`
 - `hooks/packages/*`
 - `hooks/routes/*`
 - `hooks/tracking/*`
 
-Módulos API:
+Modulos API:
 
 - `lib/api/auth-api.ts`
 - `lib/api/packages-api.ts`
@@ -94,4 +94,23 @@ Módulos API:
 
 ## Tipos
 
-Los modelos API canónicos están en `app/utils/types/api/*.ts`.
+Los modelos API canonicos estan en `app/utils/types/api/*.ts`.
+
+## Enfoque de estilos e identidad PakAG
+
+`app/globals.css` define la paleta PakAG y tokens semanticos (superficies morado oscuro, acentos violeta, colores de estado). El tema de docs en `/docs` replica esta paleta intencionadamente.
+
+## Estrategia de skeleton/loading
+
+Las paginas usan componentes wrapper `Skeleton` con loaders especificos de dominio (por ejemplo loaders de dashboard, my-route e history).
+
+## UI de tracking
+
+El frontend incluye cliente API de tracking (`tracking-api.ts`) y constantes `TRACKING_PATH_PREFIX`. El comportamiento de tracking publico usa el endpoint backend `/api/tracking/:trackingToken`.
+
+## Flujos dashboard/distributor/admin
+
+El set actual de rutas frontend esta orientado a repartidor (dashboard, myPackages, myRoute, history, settings). Las capacidades admin estan expuestas principalmente mediante APIs backend y pueden requerir superficies UI separadas.
+
+> [!NOTE]
+> Las pantallas web orientadas a admin no aparecen claramente en las rutas de `frontend-app/app` y deben tratarse como **Needs verification** para completar el alcance de producto.

@@ -1,49 +1,282 @@
-# Cómo contribuir
+# Contribucion y recetas de desarrollo
 
-## Ramas
+Guias paso a paso para las tareas de desarrollo mas comunes en este monorepo. Todas las recetas siguen las convenciones descritas en [Arquitectura](/es/architecture) y [Backend](/es/backend).
 
-Siga las políticas de ramas del repositorio y mantenga el trabajo acotado por paquete (`backend-js`, `frontend-app`, `docs`).
+## Flujo general
 
-## Flujo de desarrollo seguro
+1. Trae los ultimos cambios de `main`.
+2. Crea una rama limitada al paquete que vas a modificar (`backend/`, `frontend/`, `docs/`).
+3. Implementa los cambios siguiendo las convenciones de abajo.
+4. Ejecuta `tsc --noEmit` en el paquete afectado antes de commitear.
+5. Actualiza la documentacion en `/docs/content/en/` ante cualquier cambio de comportamiento.
 
-1. Obtener los últimos cambios.
-2. Crear rama enfocada.
-3. Implementar cambios mínimos y acotados.
-4. Ejecutar comprobaciones específicas del paquete.
-5. Actualizar la documentación en `/docs` para cambios de comportamiento.
+---
 
-## Añadir un endpoint de backend
+## Receta: anadir un endpoint backend
 
-1. Crear la carpeta del caso de uso en `backend-js/src/app/api/<dominio>/<accion>`.
-2. Añadir validación `dto`/`dtos`.
-3. Implementar las reglas del servicio.
-4. Implementar las consultas del repositorio.
-5. Añadir `route.ts` con `requireAuth` + `handleError`.
-6. Añadir/extender el módulo API del frontend y los tipos si lo consume la UI.
+Implementacion de referencia: `backend-js/src/app/api/users/create/`.
 
-## Añadir una llamada API al frontend
+### 1 - Crear la estructura de carpetas
 
-1. Añadir método a `app/lib/api/*-api.ts`.
-2. Añadir tipos de solicitud/respuesta en `app/utils/types/api`.
-3. Añadir hook en `app/hooks/<dominio>`.
-4. Añadir claves/opciones de query si es basado en query.
+```
+backend-js/src/app/api/<domain>/<action>/
+  dtos/
+    <action>.dto.ts
+  repository/
+    <action>.repo.ts
+  service/
+    <action>.service.ts
+  route.ts
+  types.ts
+```
 
-## Añadir una nueva página
+Convencion de carpeta: `dtos/` (plural). Sin excepciones.
 
-1. Crear ruta en el grupo App Router apropiado.
-2. Conectar datos con los hooks/patrones de query existentes.
-3. Reutilizar la paleta/tokens de `globals.css`.
-4. Añadir estados de carga/skeleton donde corresponda.
+### 2 - Definir tipos de dominio (`types.ts`)
 
-## Añadir un nuevo idioma a la documentación
+```ts
+export interface CreateFooDto {
+  name: string;
+  // ... campos validados
+}
 
-1. Crear el archivo de diccionario en `docs/app/i18n/<locale>.ts`.
-2. Cumplir la estructura `DocsDictionary`.
-3. Registrar el locale en `docs/app/i18n/index.ts`.
-4. Añadir las traducciones de contenido MDX en `docs/content/<locale>/`.
+export interface FooRow {
+  id: number;
+  name: string;
+  created_at: string;
+}
+```
 
-## Mantener la documentación sincronizada con el código
+### 3 - Escribir el validador DTO (`dtos/<action>.dto.ts`)
 
-- Actualizar la referencia de API tras añadir/modificar rutas.
-- Actualizar la página de entorno tras cambios de configuración.
-- Marcar las áreas inciertas como **Requiere verificación** en lugar de inventar comportamiento.
+```ts
+import { isString } from "@/app/lib/dto";
+import { ValidationError } from "@/app/lib/errors";
+import { CreateFooDto } from "../types";
+
+export function validateCreateFooDto(body: unknown): CreateFooDto {
+  if (!body || typeof body !== "object") {
+    throw new ValidationError("Invalid request body");
+  }
+  const { name } = body as Record<string, unknown>;
+  if (!isString(name)) throw new ValidationError("name is required");
+  return { name: name as string };
+}
+```
+
+Reglas:
+- Nombre de funcion: `validateXxxDto(body: unknown): XxxDto`.
+- No hacer llamadas SQL dentro de DTOs.
+- Usar guards de `src/app/lib/dto.ts`: `isString`, `isEmail`, `isNumber`, `isBoolean`, `isUserRole`, `isPackageValidStatus`.
+- Lanzar `ValidationError` para input invalido.
+
+### 4 - Escribir el repository (`repository/<action>.repo.ts`)
+
+```ts
+import { connect } from "@/app/config/dbConfig";
+import { ResultSetHeader } from "mysql2";
+import { FooRow } from "../types";
+
+export async function insertFoo(name: string): Promise<number> {
+  const db = await connect();
+  const [result] = await db.execute<ResultSetHeader>(
+    "INSERT INTO foos (name) VALUES (?)",
+    [name]
+  );
+  return result.insertId;
+}
+
+export async function findFooById(id: number): Promise<FooRow | null> {
+  const db = await connect();
+  const [rows] = await db.query<(FooRow & import("mysql2").RowDataPacket)[]>(
+    "SELECT id, name, created_at FROM foos WHERE id = ?",
+    [id]
+  );
+  return rows[0] ?? null;
+}
+```
+
+Reglas:
+- Solo SQL aqui. Sin logica de negocio.
+- Usar siempre prepared statements (placeholders `?`).
+- Nunca llamar al repository directamente desde `route.ts`; pasar por el service.
+
+### 5 - Escribir el service (`service/<action>.service.ts`)
+
+```ts
+import { NotFoundError } from "@/app/lib/errors";
+import { insertFoo, findFooById } from "../repository/<action>.repo";
+import { CreateFooDto, FooRow } from "../types";
+
+export async function createFooService(dto: CreateFooDto): Promise<FooRow> {
+  const id = await insertFoo(dto.name);
+  const foo = await findFooById(id);
+  if (!foo) throw new NotFoundError("Foo not created");
+  return foo;
+}
+```
+
+Reglas:
+- Solo logica de negocio. Sin SQL.
+- Lanzar errores de `src/app/lib/errors.ts`.
+
+### 6 - Escribir el route handler (`route.ts`)
+
+```ts
+import { requireAuth } from "@/app/lib/jwt";
+import { handleError, res } from "@/app/lib/response";
+import { validateCreateFooDto } from "./dtos/<action>.dto";
+import { createFooService } from "./service/<action>.service";
+import { USER_ROLES } from "@/app/types";
+
+export async function POST(request: Request) {
+  try {
+    const auth = requireAuth(request, [USER_ROLES.admin]);
+    const body = await request.json();
+    const dto = validateCreateFooDto(body);
+    const result = await createFooService(dto);
+    return res.created(result);
+  } catch (error) {
+    return handleError("[POST /api/<domain>/<action>]", error);
+  }
+}
+```
+
+Reglas:
+- `requireAuth` -> `validateDto` -> `service` -> `res.xxx`.
+- Sin SQL, sin logica de negocio.
+- Pasar siempre la etiqueta del endpoint a `handleError`.
+
+### 7 - Actualizar docs
+
+Anade el nuevo endpoint a `docs/content/en/api/index.mdx` dentro del grupo adecuado. Incluye request body y response shape. Marca cualquier cosa no verificada con `> [!NOTE] Needs verification`.
+
+---
+
+## Receta: anadir una llamada API de frontend
+
+Referencia: `frontend-app/app/lib/api/auth-api.ts`.
+
+### 1 - Anadir tipos request/response
+
+Crea o actualiza `frontend-app/app/utils/types/api/<domain>.types.ts`:
+
+```ts
+export interface CreateFooRequest { name: string }
+export interface CreateFooResponse { id: number; name: string; created_at: string }
+```
+
+### 2 - Anadir la funcion API
+
+En `frontend-app/app/lib/api/<domain>-api.ts`:
+
+```ts
+import { apiClient } from "./helpers/client";
+import type { CreateFooRequest, CreateFooResponse } from "../../utils/types/api/foo.types";
+
+export async function createFoo(payload: CreateFooRequest): Promise<CreateFooResponse> {
+  const response = await apiClient.post<CreateFooResponse>("/foos/create", payload);
+  return response.data;
+}
+```
+
+### 3 - Anadir un hook React Query
+
+En `frontend-app/app/hooks/<domain>/use<Action>.ts`:
+
+```ts
+import { useMutation } from "@tanstack/react-query";
+import { createFoo } from "../../lib/api/foo-api";
+
+export function useCreateFoo() {
+  return useMutation({ mutationFn: createFoo });
+}
+```
+
+Para queries (GET), anade una query key en `app/query/keys/` y options en `app/query/options/` siguiendo el patron existente.
+
+---
+
+## Receta: anadir una pagina de frontend
+
+### 1 - Crear el archivo de pagina
+
+En el grupo App Router apropiado bajo `frontend-app/app/`:
+- Las paginas autenticadas van en `(main)/(pages)/<page-name>/page.tsx`.
+- Las paginas de auth van en `(auth)/`.
+
+### 2 - Conectar datos
+
+Usa hooks existentes de `app/hooks/`. Anade un hook nuevo si hace falta (ver arriba).
+
+### 3 - Anadir estado de carga
+
+Anade un componente skeleton loader en `(main)/(pages)/<page-name>/components/loaders/<Page>.loader.tsx` siguiendo el patron `Skeleton` de `boneyard-js` usado en paginas existentes.
+
+### 4 - Anadir a la navegacion lateral
+
+Si la pagina debe aparecer en el menu lateral, anadela al componente `MenuOptions` en `(main)/components/AsideMenu/components/MenuOptions.tsx`.
+
+---
+
+## Receta: anadir una nueva seccion de docs (EN + ES + EUS)
+
+### 1 - Crear archivos de contenido
+
+```
+docs/content/en/<section>/index.mdx
+docs/content/en/<section>/_meta.ts
+docs/content/es/<section>/index.mdx
+docs/content/es/<section>/_meta.ts
+docs/content/eus/<section>/index.mdx
+docs/content/eus/<section>/_meta.ts
+```
+
+Forma minima de `_meta.ts`:
+```ts
+export default { index: { title: "Section Title" } };
+```
+
+### 2 - Registrar en el `_meta.ts` raiz
+
+Anade `<section>: { title: "..." }` a `docs/content/en/_meta.ts`, `docs/content/es/_meta.ts` y `docs/content/eus/_meta.ts`.
+
+### 3 - Anadir item de navegacion
+
+En `docs/app/[lang]/layout.tsx`, anade a `navItems`:
+```ts
+{ href: "/<section>", label: nav.<sectionKey> },
+```
+
+### 4 - Anadir strings i18n
+
+En `docs/app/i18n/en.ts`, anade `<sectionKey>: "Section Title"` a `navigation` tanto en la interfaz `DocsDictionary` como en el objeto `en`. Repite en `es.ts` y `eus.ts`.
+
+### 5 - Escribir contenido
+
+Escribe primero en ingles. Para ES y EUS, escribe traducciones completas o anade un resumen + nota enlazando a EN:
+
+```mdx
+> [!NOTE]
+> La version inglesa es la fuente autoritativa. Consulta [English version](/en/<section>) para todos los detalles.
+```
+
+---
+
+## Receta: anadir un nuevo locale soportado
+
+1. Crea `docs/app/i18n/<locale>.ts` igualando toda la interfaz `DocsDictionary`.
+2. Registra el locale en `docs/app/i18n/index.ts` dentro de `getDictionary`.
+3. Anade `<locale>` a `SUPPORTED_LOCALES` en `docs/middleware.ts`.
+4. Anade `<locale>` a `generateStaticParams` en `docs/app/[lang]/[[...mdxPath]]/page.tsx` si se usa.
+5. Crea `docs/content/<locale>/` con todos los archivos de contenido de seccion.
+
+---
+
+## Mantener la documentacion veraz
+
+- **Nunca documentes comportamiento que no hayas verificado en el codigo fuente.**
+- Usa `> [!NOTE] Needs verification` para cualquier cosa incierta.
+- Tras anadir un endpoint: verifica su request/response contra los `route.ts` y `dtos/` reales, y actualiza `docs/content/en/api/index.mdx`.
+- Tras cambiar variables de entorno: actualiza `docs/content/en/environment/index.mdx`.
+- Tras cambiar el esquema de BD: actualiza `docs/content/en/database/index.mdx`.

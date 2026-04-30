@@ -1,42 +1,73 @@
-# Auditoría de la documentación
+# Auditoria de docs
 
-Esta página registra el estado actual del sitio de documentación: qué se ha verificado, qué aún está sin confirmar, riesgos conocidos y decisiones de arquitectura para futuros mantenedores.
+Esta pagina registra el estado actual del sitio de documentacion: que se verifico, que sigue sin confirmarse, riesgos conocidos y decisiones de arquitectura para futuros mantenedores.
 
-> [!NOTE]
-> La versión inglesa de esta página es la fuente de verdad y la más completa. Consulta [la versión en inglés](/en/audit) para todos los detalles.
+## Que se verifico
 
-## Qué se ha verificado
+Las siguientes afirmaciones se cruzaron contra el codigo real bajo `backend-js/`, `frontend-app/` y `docs/`:
 
-- Estructura del monorepo (`pnpm-workspace.yaml`)
-- Inventario de endpoints de backend (verificado contra `route.ts`)
-- Flujos de autenticación (JWT + cookie HTTP-only)
-- Máquina de estados de paquetes
-- Efectos secundarios de email en cambios de estado
-- Tipos de tokens
-- Inconsistencia en el nombre de la base de datos (`erronka` vs `pakag`)
+- **Estructura monorepo**: tres paquetes (`backend-js`, `frontend-app`, `docs`) bajo pnpm workspaces. Verificado desde `pnpm-workspace.yaml`.
+- **Inventario de endpoints backend**: todos los endpoints de la referencia API se verificaron contra archivos `backend-js/src/app/api/*/route.ts`.
+- **Flujos de auth**: access token (Bearer JWT, 15 min) + refresh token (cookie HTTP-only, 7 dias) confirmados desde `backend-js/src/app/lib/jwt.ts` y `backend-js/src/app/config/envConfig.ts`.
+- **Maquina de estados de paquetes**: `pending -> assigned -> in_transit -> delivered | undelivered | failed` confirmada desde `backend-js/src/app/types/index.ts`.
+- **Efectos secundarios de email al cambiar estado**: confirmados desde `backend-js/src/app/lib/packageStatus/packageStatusSideEffects.service.ts`.
+- **Tipos de token**: `refresh_token`, `tracking_token`, `reset_pwd_token`, `activate_account_token` confirmados desde `backend-js/src/app/types/index.ts`.
+- **Inconsistencia del nombre de BD**: `schema.sql` crea la base como `erronka`; `backend-js/.env.example` la documenta como `pakag`. Marcado como **Needs verification** en docs de environment.
+- **Origen de Google Directions**: coordenadas hardcodeadas en `backend-js/src/app/api/routes/create/service/create.service.ts`; riesgo confirmado y documentado en security y environment.
+- **Rutas de archivos del cliente API frontend**: todas las rutas `app/lib/api/*` se referencian como estan documentadas; las ubicaciones exactas de tipos TypeScript se verificaron desde `app/utils/types/api/`.
 
-## Qué aún necesita verificación
+## Que sigue sin verificar (Needs verification)
 
-- Esquemas exactos de request/response para endpoints solo-admin
-- Valores por defecto de paginación en endpoints de listado
-- Variantes de respuesta de error más allá de `{ error: string }`
-- Configuración de dominio de producción y CORS
+Los siguientes items no pudieron confirmarse sin acceso a un entorno en ejecucion o test de integracion completo:
+
+- Schemas exactos de request/response para endpoints solo-admin que el frontend actual no llama (`/api/packages/create`, `/api/packages/update`, `/api/routes/create`, etc.).
+- Defaults de paginacion para endpoints de listado (`/api/packages/list`, `/api/users/list`, `/api/logs/listAll`).
+- Variantes de respuesta de error mas alla de `{ error: string }`: forma completa de error por status code.
+- Dominio de produccion y configuracion CORS (documentado como riesgo, no confirmado).
+- URL de activacion: las docs indican que reutiliza `RESET_BASE_URL`; el comportamiento exacto en un entorno vivo no esta verificado.
+- Pantallas UI de admin en frontend: algunas ubicaciones de pantallas mencionadas en domain/frontend no pudieron fijarse a paths concretos.
 
 ## Riesgos conocidos
 
-| Severidad | Riesgo |
+| Severidad | Riesgo | Referencia |
+| --- | --- | --- |
+| High | `JWT_SECRET` tiene un fallback hardcodeado en `envConfig.ts`; si no se define en produccion, el fallback es visible publicamente en el repo | Security page, CLAUDE.md §4.2 |
+| High | `DEFAULT_USER_PASSWORD` tiene el mismo problema de fallback hardcodeado | Security page, CLAUDE.md §4.3 |
+| Medium | `handleError` reenvia mensajes internos de error en respuestas HTTP 500 | CLAUDE.md §4.5 |
+| Medium | Paquetes de rate limiting instalados (`@upstash/ratelimit`) pero no implementados | CLAUDE.md §7.2 |
+| Low | Las variables env de MySQL no se validan al arrancar; posibles fallos silenciosos | CLAUDE.md §4.4 |
+| Low | `GOOGLE_DIRECTIONS_API_KEY` usa asercion TypeScript `!` sin guard al arrancar | CLAUDE.md §4.10 |
+
+## Decisiones de arquitectura del sitio de docs
+
+- **Layout custom**: las docs no usan el layout de `nextra-theme-docs`. En su lugar, `docs/app/[lang]/layout.tsx` implementa sidebar, header y layout de contenido totalmente custom para permitir control total de diseno.
+- **Rutas por locale**: el locale es el primer segmento de URL (`/en/`, `/es/`, `/eus/`). El middleware en `docs/middleware.ts` redirige paths sin locale a `/en/`.
+- **Busqueda**: implementada como busqueda estatica client-side por titulo de pagina mediante `DocsSearch.tsx`. No hay indice full-text. Ctrl+K / Cmd+K abre el modal.
+- **Tabla de contenidos**: `PageToc.tsx` lee headings del DOM tras mount (limitado a `.docs-content`). Los headings reciben IDs estables mediante `slugify` en `mdx-components.tsx`.
+- **TOC movil**: `MobilePageTools.tsx` renderiza un boton bajo el header que abre un drawer inferior con el TOC y un acceso a busqueda.
+- **i18n**: los diccionarios viven en `docs/app/i18n/`. Anadir un item de nav requiere actualizar la interfaz `DocsDictionary` y los tres archivos de locale.
+- **IDs de headings MDX**: los componentes MDX `h2`, `h3`, `h4` se sobrescriben en `docs/mdx-components.tsx` para autogenerar atributos `id` mediante `slugify`.
+
+## Estado de build y busqueda
+
+| Feature | Estado |
 | --- | --- |
-| Alta | `JWT_SECRET` con fallback hardcodeado visible en el repositorio |
-| Alta | `DEFAULT_USER_PASSWORD` con el mismo problema |
-| Media | `handleError` expone mensajes de error internos en respuestas 500 |
-| Media | Rate limiting instalado pero no implementado |
+| Redirect raiz `/` a `/en` | Funciona via `docs/app/page.tsx` + middleware |
+| Rutas con prefijo locale | Funcionan: `/en/`, `/es/`, `/eus/` |
+| Fallback de locale (p. ej. `/backend` -> `/en/backend`) | Funciona via `docs/middleware.ts` |
+| TOC por pagina (desktop) | Funciona: sticky lateral derecho via `PageToc.tsx` |
+| TOC por pagina (movil) | Funciona: drawer inferior via `MobilePageTools.tsx` |
+| Busqueda Ctrl+K | Funciona: busqueda estatica de titulos via `DocsSearch.tsx` |
+| Anchor links de headings | Funcionan: IDs generados via `slugify` en `mdx-components.tsx` |
+| Boton copiar en bloques de codigo | Funciona via `CodeBlock.tsx` |
+| Sidebar movil | Funciona via `MobileMenu.tsx` |
+| View transitions | Funcionan: CSS view transitions en navegacion |
 
-## Decisiones de arquitectura del sitio de documentación
+## Como deben actualizar docs futuros agentes
 
-- Layout completamente personalizado (sin `nextra-theme-docs`)
-- Enrutamiento por locale (`/en/`, `/es/`, `/eus/`)
-- Middleware redirige rutas sin locale a `/en/`
-- Búsqueda estática por títulos de página (Ctrl+K)
-- Tabla de contenidos generada desde el DOM
-
-Consulta la [versión en inglés](/en/audit) para la descripción completa de cada decisión.
+1. **Anadir un endpoint backend**: actualizar `docs/content/en/api/index.mdx`. Anadir ejemplos request/response. Verificar desde los `route.ts` y `dtos/` reales. Marcar lo no verificado con `> [!NOTE] Needs verification`.
+2. **Anadir una pagina o hook frontend**: actualizar `docs/content/en/frontend/index.mdx`.
+3. **Anadir una seccion de docs**: crear `docs/content/en/{section}/index.mdx` y `docs/content/en/{section}/_meta.ts`. Anadir la seccion a `docs/content/en/_meta.ts`. Anadir item de nav en `docs/app/[lang]/layout.tsx` y actualizar los tres diccionarios i18n.
+4. **Crear equivalentes ES/EUS**: crear archivos de contenido bajo `docs/content/es/` y `docs/content/eus/`. Si la traduccion completa no esta terminada, anadir cabecera traducida y marcar la pagina como pendiente.
+5. **Arreglar un link roto**: todos los links internos deben llevar prefijo de locale (por ejemplo `/es/setup`). Los links sin locale tambien funcionan via redirect de middleware, pero se prefieren links con locale explicito.
+6. **Mantener docs veraces**: no documentar comportamiento que no pueda verificarse desde el codigo. Usar callouts `> [!NOTE]` con "Needs verification" para cualquier cosa incierta.

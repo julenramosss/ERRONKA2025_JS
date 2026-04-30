@@ -1,29 +1,197 @@
 # Datu-basea
 
-PakAG-k **MySQL** erabiltzen du (`pakAG_db` eskema). Eskema osoa `schema.sql`-n dago monorepo-aren sustraian.
+pakAG-ek **MySQL** erabiltzen du (datu-basearen izena `erronka` da `schema.sql` arabera; `.env.example`-ek `pakag` dokumentatzen du, ikusi arrisku ezagunak).
 
-## Taula nagusiak
+Eskemaren egia-iturria: [`schema.sql`](https://github.com) monorepoaren erroan.
 
-| Taula                    | Deskribapena                                         |
-| ------------------------ | ---------------------------------------------------- |
-| `users`                  | Sistemaren erabiltzaileak (banatzaileak eta adminak) |
-| `packages`               | Uneko egoerarekin erregistratutako paketeak          |
-| `routes`                 | Banatzaileei esleituako banaketa-ibilbideak          |
-| `stops`                  | Ibilbide bakoitzeko geralekuak                       |
-| `package_status_history` | Pakete bakoitzeko egoera-aldaketen historia          |
-| `logs`                   | Sistemaren ekintza garrantzitsuen loga               |
+## Taulak
 
-## Pakete baten egoerak
+### `addresses`
+
+Geokodetutako entrega helbideak. Paketea sortzeko fluxuak sortzen ditu (Google Geocoding API).
+
+| Zutabea | Mota | Oharrak |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `street` | `VARCHAR(255)` | |
+| `city` | `VARCHAR(100)` | |
+| `postal_code` | `VARCHAR(20)` | |
+| `country` | `VARCHAR(100)` | Default `'Espana'` |
+| `latitude` | `DECIMAL(10,7)` | Google API-k geokodetua |
+| `longitude` | `DECIMAL(10,7)` | Google API-k geokodetua |
+| `created_at` | `TIMESTAMP` | |
+
+> [!NOTE]
+> SQL kontsultek `latitude`/`longitude` aliasatzen dituzte `lat`/`lng` gisa TypeScript motetan. DB-ko zutabe izenak eta frontend motetako field izenak ez dira berdinak.
+
+---
+
+### `users`
+
+Sistemako erabiltzaileak: admin-ak eta banatzaileak.
+
+| Zutabea | Mota | Oharrak |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `name` | `VARCHAR(150)` | |
+| `email` | `VARCHAR(255) UNIQUE` | |
+| `password_hash` | `VARCHAR(255)` | bcrypt |
+| `role` | `ENUM('admin','distributor')` | Default `'distributor'` |
+| `is_active` | `BOOLEAN` | Default `TRUE`. Erabiltzaile berriak inaktibo sortzen dira aktibazio fluxuaren bidez |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | Errenkada aldatzean automatikoki eguneratzen da |
+
+---
+
+### `packages`
+
+Domeinuko entitate nagusia. Entregatu beharreko paketea adierazten du.
+
+| Zutabea | Mota | Oharrak |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `tracking_code` | `VARCHAR(50) UNIQUE` | Gizakiek irakurtzeko kode laburra, adibidez `PAK-20260001` |
+| `recipient_name` | `VARCHAR(150)` | |
+| `recipient_email` | `VARCHAR(255)` | Egoera jakinarazpen emailak jasotzen ditu |
+| `weight_kg` | `DECIMAL(6,3)` | |
+| `description` | `TEXT NULL` | Aukerakoa |
+| `status` | `ENUM(...)` | Ikusi egoera makina behean |
+| `estimated_delivery` | `DATE NULL` | Ruta sortzean ezartzen da; ruta optimizatzean eguneratzen da |
+| `address_id` | `INT UNSIGNED` | FK -> `addresses.id` |
+| `assigned_to` | `INT UNSIGNED NULL` | FK -> `users.id`. `ON DELETE SET NULL` |
+| `created_by` | `INT UNSIGNED` | FK -> `users.id` |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | |
+
+**Pakete egoeren makina**
 
 ```
-PENDING → ASSIGNED → IN_TRANSIT → DELIVERED
-                              ↘ UNDELIVERED
-                              ↘ FAILED
+pending -> assigned -> in_transit -> delivered
+                           -> undelivered
+                           -> failed
 ```
+
+Trantsizio bakoitzak `package_status_logs`-en sarrera bat eta hartzailearentzako email bat sortzen du. Ikusi [Domeinu eredua](/eus/domain) albo-efektuen taula osorako.
+
+---
+
+### `tokens`
+
+Sistemako token mota guztietarako taula bakarra.
+
+| Zutabea | Mota | Oharrak |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `token` | `VARCHAR(512) UNIQUE` | Token balio opakoa (32 byte-ko hex edo JWT string-a) |
+| `type` | `ENUM(...)` | `refresh_token`, `tracking_token`, `reset_pwd_token`, `activate_account_token` |
+| `user_id` | `INT UNSIGNED NULL` | FK -> `users.id`. `refresh_token`-erako ezartzen da; `ON DELETE CASCADE` |
+| `package_id` | `INT UNSIGNED NULL` | FK -> `packages.id`. `tracking_token`-erako ezartzen da; `ON DELETE CASCADE` |
+| `expires_at` | `TIMESTAMP` | |
+| `revoked` | `BOOLEAN` | Default `FALSE`. Erabiltzean edo logout egitean ezeztatzen da |
+| `created_at` | `TIMESTAMP` | |
+
+Token bizitzak (env bidez konfiguratuta):
+- `refresh_token`: `JWT_REFRESH_EXPIRES_DAYS` (default 7 egun)
+- `tracking_token`: `TRACKING_EXPIRES_DAYS` (default 30 egun)
+- `reset_pwd_token` / `activate_account_token`: 24 ordu (hardcodeatuta)
+
+---
+
+### `package_status_logs`
+
+Pakete egoera aldaketa guztien historia osoa.
+
+| Zutabea | Mota | Oharrak |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `package_id` | `INT UNSIGNED` | FK -> `packages.id`. `ON DELETE CASCADE` |
+| `old_status` | `ENUM NULL` | `NULL` hasierako egoera esleipenerako |
+| `new_status` | `ENUM` | |
+| `changed_by` | `INT UNSIGNED` | FK -> `users.id` |
+| `notes` | `TEXT NULL` | |
+| `changed_at` | `TIMESTAMP` | |
+
+---
+
+### `routes`
+
+Entrega ruta bat banatzaile eta egun natural bakoitzeko (constraint bakarrak bermatuta).
+
+| Zutabea | Mota | Oharrak |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `user_id` | `INT UNSIGNED` | FK -> `users.id` (`distributor` izan behar du) |
+| `route_date` | `DATE` | |
+| `status` | `ENUM('planned','in_progress','completed')` | Default `'planned'` |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | |
+
+**Constraint bakarra**: `(user_id, route_date)`: banatzaile bakoitzeko ruta bat eguneko.
+
+---
+
+### `route_stops`
+
+Ruta baten barruko geldialdiak. Geldialdi bat = pakete entrega bat.
+
+| Zutabea | Mota | Oharrak |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `route_id` | `INT UNSIGNED` | FK -> `routes.id`. `ON DELETE CASCADE` |
+| `package_id` | `INT UNSIGNED` | FK -> `packages.id`. `ON DELETE CASCADE` |
+| `stop_order` | `SMALLINT` | Google Directions API-k optimizatua |
+| `estimated_arrival` | `TIME NULL` | Ruta sortzean kalkulatua |
+| `actual_arrival` | `TIME NULL` | Banatzaileak iritsiera markatzean ezarria |
+| `created_at` | `TIMESTAMP` | |
+
+**Constraint bakarra**: `(route_id, stop_order)`: bi geldialdik ezin dute ordena bera partekatu ruta batean.
+
+---
+
+## Erlazioak
+
+```
+users --- packages (assigned_to, created_by)
+users --- routes (user_id)
+users --- package_status_logs (changed_by)
+users --- tokens (user_id)
+
+packages --- addresses (address_id)
+packages --- route_stops (package_id)
+packages --- package_status_logs (package_id)
+packages --- tokens (package_id, tracking_token-erako)
+
+routes --- route_stops (route_id)
+```
+
+---
+
+## Indizeak
+
+```sql
+CREATE INDEX idx_packages_status      ON packages (status);
+CREATE INDEX idx_packages_assigned_to ON packages (assigned_to);
+CREATE INDEX idx_packages_created_at  ON packages (created_at);
+CREATE INDEX idx_tokens_type_expires  ON tokens (type, expires_at, revoked);
+CREATE INDEX idx_logs_package_date    ON package_status_logs (package_id, changed_at);
+CREATE INDEX idx_routes_date          ON routes (route_date);
+```
+
+---
 
 ## SQL konbentzioak
 
-- Kontsulta guztiek **prepared statements** erabiltzen dituzte (mysql2 `?` lekuzorrotzak)
-- ID-ak: `INT AUTO_INCREMENT PRIMARY KEY`
-- Timestamps-ak: `DATETIME DEFAULT CURRENT_TIMESTAMP`
-- Ezabaketa bigunak: ez dira erabiltzen — `package_status_history`-n gordetzen dira erregistro historikoak
+- Kontsulta guztiek **prepared statements** erabiltzen dituzte (`mysql2` `?` placeholder-ekin). Ez dago string kateaketarik.
+- ID-ak: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`.
+- Timestamp-ak: `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`.
+- Ez dago soft delete-rik `packages` taulan; egoera historikoa `package_status_logs`-en gordetzen da.
+- `addresses` ez dira ezabatzen pakete bat ezabatzean (**Needs verification**: ez dago `ON DELETE CASCADE` `packages.address_id` FK-an).
+
+---
+
+## Arrisku ezagunak
+
+| Arriskua | Xehetasuna |
+| --- | --- |
+| DB izenaren inkoherentzia | `schema.sql`-ek DB-a `erronka` gisa sortzen du; `.env.example`-ek `MYSQL_DATABASE=pakag` dokumentatzen du. Migrazio aurretik egiaztatu produkzioan zein izen erabiltzen den. |
+| Startup balidaziorik ez | `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` env aldagaiak `undefined` izan daitezke hasieran errorerik gabe. Pool-ak isilik huts egiten du lehen kontsultan. |

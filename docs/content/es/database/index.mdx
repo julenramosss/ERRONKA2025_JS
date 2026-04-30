@@ -1,29 +1,197 @@
 # Base de datos
 
-PakAG usa **MySQL** (esquema `pakAG_db`). El esquema completo está en `schema.sql` en la raíz del monorepo.
+pakAG usa **MySQL** (nombre de base de datos `erronka` segun `schema.sql`; `.env.example` lo documenta como `pakag`, ver riesgos conocidos).
 
-## Tablas principales
+Fuente de verdad del esquema: [`schema.sql`](https://github.com) en la raiz del monorepo.
 
-| Tabla                    | Descripción                                    |
-| ------------------------ | ---------------------------------------------- |
-| `users`                  | Usuarios del sistema (distribuidores y admins) |
-| `packages`               | Paquetes registrados con estado actual         |
-| `routes`                 | Rutas de reparto asignadas a distribuidores    |
-| `stops`                  | Paradas dentro de cada ruta                    |
-| `package_status_history` | Historial de cambios de estado por paquete     |
-| `logs`                   | Log de acciones relevantes del sistema         |
+## Tablas
 
-## Estados de un paquete
+### `addresses`
+
+Direcciones de entrega geocodificadas. Se crean en el flujo de creacion de paquetes (Google Geocoding API).
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `street` | `VARCHAR(255)` | |
+| `city` | `VARCHAR(100)` | |
+| `postal_code` | `VARCHAR(20)` | |
+| `country` | `VARCHAR(100)` | Default `'Espana'` |
+| `latitude` | `DECIMAL(10,7)` | Geocodificado por Google API |
+| `longitude` | `DECIMAL(10,7)` | Geocodificado por Google API |
+| `created_at` | `TIMESTAMP` | |
+
+> [!NOTE]
+> Las consultas SQL aliasan `latitude`/`longitude` como `lat`/`lng` en los tipos TypeScript. Los nombres de columnas en BD difieren de los nombres de campos en los tipos del frontend.
+
+---
+
+### `users`
+
+Usuarios del sistema: admins y repartidores.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `name` | `VARCHAR(150)` | |
+| `email` | `VARCHAR(255) UNIQUE` | |
+| `password_hash` | `VARCHAR(255)` | bcrypt |
+| `role` | `ENUM('admin','distributor')` | Default `'distributor'` |
+| `is_active` | `BOOLEAN` | Default `TRUE`. Los usuarios nuevos se crean inactivos mediante el flujo de activacion |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | Se actualiza automaticamente al cambiar la fila |
+
+---
+
+### `packages`
+
+Entidad principal del dominio. Representa un paquete a entregar.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `tracking_code` | `VARCHAR(50) UNIQUE` | Codigo corto legible, por ejemplo `PAK-20260001` |
+| `recipient_name` | `VARCHAR(150)` | |
+| `recipient_email` | `VARCHAR(255)` | Recibe emails de notificacion de estado |
+| `weight_kg` | `DECIMAL(6,3)` | |
+| `description` | `TEXT NULL` | Opcional |
+| `status` | `ENUM(...)` | Ver maquina de estados abajo |
+| `estimated_delivery` | `DATE NULL` | Se define al crear ruta; se actualiza al optimizar la ruta |
+| `address_id` | `INT UNSIGNED` | FK -> `addresses.id` |
+| `assigned_to` | `INT UNSIGNED NULL` | FK -> `users.id`. `ON DELETE SET NULL` |
+| `created_by` | `INT UNSIGNED` | FK -> `users.id` |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | |
+
+**Maquina de estados de paquete**
 
 ```
-PENDING → ASSIGNED → IN_TRANSIT → DELIVERED
-                              ↘ UNDELIVERED
-                              ↘ FAILED
+pending -> assigned -> in_transit -> delivered
+                           -> undelivered
+                           -> failed
 ```
+
+Cada transicion genera una entrada en `package_status_logs` y un email al destinatario. Consulta [Modelo de dominio](/es/domain) para la tabla completa de efectos secundarios.
+
+---
+
+### `tokens`
+
+Tabla unica para todos los tipos de token del sistema.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `token` | `VARCHAR(512) UNIQUE` | Valor opaco del token (hex de 32 bytes o cadena JWT) |
+| `type` | `ENUM(...)` | `refresh_token`, `tracking_token`, `reset_pwd_token`, `activate_account_token` |
+| `user_id` | `INT UNSIGNED NULL` | FK -> `users.id`. Definido para `refresh_token`; `ON DELETE CASCADE` |
+| `package_id` | `INT UNSIGNED NULL` | FK -> `packages.id`. Definido para `tracking_token`; `ON DELETE CASCADE` |
+| `expires_at` | `TIMESTAMP` | |
+| `revoked` | `BOOLEAN` | Default `FALSE`. Se revoca al usarlo o cerrar sesion |
+| `created_at` | `TIMESTAMP` | |
+
+Vida de los tokens (configurada por env):
+- `refresh_token`: `JWT_REFRESH_EXPIRES_DAYS` (default 7 dias)
+- `tracking_token`: `TRACKING_EXPIRES_DAYS` (default 30 dias)
+- `reset_pwd_token` / `activate_account_token`: 24 horas (hardcodeado)
+
+---
+
+### `package_status_logs`
+
+Historial completo de cada cambio de estado de paquete.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `package_id` | `INT UNSIGNED` | FK -> `packages.id`. `ON DELETE CASCADE` |
+| `old_status` | `ENUM NULL` | `NULL` para la asignacion inicial de estado |
+| `new_status` | `ENUM` | |
+| `changed_by` | `INT UNSIGNED` | FK -> `users.id` |
+| `notes` | `TEXT NULL` | |
+| `changed_at` | `TIMESTAMP` | |
+
+---
+
+### `routes`
+
+Una ruta de entrega por repartidor y dia natural (forzado por constraint unico).
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `user_id` | `INT UNSIGNED` | FK -> `users.id` (debe ser `distributor`) |
+| `route_date` | `DATE` | |
+| `status` | `ENUM('planned','in_progress','completed')` | Default `'planned'` |
+| `created_at` | `TIMESTAMP` | |
+| `updated_at` | `TIMESTAMP` | |
+
+**Constraint unico**: `(user_id, route_date)`: una ruta por repartidor y dia.
+
+---
+
+### `route_stops`
+
+Paradas individuales dentro de una ruta. Una parada = una entrega de paquete.
+
+| Columna | Tipo | Notas |
+| --- | --- | --- |
+| `id` | `INT UNSIGNED AUTO_INCREMENT` | PK |
+| `route_id` | `INT UNSIGNED` | FK -> `routes.id`. `ON DELETE CASCADE` |
+| `package_id` | `INT UNSIGNED` | FK -> `packages.id`. `ON DELETE CASCADE` |
+| `stop_order` | `SMALLINT` | Optimizado por Google Directions API |
+| `estimated_arrival` | `TIME NULL` | Calculado al crear la ruta |
+| `actual_arrival` | `TIME NULL` | Definido cuando el repartidor marca llegada |
+| `created_at` | `TIMESTAMP` | |
+
+**Constraint unico**: `(route_id, stop_order)`: dos paradas no pueden compartir el mismo orden en una ruta.
+
+---
+
+## Relaciones
+
+```
+users --- packages (assigned_to, created_by)
+users --- routes (user_id)
+users --- package_status_logs (changed_by)
+users --- tokens (user_id)
+
+packages --- addresses (address_id)
+packages --- route_stops (package_id)
+packages --- package_status_logs (package_id)
+packages --- tokens (package_id, para tracking_token)
+
+routes --- route_stops (route_id)
+```
+
+---
+
+## Indices
+
+```sql
+CREATE INDEX idx_packages_status      ON packages (status);
+CREATE INDEX idx_packages_assigned_to ON packages (assigned_to);
+CREATE INDEX idx_packages_created_at  ON packages (created_at);
+CREATE INDEX idx_tokens_type_expires  ON tokens (type, expires_at, revoked);
+CREATE INDEX idx_logs_package_date    ON package_status_logs (package_id, changed_at);
+CREATE INDEX idx_routes_date          ON routes (route_date);
+```
+
+---
 
 ## Convenciones SQL
 
-- Todas las consultas usan **prepared statements** (placeholders `?` de mysql2)
-- IDs: `INT AUTO_INCREMENT PRIMARY KEY`
-- Timestamps: `DATETIME DEFAULT CURRENT_TIMESTAMP`
-- Soft deletes: no se usan — los registros históricos se mantienen en `package_status_history`
+- Todas las consultas usan **prepared statements** (`mysql2` con placeholders `?`). Sin concatenacion de strings.
+- IDs: `INT UNSIGNED AUTO_INCREMENT PRIMARY KEY`.
+- Timestamps: `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`.
+- No hay soft deletes en `packages`; el estado historico se conserva en `package_status_logs`.
+- `addresses` no se eliminan cuando se elimina un paquete (**Needs verification**: no hay `ON DELETE CASCADE` en la FK `packages.address_id`).
+
+---
+
+## Riesgos conocidos
+
+| Riesgo | Detalle |
+| --- | --- |
+| Inconsistencia de nombre de BD | `schema.sql` crea la BD como `erronka`; `.env.example` documenta `MYSQL_DATABASE=pakag`. Verifica que nombre se usa en produccion antes de migrar. |
+| Sin validacion al arranque | `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE` pueden ser `undefined` al arrancar sin error. El pool falla silenciosamente en la primera consulta. |

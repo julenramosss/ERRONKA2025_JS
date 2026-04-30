@@ -1,11 +1,11 @@
-import nextra from "nextra";
+import nextra from 'nextra';
 
 const withNextra = nextra({
   defaultShowCopyCode: true,
   search: {
     codeblocks: false,
   },
-  contentDirBasePath: "/",
+  contentDirBasePath: '/',
 });
 
 export default withNextra({
@@ -13,7 +13,7 @@ export default withNextra({
     viewTransition: true,
   },
   i18n: {
-    locales: ["en", "es", "eus"],
-    defaultLocale: "en",
+    locales: ['en', 'es', 'eus'],
+    defaultLocale: 'en',
   },
 });

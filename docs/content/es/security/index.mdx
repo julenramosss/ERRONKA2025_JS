@@ -1,59 +1,140 @@
-# Autenticación y seguridad
+# Auth y seguridad
 
-## Flujo del token de acceso
+## Arquitectura de tokens
 
-- El backend emite un token JWT de acceso al hacer login/refresh.
-- El frontend almacena este token en una cookie de cliente (`access_token`) y lo envía como header Bearer mediante el interceptor Axios.
-- `RouteGuard` valida la expiración del JWT en el navegador antes de permitir la navegación protegida.
+En login se emiten dos tokens y se mantienen en la tabla `tokens`:
 
-## Flujo de la cookie de token de refresco
+| Token | Almacenamiento | Vida | Proposito |
+| --- | --- | --- | --- |
+| Access token (JWT) | Cookie frontend `access_token` | 15 min (`JWT_ACCESS_EXPIRES_IN`) | Enviado como `Authorization: Bearer` en cada request |
+| Refresh token (hex opaco) | Cookie backend HTTP-only | 7 dias (`JWT_REFRESH_EXPIRES_DAYS`) | Rotado en cada uso via `/api/auth/refresh` |
 
-- El backend establece `refresh_token` como cookie HTTP-only mediante `res.ok(...cookies)`.
-- Al refrescar, el backend revoca la fila del token antiguo e inserta un nuevo registro de token de refresco.
-- El logout revoca el token de refresco actual y limpia la cookie.
+## Flujo de login
 
-## Comportamiento de las cookies en el frontend
+```
+1. POST /api/auth/login { email, password }
+   -> Backend verifica hash bcrypt
+   -> Emite JWT access token firmado (15 min)
+   -> Genera refresh token, lo persiste en tokens table
+   -> Define refresh_token como cookie HttpOnly
+   -> Devuelve { user, access_token } en el body
 
-- Cookie de token de acceso: `SameSite=Strict`, `max-age=900`, `Secure` en producción.
-- Las solicitudes de refresco se envían con `withCredentials: true`.
+2. Frontend guarda access_token en cookie:
+   SameSite=Strict, max-age=900, Secure en produccion
+```
 
-## Comportamiento de las cookies en el backend
+## Flujo de refresh
 
-`res.ok` aplica:
+```
+3. Query en background cada 12 min (via SessionKeepAlive)
+   -> POST /api/auth/refresh (cookie enviada automaticamente)
+   -> Backend valida refresh token (no revocado, no caducado)
+   -> Revoca la fila antigua de refresh token en BD
+   -> Inserta una fila nueva de refresh token
+   -> Devuelve nuevo { access_token } + define cookie nueva
 
-- `SameSite=Lax` en desarrollo
-- `SameSite=None; Secure` en producción
+4. Interceptor Axios ante 401 inesperado:
+   -> Refresca y reintenta la request original una vez
+   -> En segundo fallo: borra access_token, redirige a /login
+```
 
-para las cookies establecidas/eliminadas por el helper del backend.
+## Flujo de logout
 
-## Rutas protegidas y públicas
+```
+5. POST /api/auth/logout
+   -> Backend revoca refresh_token en BD
+   -> Borra cookie refresh_token
+   -> Frontend borra cookie access_token
+```
 
-### Rutas públicas del backend
+## Ajustes de cookies
 
-- `POST /api/auth/login`
-- `POST /api/auth/forgotPassword`
-- `PATCH /api/auth/changePwd`
-- `GET /api/tracking/:trackingToken`
+El helper backend `res.ok()` aplica:
 
-### Rutas protegidas del backend
+| Entorno | cookie access_token | cookie refresh_token |
+| --- | --- | --- |
+| Desarrollo | `SameSite=Strict` | `SameSite=Lax; HttpOnly` |
+| Produccion | `SameSite=Strict; Secure` | `SameSite=None; Secure; HttpOnly` |
 
-Todas las demás rutas de dominio requieren auth bearer; muchas también restringen por rol.
+El frontend define directamente la cookie access token (no HttpOnly). Esta es una superficie de exposicion conocida; ver riesgos abajo.
 
 ## Modelo de roles
 
-- `admin`
-- `distributor`
+Existen dos roles, aplicados mediante `requireAuth(request, allowedRoles)` en cada route handler:
 
-Las comprobaciones de rol se realizan mediante `requireAuth(request, allowedRoles)` en los route handlers.
+| Rol | Acceso |
+| --- | --- |
+| `admin` | Gestion de usuarios, gestion de paquetes, creacion de rutas, logs |
+| `distributor` | Paquetes propios, ruta diaria propia, llegada a paradas, actualizaciones de estado de paquete |
 
-## Notas de seguridad
+## Rutas publicas (sin auth)
 
-- Los tokens de refresco se persisten en la tabla `tokens` con expiración y flags de revocación.
-- Las contraseñas se hashean con helpers bcrypt.
-- El endpoint de contraseña olvidada devuelve un mensaje de éxito neutral para emails desconocidos.
+- `POST /api/auth/login`
+- `POST /api/auth/forgotPassword`
+- `PATCH /api/auth/changePwd` (basada en token, no Bearer)
+- `GET /api/tracking/:trackingToken` (pagina publica de tracking)
 
-## Riesgos conocidos / TODOs
+## Flujo de reset de password
 
-- Existen valores de secreto/contraseña de fallback hardcodeados en la configuración de env del backend (deben sobreescribirse en producción).
-- La URL de activación actualmente se deriva de la URL base de reset (confirmar comportamiento de producto esperado).
-- El token de acceso del frontend en una cookie no HTTP-only aumenta la superficie de exposición a XSS comparado con el almacenamiento solo en el servidor.
+```
+1. POST /api/auth/forgotPassword { email }
+   -> Siempre responde con mensaje neutral (sin enumeracion de email)
+   -> Si el email existe: genera reset_pwd_token (24h), envia email
+
+2. PATCH /api/auth/changePwd { reset_pwd_token }
+   -> Devuelve { valid: true } (comprobacion de token, sin cambiar password)
+
+3. PATCH /api/auth/changePwd { reset_pwd_token, new_password }
+   -> Valida token no revocado, no caducado
+   -> Actualiza password_hash, revoca token
+   -> Devuelve { message: "Password changed successfully" }
+```
+
+## Flujo de activacion de cuenta
+
+```
+1. Admin: POST /api/users/create { name, email, role }
+   -> Usuario creado con is_active=FALSE
+   -> activate_account_token generado (caduca en 24h)
+   -> Email de activacion enviado al usuario
+
+2. Usuario pulsa link -> POST /api/auth/activateAccount?token=...
+   -> Usuario define su propia password
+   -> is_active=TRUE, token revocado
+```
+
+## Riesgos conocidos
+
+| Severidad | Riesgo | Fuente |
+| --- | --- | --- |
+| High | `JWT_SECRET` tiene un fallback hardcodeado en `envConfig.ts`. Si no se define en produccion, cualquiera con el repo puede falsificar access tokens. | `backend-js/src/app/config/envConfig.ts:14` |
+| High | `DEFAULT_USER_PASSWORD` tiene el mismo fallback hardcodeado. Los usuarios nuevos reciben una password conocida si la env var no esta definida. | `backend-js/src/app/config/envConfig.ts:37` |
+| Medium | `handleError` reenvia `error.message` interno en respuestas HTTP 500. Mensajes de MySQL o librerias pueden filtrar nombres de tablas y detalles de stack. | `backend-js/src/app/lib/response.ts:83` |
+| Medium | `@upstash/ratelimit` y `@upstash/redis` estan instalados pero no conectados. Login, forgotPassword y tracking quedan sin proteccion ante brute force. | `backend-js/package.json` |
+| Medium | Access token guardado en cookie no-HttpOnly (`access_token`). XSS puede leerlo. El refresh token si esta protegido en cookie HttpOnly. | `frontend-app/app/lib/api/helpers/client.ts` |
+| Low | `GOOGLE_DIRECTIONS_API_KEY` usa asercion TypeScript `!` sin guard al arrancar. `undefined` silencioso en runtime si falta la var. | `backend-js/src/app/config/envConfig.ts:9` |
+| Low | Variables env MySQL no validadas al arrancar. El pool acepta `undefined` silenciosamente; la primera query falla sin error descriptivo de startup. | `backend-js/src/app/config/envConfig.ts:1-5` |
+
+## Arreglar secretos hardcodeados
+
+Cambio minimo requerido en `envConfig.ts`:
+
+```ts
+// Actual (inseguro):
+export const jwt_secret = process.env.JWT_SECRET ?? "kjhaf7ya...";
+
+// Debe ser:
+const jwt_secret = process.env.JWT_SECRET;
+if (!jwt_secret) throw new Error("JWT_SECRET env var is required");
+export { jwt_secret };
+```
+
+Aplica el mismo patron a `DEFAULT_USER_PASSWORD` y `GOOGLE_DIRECTIONS_API_KEY`.
+
+## Implementar rate limiting
+
+`@upstash/ratelimit` ya esta en `package.json`. Para activarlo:
+
+1. Anade `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` a `.env.local`.
+2. Crea `backend-js/src/app/lib/rateLimit.ts` con una instancia `Ratelimit`.
+3. Llama al limiter al inicio de: `POST /api/auth/login`, `POST /api/auth/forgotPassword`, `GET /api/tracking/:token`.

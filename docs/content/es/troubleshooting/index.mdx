@@ -1,59 +1,185 @@
-# Solución de problemas
+# Solucion de problemas
 
-## Variables de entorno faltantes
+## El backend no arranca
 
-Síntomas: errores al arrancar, fallos de clave indefinida, fallos de conexión a DB.
+**Sintoma**: `Error: Cannot find module '@/app/...'` o similar al ejecutar `pnpm backend:dev`.
 
-- Verificar las variables del backend desde `backend-js/.env.example`.
-- Verificar `NEXT_PUBLIC_API_BASE_URL` del frontend y la clave HERE.
+**Causa**: Los alias de rutas no se resuelven o los `paths` de `tsconfig.json` no coinciden.
 
-## Discrepancia de URL de API
+**Solucion**: Verifica que `backend-js/tsconfig.json` tenga `"@/*": ["./src/*"]` dentro de `compilerOptions.paths`. Si falta, revisa que `backend-js/tsconfig.json` extienda la base correcta.
 
-Síntomas: errores 404/Red del frontend al host incorrecto.
+---
 
-- Confirmar el `API_BASE_URL` en tiempo de ejecución en `frontend-app/app/config/envConfig.ts`.
+## Variables de entorno ausentes o indefinidas
 
-## Problemas de CORS/cookie/sesión
+**Sintoma**: valores `undefined` en logs, errores de conexion a BD, errores de envio de email o errores JWT como `secretOrPrivateKey must have a value`.
 
-Síntomas: 401 repetidos, el refresco no restaura la sesión.
+**Solucion**:
+1. Copia `.env.example` a `.env.local` en `backend-js/`.
+2. Rellena todos los valores; no dejes valores tal cual del ejemplo.
+3. Reinicia el servidor de desarrollo despues de los cambios.
 
-- Asegurarse de que las solicitudes se envíen con credenciales.
-- Asegurarse de que el backend permita credenciales cross-origin.
-- Asegurarse de HTTPS en producción para soporte de cookie Secure.
+Variables criticas con fallback hardcodeado (inseguras en produccion, pero funcionan silenciosamente en desarrollo):
+- `JWT_SECRET`: usa un fallback conocido si no esta definida
+- `DEFAULT_USER_PASSWORD`: usa un fallback conocido si no esta definida
 
-## Bucles de expiración JWT
+Variables sin fallback que fallan en tiempo de ejecucion:
+- `RESEND_API_KEY`: fallara el envio de emails
+- `GOOGLE_DIRECTIONS_API_KEY`: fallaran geocoding y optimizacion de rutas
+- Variables MySQL: el pool de BD fallara en la primera consulta
 
-Síntomas: el usuario es expulsado a `/login` con frecuencia.
+---
 
-- Comprobar la duración máxima del token de acceso (15m) y el intervalo de refresco (12m).
-- Inspeccionar el almacenamiento de cookies del navegador y el desfase de reloj.
+## Errores de conexion a la base de datos
 
-## Token de refresco no funciona
+**Sintoma**: `ECONNREFUSED`, `ER_ACCESS_DENIED_ERROR` o `Unknown database` en tiempo de ejecucion.
 
-- Confirmar que la cookie `refresh_token` existe y se envía.
-- Confirmar que `/api/auth/refresh` no está bloqueado por CORS/proxy.
-- Confirmar que la fila del token no está expirada/revocada en la DB.
+**Checklist**:
+1. El servidor MySQL esta arrancado en `MYSQL_HOST:MYSQL_PORT`.
+2. Las credenciales `MYSQL_USER` / `MYSQL_PASSWORD` son correctas.
+3. La base de datos existe. `schema.sql` la crea como `erronka`; ejecuta `CREATE DATABASE IF NOT EXISTS erronka` si hace falta.
+4. La variable `MYSQL_DATABASE` coincide con el nombre real (`erronka` vs `pakag`; difieren entre `schema.sql` y `.env.example`).
+5. Ajuste SSL: `backend-js/src/app/config/dbConfig.ts` define `ssl: { rejectUnauthorized: false }`. Si tu instancia MySQL requiere un certificado concreto, ajustalo.
 
-## Errores de conexión MySQL
+---
 
-- Comprobar env de host/puerto/usuario/contraseña/base de datos.
-- Validar la ruta de red desde el tiempo de ejecución a la DB.
-- Validar los requisitos SSL frente a la configuración actual `ssl: { rejectUnauthorized: false }`.
+## Falla la comprobacion TypeScript (`tsc --noEmit`)
 
-## Errores de Resend/email
+**Sintoma**: errores de tipos al ejecutar `pnpm tsc --noEmit` en `backend-js/`.
 
-- Confirmar la validez de `RESEND_API_KEY` y la configuración del dominio del remitente (`no-reply@tolosaerronka.es`).
+**Causas y soluciones comunes**:
 
-## Errores de Google Directions/Geocoding
+| Error | Solucion |
+| --- | --- |
+| `Property 'X' does not exist on type 'Y'` | Comprueba que la interfaz DTO y el archivo de tipos esten sincronizados |
+| `Argument of type 'any' is not assignable` | No se permite `any`; anade una interfaz explicita |
+| `Cannot find module '@/app/...'` | Comprueba los `paths` de `tsconfig.json` |
+| Error de tipo en `route.ts` | Verifica que el tipo devuelto por `requireAuth` se use correctamente |
 
-- Confirmar que `GOOGLE_DIRECTIONS_API_KEY` está activa para las APIs requeridas.
-- Comprobar los límites de cuota y el estado de facturación.
+---
 
-## Errores de build de Next.js
+## 401 en todas las peticiones despues del login
 
-- Ejecutar los comandos de build del paquete local para aislar los problemas de backend/frontend/docs.
+**Sintoma**: El login funciona (devuelve `access_token`), pero las llamadas API posteriores devuelven 401.
 
-## Problemas con el gestor de paquetes
+**Checklist**:
+1. El frontend guarda correctamente el access token en la cookie `access_token`.
+2. El interceptor de Axios lee la cookie y define `Authorization: Bearer <token>`.
+3. El token no esta caducado; el access token dura 15 minutos.
+4. El backend esta en otro origen; revisa CORS y `withCredentials: true`.
 
-- Usar `pnpm` de forma consistente en este monorepo.
-- Reinstalar con `pnpm install` en la raíz si el lockfile/workspace diverge.
+---
+
+## El refresh token no funciona / el usuario vuelve al login
+
+**Sintoma**: El usuario sale de sesion tras 15 minutos aunque `SessionKeepAlive` este activo.
+
+**Checklist**:
+1. Abre DevTools -> Application -> Cookies. Confirma que existe la cookie `refresh_token` con flag `HttpOnly`.
+2. Confirma que `POST /api/auth/refresh` no queda bloqueado por CORS. En desarrollo, el backend debe permitir el origen del frontend con `credentials: true`.
+3. Confirma que la fila del refresh token no esta revocada ni caducada en la tabla `tokens`.
+4. Revisa el desfase horario; si servidor y cliente difieren mas que la vida del token, los tokens pueden parecer caducados al instante.
+5. Confirma que `withCredentials: true` esta configurado en el cliente Axios.
+
+---
+
+## Errores CORS
+
+**Sintoma**: falta la cabecera `Access-Control-Allow-Origin` o falla el preflight.
+
+**Solucion**: En `backend-js/next.config.ts` (o middleware CORS equivalente), aseguro:
+- El origen del frontend esta permitido explicitamente (no `*` cuando se usan credenciales).
+- `Access-Control-Allow-Credentials: true` esta configurado.
+- Las peticiones preflight `OPTIONS` devuelven 200.
+
+En produccion, ambas apps deben usar HTTPS para que funcionen cookies `SameSite=None; Secure`.
+
+---
+
+## No se envia email tras crear paquete o cambiar estado
+
+**Sintoma**: No llega ningun email, pero la operacion termina correctamente.
+
+**Checklist**:
+1. `RESEND_API_KEY` esta definida y es valida.
+2. El dominio remitente (`no-reply@tolosaerronka.es`) esta verificado en Resend.
+3. Revisa el dashboard de Resend por fallos de envio o rebotes.
+4. Los emails de cambio de estado son condicionales; solo transiciones concretas disparan emails. Consulta [Modelo de dominio](/es/domain) para la tabla de disparadores.
+
+---
+
+## Falla la creacion de rutas (error de Google Maps)
+
+**Sintoma**: `POST /api/routes/create` devuelve 500 o un error relacionado con Directions API.
+
+**Checklist**:
+1. `GOOGLE_DIRECTIONS_API_KEY` esta definida y la clave tiene **Directions API** y **Geocoding API** activadas en Google Cloud Console.
+2. La facturacion esta activa en el proyecto de Google Cloud.
+3. La clave API no tiene restricciones de IP/referer que bloqueen la IP del servidor backend.
+4. Las direcciones de los paquetes se geocodificaron correctamente al crearlos; si `latitude`/`longitude` son 0 o NULL, fallo el geocoding en la creacion del paquete.
+
+---
+
+## Geocoding devuelve una ubicacion incorrecta
+
+**Sintoma**: El paquete aparece en coordenadas incorrectas en el mapa.
+
+**Causa**: Google Geocoding emparejo otra direccion, o la direccion es ambigua.
+
+**Solucion**: Revisa la fila `addresses` del paquete en la BD. Corrige `latitude`/`longitude` manualmente si hace falta mediante una actualizacion directa en BD (actualmente no hay endpoint para editar coordenadas en bruto).
+
+---
+
+## La optimizacion de ruta supera el maximo de paradas
+
+**Sintoma**: La creacion de ruta se rechaza incluso con menos paquetes de los esperados.
+
+**Causa**: El servicio de rutas anade **paquetes arrastrados** (paquetes asignados de dias anteriores para el mismo repartidor) a la lista de paradas automaticamente. El total esta limitado a 20 paradas.
+
+**Solucion**: Reduce `package_ids` en la peticion para dejar espacio a los arrastrados, o limpia primero el backlog del repartidor.
+
+---
+
+## Falta el log de estado despues de actualizar
+
+**Sintoma**: `GET /api/logs/listByPackage` no devuelve logs despues de llamar a `updateStatus`.
+
+**Causa**: La insercion del log ocurre en `packageStatusSideEffects.service.ts`. Si lanza error y se captura silenciosamente, la actualizacion de estado puede completarse sin escribir log.
+
+**Solucion**: Revisa la consola del backend por errores de `[packageStatusSideEffects]`. Verifica que las restricciones de BD permiten insertar el log (por ejemplo, que existe el usuario `changed_by`).
+
+---
+
+## Falla el build del frontend
+
+**Sintoma**: `pnpm frontend:dev` falla con errores TypeScript o de modulos.
+
+**Solucion**:
+```bash
+# Desde la raiz del monorepo:
+pnpm install
+pnpm --filter @repo/frontend-app tsc --noEmit
+```
+
+---
+
+## La busqueda de docs no encuentra una pagina
+
+**Sintoma**: La busqueda Ctrl+K no devuelve resultados para una pagina conocida.
+
+**Causa**: La busqueda es estatica y se basa en los titulos de `navItems` en `docs/app/[lang]/layout.tsx`. Si anades una pagina nueva sin anadirla a `navItems`, no aparecera en la busqueda.
+
+**Solucion**: Anade la pagina nueva a `navItems` en `layout.tsx` y actualiza los tres diccionarios i18n. Consulta [Auditoria de docs](/es/audit) para el procedimiento completo.
+
+---
+
+## Conflictos de version de pnpm
+
+**Sintoma**: `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND` o no se encuentra un script del workspace.
+
+**Solucion**:
+```bash
+pnpm install   # desde la raiz del monorepo
+```
+
+Todos los comandos de paquetes del workspace deben ejecutarse desde la raiz del monorepo usando flags `--filter` o los scripts de nivel raiz de `package.json`.

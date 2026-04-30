@@ -1,37 +1,37 @@
-# Arquitectura
+# Architecture
 
-pakAG es un **monorepo pnpm** con tres paquetes:
+PakAG is a **pnpm monorepo** with three packages:
 
 ```
 ERRONKA2025_JS/
-  backend-js/    → @repo/backend-js  (API REST)
-  frontend-app/  → @repo/frontend-app (App Next.js)
-  docs/          → @repo/docs        (Esta documentación)
-  schema.sql     → Schema de la base de datos
+  backend-js/    -> @repo/backend-js  (REST API)
+  frontend-app/  -> @repo/frontend-app (Next.js App)
+  docs/          -> @repo/docs        (This documentation)
+  schema.sql     -> Database schema
 ```
 
-## Flujo de datos
+## Data flow
 
 ```
-Cliente (frontend-app)
-  → API REST (backend-js /api/*)
-    → Service (lógica)
-      → Repository (SQL / mysql2)
-        → MySQL (pakAG_db)
+Client (frontend-app)
+  -> REST API (backend-js /api/*)
+    -> Service (logic)
+      -> Repository (SQL / mysql2)
+        -> MySQL (pakAG_db)
 ```
 
-## Comunicación entre capas
+## Communication between layers
 
-- **route.ts**: recibe Request, valida con DTO, llama al service, devuelve Response
-- **service**: pura lógica, sin dependencias de HTTP ni SQL
-- **repository**: solo prepared statements, devuelve tipos de dominio
+- **route.ts**: receives Request, validates with DTO, calls the service, returns Response
+- **service**: pure logic, no HTTP or SQL dependencies
+- **repository**: prepared statements only, returns domain types
 
-## Autenticación
+## Authentication
 
-JWT firmado con `HS256`. El token va en el header `Authorization: Bearer <token>`.  
-El middleware `src/lib/jwt.ts` verifica y extrae el payload en cada request protegida.
+JWT signed with `HS256`. The token is sent in the `Authorization: Bearer <token>` header.  
+The `src/lib/jwt.ts` middleware verifies and extracts the payload on every protected request.
 
 ## Emails
 
-Nodemailer con templates HTML propios (sin librería externa). Los templates están en  
-`src/app/lib/email/templates/` e incluyen diseño responsive con seguimiento de estado del paquete.
+Resend with custom HTML templates (no external template library). Templates live in  
+`src/app/lib/email/templates/` and include responsive design with package status tracking.
