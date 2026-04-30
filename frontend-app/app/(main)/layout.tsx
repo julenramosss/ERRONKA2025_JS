@@ -3,6 +3,7 @@ import { AsideMenu } from './components/AsideMenu/AsideMenu';
 import { SessionKeepAlive } from '../components/SessionKeepAlive';
 import { PreferencesSync } from '../components/PreferencesSync';
 import { TutorialProvider } from '../providers/TutorialProvider';
+import { RoleGuard } from './components/RoleGuard';
 
 export default function AuthLayout({
   children,
@@ -17,7 +18,9 @@ export default function AuthLayout({
         <AsideMenu />
         <div className="flex flex-1 flex-col">
           <Header />
-          <div className="flex-1">{children}</div>
+          <div className="flex-1">
+            <RoleGuard>{children}</RoleGuard>
+          </div>
           <footer className="w-full flex items-center justify-center py-5 text-text-secondary text-sm">
             pakAG © 2026 — Elduaien / Aduna · v2.4.1
           </footer>
