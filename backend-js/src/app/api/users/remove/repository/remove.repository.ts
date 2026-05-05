@@ -13,8 +13,5 @@ export async function findUserById(id: number): Promise<UserIdRow | null> {
 
 export async function deleteUserById(id: number): Promise<void> {
   const db = await connect();
-  await db.query<ResultSetHeader>(
-    'DELETE FROM users WHERE id = ? DELETE ON CASCADE',
-    [id]
-  );
+  await db.query<ResultSetHeader>('DELETE FROM users WHERE id = ?', [id]);
 }
