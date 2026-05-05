@@ -34,6 +34,7 @@ const FINAL_STATUSES: Status[] = [STATUS.FINISHED, STATUS.SKIPPED];
 export function TutorialProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const cleanPath = pathname.split('/')[1]; // For tutorial state key
+
   const { showTutorial } = usePreferences();
   const hasSeen = useTutorialSeen(cleanPath as keyof TutorialState);
 
