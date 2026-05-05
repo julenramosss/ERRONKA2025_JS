@@ -72,13 +72,13 @@ CREATE TABLE packages (
   estimated_delivery  DATE            NULL,
   address_id          INT UNSIGNED    NOT NULL,
   assigned_to         INT UNSIGNED    NULL,               -- banatzailea (users.id)
-  created_by          INT UNSIGNED    NOT NULL,           -- admin (users.id)
+  created_by          INT UNSIGNED    NULL,               -- admin (users.id)
   created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT fk_packages_address   FOREIGN KEY (address_id)   REFERENCES addresses (id),
   CONSTRAINT fk_packages_assignee  FOREIGN KEY (assigned_to)  REFERENCES users (id) ON DELETE SET NULL,
-  CONSTRAINT fk_packages_creator   FOREIGN KEY (created_by)   REFERENCES users (id) ON DELETE CASCADE
+  CONSTRAINT fk_packages_creator   FOREIGN KEY (created_by)   REFERENCES users (id) ON DELETE SET NULL
 );
 
 -- ------------------------------------------------------------
@@ -106,12 +106,12 @@ CREATE TABLE package_status_logs (
   package_id  INT UNSIGNED    NOT NULL,
   old_status  ENUM('pending', 'assigned', 'in_transit', 'delivered', 'undelivered', 'failed') NULL,
   new_status  ENUM('pending', 'assigned', 'in_transit', 'delivered', 'undelivered', 'failed') NOT NULL,
-  changed_by  INT UNSIGNED    NOT NULL,   -- zeinek egin zuen aldaketa (users.id)
+  changed_by  INT UNSIGNED    NULL,       -- zeinek egin zuen aldaketa (users.id)
   notes       TEXT            NULL,
   changed_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   CONSTRAINT fk_logs_package    FOREIGN KEY (package_id) REFERENCES packages (id) ON DELETE CASCADE,
-  CONSTRAINT fk_logs_changed_by FOREIGN KEY (changed_by) REFERENCES users (id) ON DELETE CASCADE
+  CONSTRAINT fk_logs_changed_by FOREIGN KEY (changed_by) REFERENCES users (id) ON DELETE SET NULL
 );
 
 -- ------------------------------------------------------------
@@ -119,13 +119,13 @@ CREATE TABLE package_status_logs (
 -- ------------------------------------------------------------
 CREATE TABLE routes (
   id            INT UNSIGNED    NOT NULL AUTO_INCREMENT,
-  user_id       INT UNSIGNED    NOT NULL,   -- banatzailea
+  user_id       INT UNSIGNED    NULL,       -- banatzailea
   route_date    DATE            NOT NULL,
   status        ENUM('planned', 'in_progress', 'completed') NOT NULL DEFAULT 'planned',
   created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT fk_routes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_routes_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL,
   UNIQUE KEY uq_route_user_date (user_id, route_date)   -- banatzaileak egun bakoitzeko ibilbide bat
 );
 
