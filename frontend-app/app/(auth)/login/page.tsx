@@ -13,8 +13,9 @@ export default function LoginPage() {
         <GlowAmbient />
 
         {/* LOGO */}
-        <div className="relative z-10 w-full">
+        <div className="relative z-10 w-full flex items-center justify-start gap-4">
           <PakLogo size={35} showText={true} />
+          <h1>BY Alejandro</h1>
         </div>
 
         {/* LOGIN CONTAINER */}
