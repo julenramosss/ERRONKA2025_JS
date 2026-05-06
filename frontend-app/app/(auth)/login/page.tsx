@@ -23,7 +23,7 @@ export default function LoginPage() {
             {/* LOGIN HEADER */}
             <div className="flex items-left justify-center text-left flex-col mb-4">
               <h2 className="text-text-secondary text-md font-semibold mb-2">
-                · ONGI ETORRI
+                · PEPE
               </h2>
               <h1 className="text-white font-bold text-3xl mb-4">Saioa hasi</h1>
               <p className="text-text-secondary">
