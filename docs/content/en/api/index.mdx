@@ -1,5 +1,5 @@
 ---
-description: "pakAG REST API reference: base URL, authentication scheme, error format, pagination, and links to all resource pages."
+description: 'pakAG REST API reference: base URL, authentication scheme, error format, pagination, and links to all resource pages.'
 ---
 
 # API Reference
@@ -37,14 +37,14 @@ Every error response uses a consistent envelope:
 
 HTTP status codes:
 
-| Code | Meaning |
-|------|---------|
-| 400 | Validation error |
-| 401 | Unauthenticated (missing or invalid token) |
-| 403 | Forbidden (wrong role, or resource not owned) |
-| 404 | Resource not found |
-| 409 | Conflict (duplicate, FK constraint) |
-| 500 | Internal server error |
+| Code | Meaning                                       |
+| ---- | --------------------------------------------- |
+| 400  | Validation error                              |
+| 401  | Unauthenticated (missing or invalid token)    |
+| 403  | Forbidden (wrong role, or resource not owned) |
+| 404  | Resource not found                            |
+| 409  | Conflict (duplicate, FK constraint)           |
+| 500  | Internal server error                         |
 
 ---
 
@@ -67,15 +67,15 @@ The field name for the array varies per resource (`users`, `packages`, `logs`).
 
 ## Resources
 
-| Resource | Base path | Description |
-|----------|-----------|-------------|
-| [Auth](/en/api/auth) | `/api/auth` | Login, logout, token refresh, password reset, account activation |
-| [Users](/en/api/users) | `/api/users` | User CRUD (admin), change own password (any role) |
+| Resource                     | Base path       | Description                                                          |
+| ---------------------------- | --------------- | -------------------------------------------------------------------- |
+| [Auth](/en/api/auth)         | `/api/auth`     | Login, logout, token refresh, password reset, account activation     |
+| [Users](/en/api/users)       | `/api/users`    | User CRUD (admin), change own password (any role)                    |
 | [Packages](/en/api/packages) | `/api/packages` | Package lifecycle — create, list, update, delete, status transitions |
-| [Routes](/en/api/routes) | `/api/routes` | Optimized delivery route creation and management |
-| [Stops](/en/api/stops) | `/api/stops` | Reorder stops, record arrival times |
-| [Logs](/en/api/logs) | `/api/logs` | Package status-change audit log |
-| [Tracking](/en/api/tracking) | `/api/tracking` | Public package tracking by token |
+| [Routes](/en/api/routes)     | `/api/routes`   | Optimized delivery route creation and management                     |
+| [Stops](/en/api/stops)       | `/api/stops`    | Reorder stops, record arrival times                                  |
+| [Logs](/en/api/logs)         | `/api/logs`     | Package status-change audit log                                      |
+| [Tracking](/en/api/tracking) | `/api/tracking` | Public package tracking by token                                     |
 
 ---
 
