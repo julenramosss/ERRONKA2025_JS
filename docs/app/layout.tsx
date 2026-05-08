@@ -1,5 +1,16 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import './globals.css';
+import { SITE_URL } from './lib/seo';
+
+/**
+ * metadataBase is REQUIRED here so that every openGraph.url, twitter.images,
+ * and alternates.canonical resolved by child layouts/pages becomes an absolute URL.
+ * Without it Next.js emits relative paths that OG scrapers and search engines reject.
+ */
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+};
 
 // Root layout — locale-specific layout lives in app/[lang]/layout.tsx
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -9,7 +9,9 @@
     "dev": "next dev",
     "prebuild": "node scripts/generate-search-index.mjs",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +32,7 @@
   "devDependencies": {
     "@types/mdx": "2.0.13",
     "@types/node": "25.6.0",
-    "@types/react": "19.2.14"
+    "@types/react": "19.2.14",
+    "vitest": "4.1.5"
   }
 }

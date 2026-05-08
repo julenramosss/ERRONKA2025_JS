@@ -16,14 +16,49 @@ import { buildSearchIndex } from '../lib/search-index';
 import { navItems } from '../utils/constants';
 import { DocsDictionary } from '../i18n/en';
 
-export const metadata: Metadata = {
-  title: {
-    template: '%s · PakAG Docs',
-    default: 'PakAG Engineering Docs',
-  },
-  description:
-    'Technical documentation for PakAG backend, frontend, operations, and onboarding.',
-};
+import {
+  SITE_NAME,
+  DEFAULT_DESCRIPTION,
+  LOCALES,
+  buildAlternates,
+} from '../lib/seo';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}): Promise<Metadata> {
+  const { lang } = await params;
+
+  return {
+    title: {
+      template: `%s · ${SITE_NAME}`,
+      default: 'PakAG Engineering Docs',
+    },
+    description: DEFAULT_DESCRIPTION,
+    openGraph: {
+      type: 'website',
+      siteName: SITE_NAME,
+      title: 'PakAG Engineering Docs',
+      description: DEFAULT_DESCRIPTION,
+      locale: lang,
+      alternateLocale: LOCALES.filter((l) => l !== lang),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'PakAG Engineering Docs',
+      description: DEFAULT_DESCRIPTION,
+    },
+    alternates: {
+      // Root-level hreflang — pages override with their own canonical + alternates
+      languages: buildAlternates(''),
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 type LayoutProps = Readonly<{
   children: ReactNode;
