@@ -114,21 +114,29 @@
   --nextra-content-width: 860px;
 }
 
-@keyframes slides-out-to-bottom {
+@keyframes page-exit {
   from {
-    transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
   }
   to {
-    transform: translateY(100%);
+    opacity: 0;
+    transform: translateY(-20px) scale(0.97);
+    filter: blur(8px);
   }
 }
 
-@keyframes slides-in-from-bottom {
+@keyframes page-enter {
   from {
-    transform: translateY(100%);
+    opacity: 0;
+    transform: translateY(32px) scale(0.97);
+    filter: blur(8px);
   }
   to {
-    transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
   }
 }
 
@@ -148,12 +156,12 @@
 
 ::view-transition-old(page-content) {
   z-index: 10;
-  animation: slides-out-to-bottom 1s ease forwards;
+  animation: page-exit 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 ::view-transition-new(page-content) {
   z-index: 10;
-  animation: slides-in-from-bottom 1s ease forwards;
+  animation: page-enter 0.5s cubic-bezier(0, 0, 0.2, 1) forwards;
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────── */
