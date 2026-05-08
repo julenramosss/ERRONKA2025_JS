@@ -1,0 +1,408 @@
+---
+description: "Package management endpoints for pakAG: create, list, get, update, delete packages, and update delivery status."
+---
+
+# Packages
+
+Base URL: `/api/packages` · Port 3001 in development.
+
+Packages are the core entity of pakAG. Each package has a delivery address (geocoded via Google Maps), a tracking token, and a lifecycle of statuses. Admin endpoints manage the full package lifecycle; distributors interact with packages assigned to them.
+
+**Package statuses**: `pending` | `assigned` | `in_transit` | `delivered` | `undelivered` | `failed`
+
+**Status transitions** (distributor-enforced):
+- `assigned → in_transit`
+- `in_transit → delivered`
+- `in_transit → failed`
+
+Each transition triggers a status log entry and a tracking email to the recipient.
+
+---
+
+### POST /api/packages/create
+
+**Auth required**: Yes — `admin` only
+
+Creates a package. Geocodes the delivery address via Google Maps, generates a tracking token, logs the creation, and sends a tracking email to the recipient.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `packageInfo.recipient_name` | string | ✓ | Name of the recipient |
+| `packageInfo.recipient_email` | string | ✓ | Email of the recipient |
+| `packageInfo.assigned_to` | number \| null | ✓ | Distributor user ID, or `null` |
+| `packageInfo.created_by` | number | ✓ | Admin user ID creating the package |
+| `packageInfo.status` | string | ✓ | Initial status (e.g. `"pending"`) |
+| `packageInfo.weight_kg` | number | ✓ | Package weight in kilograms |
+| `packageInfo.description` | string | ✗ | Optional description |
+| `packageInfo.estimated_delivery` | string | ✗ | Estimated delivery date string |
+| `address_info.street` | string | ✓ | Street address |
+| `address_info.city` | string | ✓ | City |
+| `address_info.postal_code` | string | ✓ | Postal/ZIP code |
+
+```json
+{
+  "packageInfo": {
+    "recipient_name": "Maria Garcia",
+    "recipient_email": "maria@example.com",
+    "assigned_to": 3,
+    "created_by": 1,
+    "status": "assigned",
+    "weight_kg": 2.5,
+    "description": "Fragile electronics"
+  },
+  "address_info": {
+    "street": "Calle Mayor 10",
+    "city": "Bilbao",
+    "postal_code": "48001"
+  }
+}
+```
+
+**Response 201**
+
+```json
+{
+  "id": 42,
+  "recipient_name": "Maria Garcia",
+  "recipient_email": "maria@example.com",
+  "assigned_to": 3,
+  "created_by": 1,
+  "status": "assigned",
+  "weight_kg": 2.5,
+  "description": "Fragile electronics",
+  "estimated_delivery": null,
+  "address_id": 18,
+  "tracking_code": "TRK-2024-ABCD1234"
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"packageInfo is required"` / `"address_info is required"` | Top-level objects missing |
+| 400 | `"recipient_name is required and must be a non-empty string"` | Invalid name |
+| 400 | `"recipient_email is required and must be a valid email"` | Invalid email |
+| 400 | `"assigned_to must be a valid user ID"` | Non-existent user ID |
+| 400 | `"created_by is required and must be a valid user ID"` | Non-existent creator |
+| 400 | `"status is required and must be a valid package status"` | Unknown status |
+| 400 | `"weight_kg is required and must be a valid number"` | Non-numeric weight |
+| 400 | `"street/city/postal_code is required and must be a non-empty string"` | Missing address fields |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 500 | `"Internal server error"` | Unhandled exception or geocoding failure |
+
+> **Side effects**: Geocodes address (external Google Maps API call). Inserts address, package, tracking token, and status log rows. Sends tracking email to recipient.
+
+---
+
+### GET /api/packages/list
+
+**Auth required**: Yes — `admin` only
+
+Returns a paginated list of all packages, optionally filtered by status, distributor, or city.
+
+**Query parameters**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `status` | string | — | Filter by package status |
+| `assigned_to` | number | — | Filter by distributor user ID |
+| `city` | string | — | Filter by delivery city |
+| `page` | number | `1` | Page number |
+| `limit` | number | `20` | Results per page (1–100) |
+
+**Response 200**
+
+```json
+{
+  "packages": [
+    {
+      "id": 1,
+      "tracking_code": "TRK-2024-ABCD1234",
+      "recipient_name": "Maria Garcia",
+      "recipient_email": "maria@example.com",
+      "weight_kg": 2.5,
+      "description": null,
+      "status": "assigned",
+      "estimated_delivery": "2024-04-20",
+      "address_id": 18,
+      "assigned_to": 3,
+      "created_by": 1,
+      "created_at": "2024-04-15T10:00:00.000Z",
+      "updated_at": "2024-04-15T10:00:00.000Z",
+      "street": "Calle Mayor 10",
+      "city": "Bilbao",
+      "postal_code": "48001",
+      "latitude": 43.263,
+      "longitude": -2.935,
+      "country": "ES"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
+}
+```
+
+> **Note**: `latitude`/`longitude` are the DB column names; the `addresses` table stores them as `latitude`/`longitude` but some TypeScript types expose them as `lat`/`lng`. The API response uses the full names.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"status must be a valid package status"` | Unknown status value |
+| 400 | `"assigned_to must be a positive integer"` | Non-integer value |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### GET /api/packages/getById
+
+**Auth required**: Yes — `admin` or `distributor`
+
+Returns full details (including joined address) for a single package. Distributors may only access packages assigned to themselves.
+
+**Query parameters**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | number | ✓ | Package ID (positive integer) |
+
+**Response 200** — `PackageWithAddress`
+
+```json
+{
+  "id": 42,
+  "tracking_code": "TRK-2024-ABCD1234",
+  "recipient_name": "Maria Garcia",
+  "recipient_email": "maria@example.com",
+  "weight_kg": 2.5,
+  "description": "Fragile electronics",
+  "status": "assigned",
+  "estimated_delivery": "2024-04-20",
+  "address_id": 18,
+  "assigned_to": 3,
+  "created_by": 1,
+  "created_at": "2024-04-15T10:00:00.000Z",
+  "updated_at": "2024-04-15T10:00:00.000Z",
+  "street": "Calle Mayor 10",
+  "city": "Bilbao",
+  "postal_code": "48001",
+  "latitude": 43.263,
+  "longitude": -2.935,
+  "country": "ES"
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"id is required"` | Missing query param |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller role not allowed |
+| 403 | `"Access denied"` | Distributor querying a package not assigned to them |
+| 404 | `"Package not found"` | No package with that ID |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### PATCH /api/packages/update
+
+**Auth required**: Yes — `admin` only
+
+Partially updates package fields and/or its delivery address. If any address field changes, coordinates are re-geocoded via Google Maps.
+
+**Query parameters**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | number | ✓ | Package ID |
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `packageInfo.recipient_name` | string | ✗ | New recipient name |
+| `packageInfo.recipient_email` | string | ✗ | New recipient email |
+| `packageInfo.assigned_to` | number \| null | ✗ | New distributor ID or `null` |
+| `packageInfo.status` | string | ✗ | New package status |
+| `packageInfo.weight_kg` | number | ✗ | New weight |
+| `packageInfo.description` | string | ✗ | New description |
+| `packageInfo.estimated_delivery` | string | ✗ | New estimated delivery date |
+| `address_info.street` | string | ✗ | New street |
+| `address_info.city` | string | ✗ | New city |
+| `address_info.postal_code` | string | ✗ | New postal code |
+| `address_info.country` | string | ✗ | New country code |
+
+```json
+{
+  "packageInfo": { "assigned_to": 4, "status": "assigned" },
+  "address_info": { "street": "Gran Vía 5", "city": "Bilbao" }
+}
+```
+
+**Response 200** — same `PackageWithAddress` shape as `GET /api/packages/getById`.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"id is required"` | Missing `id` query param |
+| 400 | `"id must be a positive integer"` | Non-integer ID |
+| 400 | `"assigned_to must be an existing active distributor"` | Invalid distributor ID |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 404 | `"Package not found"` | No package with that ID |
+| 500 | `"Internal server error"` | Unhandled exception or geocoding failure |
+
+> **Side effects**: May re-geocode address. Inserts a status log entry if status changes. Sends tracking email to recipient if status changes.
+
+---
+
+### DELETE /api/packages/delete
+
+**Auth required**: Yes — `admin` only
+
+Permanently deletes a package and its associated address. Only packages in `pending` status can be deleted.
+
+**Query parameters**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | number | ✓ | Package ID to delete |
+
+**Response 204** — No content.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"id is required"` | Missing query param |
+| 400 | `"id must be a positive integer"` | Non-integer value |
+| 400 | `"Package can only be deleted when status is pending"` | Package is not `pending` |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 404 | `"Package not found"` | No package with that ID |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### PATCH /api/packages/updateStatus
+
+**Auth required**: Yes — `distributor` only
+
+Updates the status of one package. Only the assigned distributor can update the package. Valid transitions: `assigned → in_transit`, `in_transit → delivered`, `in_transit → failed`.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `package_id` | number | ✓ | Package ID to update |
+| `new_status` | string | ✓ | Target status |
+
+```json
+{ "package_id": 42, "new_status": "in_transit" }
+```
+
+**Response 200** — same `PackageWithAddress` shape as `GET /api/packages/getById`.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"package_id must be a positive integer"` | Invalid package ID |
+| 400 | `"new_status must be a valid package status"` | Unknown status |
+| 400 | `"Invalid status transition from '...' to '...'"` | Disallowed transition |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `distributor` |
+| 403 | `"Access denied"` | Package not assigned to calling distributor |
+| 404 | `"Package not found"` | No package with that ID |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effects**: Updates package status. Inserts a status log entry. Sends a tracking email to the recipient.
+
+---
+
+### GET /api/packages/getMyPackages
+
+**Auth required**: Yes — `distributor` only
+
+Returns all packages currently assigned to the authenticated distributor, including full address details.
+
+**Request**: No body, no query params.
+
+**Response 200** — array of `PackageWithAddress`
+
+```json
+[
+  {
+    "id": 42,
+    "tracking_code": "TRK-2024-ABCD1234",
+    "recipient_name": "Maria Garcia",
+    "recipient_email": "maria@example.com",
+    "weight_kg": 2.5,
+    "description": null,
+    "status": "assigned",
+    "estimated_delivery": "2024-04-20",
+    "address_id": 18,
+    "assigned_to": 3,
+    "created_by": 1,
+    "created_at": "2024-04-15T10:00:00.000Z",
+    "updated_at": "2024-04-15T10:00:00.000Z",
+    "street": "Calle Mayor 10",
+    "city": "Bilbao",
+    "postal_code": "48001",
+    "latitude": 43.263,
+    "longitude": -2.935,
+    "country": "ES"
+  }
+]
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `distributor` |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### GET /api/packages/getDailySummary
+
+**Auth required**: Yes — `admin` only
+
+Returns today's package count broken down by status. Used for the admin dashboard.
+
+**Request**: No body, no query params.
+
+**Response 200**
+
+```json
+{
+  "date": "2024-04-19",
+  "summary": {
+    "pending": 5,
+    "assigned": 12,
+    "in_transit": 8,
+    "delivered": 30,
+    "failed": 2
+  },
+  "total": 57
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 500 | `"Internal server error"` | Unhandled exception |

@@ -1,0 +1,314 @@
+---
+description: "pakAG frontend auth flow: access token storage in cookies, axios interceptors, silent refresh on 401, and logout cache wipe."
+---
+
+# Auth Flow
+
+This page documents how the pakAG frontend authenticates users, stores the access token,
+attaches it to every request, silently refreshes it before expiry, and cleans up on logout.
+
+---
+
+## Overview
+
+```
+Browser                          Backend API
+  │                                  │
+  │── POST /auth/login ─────────────►│
+  │◄── { user, access_token } ───────│  (+ refresh_token in HttpOnly cookie)
+  │                                  │
+  │  setAccessToken(access_token)    │  ← stored in JS-accessible cookie
+  │                                  │
+  │── GET /auth/me (Bearer ...) ────►│  ← auto-prefetched after login
+  │◄── { user } ─────────────────────│
+  │                                  │
+  │  [every 12 min]                  │
+  │── POST /auth/refresh ───────────►│  ← refreshClient (no interceptors)
+  │◄── { access_token } ─────────────│  (+ new refresh_token in HttpOnly cookie)
+  │                                  │
+  │  [on any 401]                    │
+  │── POST /auth/refresh ───────────►│
+  │◄── { access_token } ─────────────│
+  │── retry original request ───────►│
+  │                                  │
+  │── POST /auth/logout ────────────►│
+  │  clearAccessToken()              │
+  │  queryClient.removeQueries(...)  │
+```
+
+---
+
+## Token Storage
+
+### Access token — JS-accessible cookie
+
+The access token is stored in a **first-party cookie** (not `localStorage`, not memory).
+
+```ts
+// app/lib/api/helpers/auth-token.ts
+
+const COOKIE_MAX_AGE = 15 * 60; // 15 minutes — matches backend JWT expiry
+const KEY = 'access_token';      // ACCESS_TOKEN_STORAGE_KEY from envConfig
+
+export function setAccessToken(accessToken: string): void {
+  document.cookie =
+    `${KEY}=${encodeURIComponent(accessToken)}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Strict${SECURE}`;
+}
+
+export function getAccessToken(): string | null {
+  const match = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(`${KEY}=`));
+  return match ? decodeURIComponent(match.split('=')[1]) : null;
+}
+
+export function clearAccessToken(): void {
+  document.cookie = `${KEY}=; path=/; max-age=0; SameSite=Strict${SECURE}`;
+}
+```
+
+The `SECURE` constant is `'; Secure'` in production and `''` in development
+(from `app/config/envConfig.ts`).
+
+| Attribute | Dev | Prod |
+|---|---|---|
+| `SameSite` | `Strict` | `Strict` |
+| `Secure` | ✗ | ✓ |
+| `HttpOnly` | ✗ | ✗ |
+| `max-age` | 900 s | 900 s |
+| `path` | `/` | `/` |
+
+> [!NOTE]
+> The access token cookie is **not** `HttpOnly` — the frontend reads it via `document.cookie`
+> to attach it to every Axios request. This is intentional; the attack surface is mitigated by
+> `SameSite=Strict` (no cross-site request forgery) and the short 15-minute TTL.
+
+### Refresh token — backend HttpOnly cookie
+
+The refresh token is managed entirely by the backend:
+
+- Set as `HttpOnly; SameSite=Lax` (dev) or `HttpOnly; SameSite=None; Secure` (prod).
+- Never readable by JavaScript.
+- Automatically sent by the browser when `withCredentials: true` on the Axios instance.
+- Rotated on every `POST /auth/refresh` call (old token is revoked in the database).
+
+---
+
+## Axios Instance Configuration
+
+```ts
+// app/lib/api/helpers/client.ts
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,   // sends refresh_token cookie automatically
+  headers: JSON_HEADERS,
+});
+```
+
+A dedicated `refreshClient` (identical config, no interceptors) is used only for the refresh
+call to avoid interceptor loops.
+
+---
+
+## Request Interceptor — Attaching the Bearer Header
+
+```ts
+apiClient.interceptors.request.use(async (config) => {
+  const accessToken = getAccessToken();
+
+  if (accessToken && !shouldSkipAuthRefresh(config.url)) {
+    const headers = AxiosHeaders.from(config.headers);
+    headers.set('Authorization', `Bearer ${accessToken}`);
+    config.headers = headers;
+  }
+
+  return config;
+});
+```
+
+The interceptor reads the access token from the cookie on every request and injects
+`Authorization: Bearer <token>` into the request headers.
+
+### Skipped endpoints
+
+Some endpoints must never receive (or trigger refresh for) the access token:
+
+```ts
+function shouldSkipAuthRefresh(url?: string): boolean {
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/forgotPassword') ||
+    url.includes('/tracking/')
+  );
+}
+```
+
+These paths are defined as constants in `app/config/envConfig.ts`:
+
+| Constant | Value |
+|---|---|
+| `AUTH_LOGIN_PATH` | `/auth/login` |
+| `AUTH_REFRESH_PATH` | `/auth/refresh` |
+| `AUTH_FORGOT_PASSWORD_PATH` | `/auth/forgotPassword` |
+| `TRACKING_PATH_PREFIX` | `/tracking/` |
+
+---
+
+## Response Interceptor — Refresh on 401
+
+When any non-skipped request returns `401`, the interceptor silently refreshes the access
+token and replays the original request **once**:
+
+```ts
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryableRequestConfig | undefined;
+
+    if (
+      !originalRequest ||
+      error.response?.status !== 401 ||
+      originalRequest._retry ||          // prevent infinite loops
+      shouldSkipAuthRefresh(originalRequest.url)
+    ) {
+      return Promise.reject(toAppError(error));
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      const newToken = await refreshAccessToken();
+      applyAuthorizationHeader(originalRequest, newToken);
+      return apiClient(originalRequest);   // replay with new token
+    } catch (refreshError) {
+      clearAccessToken();                  // refresh failed → clear token
+      return Promise.reject(toAppError(refreshError));
+    }
+  }
+);
+```
+
+### Concurrent request deduplication
+
+If multiple requests fail with `401` at the same time, the refresh is only called once.
+A shared `refreshPromise` variable ensures all waiting requests reuse the same pending
+refresh:
+
+```ts
+let refreshPromise: Promise<string> | null = null;
+
+async function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshClient
+      .post<RefreshResponse>(AUTH_REFRESH_PATH)
+      .then(({ data }) => {
+        setAccessToken(data.access_token);
+        return data.access_token;
+      })
+      .catch((error: unknown) => {
+        clearAccessToken();
+        throw toAppError(error);
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+
+  return refreshPromise;
+}
+```
+
+---
+
+## Background Token Refresh
+
+`SessionKeepAlive` is mounted in the `(main)` layout and runs a React Query polling loop
+that proactively refreshes the token before it expires:
+
+```tsx
+// app/components/SessionKeepAlive.tsx
+export function SessionKeepAlive() {
+  useQuery(refreshTokenQueryOptions());
+  return null;
+}
+
+// app/query/options/auth.options.ts
+export const refreshTokenQueryOptions = () =>
+  queryOptions({
+    queryKey: authKeys.refresh(),
+    queryFn: async () => {
+      const response = await refresh();
+      setAccessToken(response.access_token);
+      return response;
+    },
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 12 * 60 * 1000,       // every 12 min (JWT expires at 15 min)
+    refetchIntervalInBackground: true,
+  });
+```
+
+This means the access token is refreshed proactively every 12 minutes. The response
+interceptor acts as a safety net only if the token expires unexpectedly (e.g. after a
+long background-tab period).
+
+---
+
+## Login Flow
+
+```ts
+// app/hooks/auth/useLogin.ts
+return useMutation<LoginResponse, AppError, LoginRequest>({
+  mutationFn: login,
+  onSuccess: async (response) => {
+    setAccessToken(response.access_token);           // store in cookie
+    await queryClient.invalidateQueries({ queryKey: authKeys.all() });
+    await queryClient.prefetchQuery(meQueryOptions()); // warm up user data
+  },
+});
+```
+
+After a successful login:
+1. Access token is stored in the cookie.
+2. All `auth` queries are invalidated.
+3. `GET /auth/me` is prefetched so the `RoleGuard` resolves immediately.
+
+---
+
+## Logout Flow
+
+```ts
+// app/hooks/auth/useLogout.ts
+return useMutation<LogoutResponse, AppError, void>({
+  mutationFn: logout,
+  onSettled: () => {
+    clearAccessToken();                                    // wipe cookie
+    queryClient.removeQueries({ queryKey: authKeys.all() });
+    queryClient.removeQueries({ queryKey: packagesKeys.all() });
+    queryClient.removeQueries({ queryKey: logsKeys.all() });
+    queryClient.removeQueries({ queryKey: routesKeys.all() });
+  },
+});
+```
+
+`onSettled` (not `onSuccess`) is used so the local state is always cleaned up — even if the
+`POST /auth/logout` request fails. After the cookie and cache are wiped, the `RoleGuard`
+will find no user and redirect to `/login`.
+
+> [!NOTE]
+> The backend revokes the refresh token in the database on `POST /auth/logout`. Even if a
+> stale refresh token cookie somehow remains, the backend will reject it on the next
+> `/auth/refresh` call.
+
+---
+
+## Redirect After Login
+
+The constant `REDIRECT_AFTER_LOGIN_STORAGE_KEY = 'redirect_after_login'` is defined in
+`app/config/envConfig.ts`.
+
+> [!WARNING]
+> The `redirect_after_login` key exists in `envConfig.ts` but the implementation of storing
+> and consuming this redirect intent was not found in the source files reviewed. **Verify
+> manually** that `(auth)/login/` reads this key and redirects post-login, or remove the
+> constant if unused.

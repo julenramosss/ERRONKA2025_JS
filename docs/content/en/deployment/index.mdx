@@ -1,31 +1,193 @@
+---
+description: "How to build and deploy the pakAG backend, frontend, and docs to production, including env vars, cookies, and MySQL considerations."
+---
+
 # Deployment
 
-## Backend deployment notes
+This page covers building each package for production, the environment variables required, hosting options, and common deployment pitfalls.
 
-- Requires MySQL connectivity and all critical env vars.
-- Must set production `JWT_SECRET` and `DEFAULT_USER_PASSWORD` overrides.
-- Requires functional Resend API key for auth + package emails.
-- Requires Google API key for route creation/geocoding.
+---
 
-## Frontend deployment notes
+## Production build commands
 
-- In production mode, API base URL falls back to `https://api.tolosaerronka.es/api`.
-- HERE maps key must be configured in `NEXT_PUBLIC_HERE_API_KEY`.
-- Frontend requests rely on cookies (`withCredentials: true`) for refresh flow.
+Run these from the **repo root**. Each command triggers `next build` inside the respective package.
 
-## API domain assumptions
+```bash
+# Build backend API
+pnpm --filter @repo/backend-js build
 
-Frontend assumes backend is reachable with CORS/cookie-compatible settings from deployed frontend domain.
+# Build frontend app
+pnpm --filter @repo/frontend-app build
 
-## Cookie/SameSite/Secure implications
+# Build documentation site
+pnpm --filter @repo/docs build
+```
 
-- Backend refresh cookie: `SameSite=None; Secure` in production.
-- Frontend access cookie: `SameSite=Strict`, `Secure` in production.
-- If domains/subdomains are misconfigured, refresh flow may fail silently.
+After building, start each service with its `start` script (Next.js production server):
 
-## Known deployment pitfalls
+```bash
+pnpm --filter @repo/backend-js start   # runs on the port next start listens to
+pnpm --filter @repo/frontend-app start
+pnpm --filter @repo/docs start
+```
 
-- CORS policy not allowing credentialed requests.
-- Inconsistent TLS setup causing Secure cookies not to persist.
-- API URL mismatch between frontend environment and backend host.
-- Missing Google/Resend secrets causing runtime failures in route creation/email dispatch.
+> [!TIP]
+> In a process manager like PM2, map each package to a `start` command and assign ports via `PORT` environment variable (e.g. `PORT=3001 pnpm --filter @repo/backend-js start`).
+
+---
+
+## Port assignments
+
+| Service | Development port | Recommended production port |
+| --- | --- | --- |
+| `backend-js` | 3001 | 3001 (behind reverse proxy) |
+| `frontend-app` | 3000 | 3000 (behind reverse proxy) or served via CDN |
+| `docs` | 3002 | 3002 (behind reverse proxy) |
+
+Use a reverse proxy (nginx, Caddy, Traefik) in front of all three services to terminate TLS and route by hostname or path prefix.
+
+---
+
+## Required environment variables in production
+
+### backend-js
+
+All of these **must** be set via your deployment platform's secrets manager (never committed to the repo).
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `MYSQL_HOST` | ✅ | Production DB host or socket |
+| `MYSQL_USER` | ✅ | |
+| `MYSQL_PASSWORD` | ✅ | Secret — never expose |
+| `MYSQL_DATABASE` | ✅ | Use `erronka` (matches `schema.sql`) |
+| `MYSQL_PORT` | optional | Defaults to `3306` |
+| `JWT_SECRET` | ✅ | Minimum 32 random bytes; rotate periodically |
+| `JWT_ACCESS_EXPIRES_IN` | optional | Default `15m` |
+| `JWT_REFRESH_EXPIRES_DAYS` | optional | Default `7` |
+| `RESEND_API_KEY` | ✅ | Required for all email flows |
+| `GOOGLE_DIRECTIONS_API_KEY` | ✅ | Required for route creation and geocoding |
+| `TRACKING_BASE_URL` | ✅ | Public URL to the tracking page, e.g. `https://tolosaerronka.es/tracking` |
+| `RESET_BASE_URL` | ✅ | Public URL to the password-reset page |
+| `TRACKING_EXPIRES_DAYS` | optional | Default `15` |
+| `DEFAULT_USER_PASSWORD` | ✅ | Must be overridden; the source fallback is public |
+
+> [!WARNING]
+> `JWT_SECRET` and `DEFAULT_USER_PASSWORD` have **hardcoded fallbacks** in `src/app/config/envConfig.ts`. These fallbacks are visible in the public repository. If you deploy without overriding them, any attacker can forge JWT tokens and know the initial password of every created user.
+
+### frontend-app
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | ✅ in dev | Production code falls back to `https://api.tolosaerronka.es/api` when `NODE_ENV=production`. Override to change the API domain. |
+| `NEXT_PUBLIC_HERE_API_KEY` | ✅ | HERE Maps key for map rendering |
+| `NEXT_PUBLIC_DOCS_BASE_URL` | optional | Link to the docs site |
+
+---
+
+## MySQL in production
+
+### Connection pooling
+
+The backend uses `mysql2` with a connection pool (`src/app/config/dbConfig.ts`). The pool is a module-level singleton — it is created once when the module first loads and reused across all requests.
+
+Key considerations:
+
+- Set `connectionLimit` to match your MySQL server's `max_connections` capacity. A typical starting value is `10`.
+- In **serverless** environments (Vercel, AWS Lambda), each function invocation may spawn a new pool. This can exhaust MySQL connections quickly. Consider using [PlanetScale](https://planetscale.com/) or [Neon](https://neon.tech/) with their HTTP drivers, or a dedicated connection proxy like [ProxySQL](https://proxysql.com/) or [RDS Proxy](https://aws.amazon.com/rds/proxy/).
+- In **self-hosted** deployments (a single long-running Node process), the pool behaves correctly as-is.
+
+### SSL / TLS
+
+If your production MySQL instance requires TLS (common on managed services like AWS RDS, GCP Cloud SQL, Azure Database for MySQL), add SSL configuration to the pool options in `dbConfig.ts`:
+
+```ts
+ssl: {
+  rejectUnauthorized: true,
+  ca: process.env.MYSQL_SSL_CA,
+}
+```
+
+And add `MYSQL_SSL_CA` (PEM content) to your secrets.
+
+---
+
+## Next.js hosting options
+
+### Option A — Vercel (recommended for frontend-app)
+
+The frontend is a standard Next.js App Router application and deploys to Vercel with zero configuration.
+
+1. Connect the repository in the Vercel dashboard.
+2. Set **Root Directory** to `frontend-app`.
+3. Add all `NEXT_PUBLIC_*` environment variables in the Vercel project settings.
+4. Deploy.
+
+> [!NOTE]
+> Vercel does not run the backend. Deploy `backend-js` separately on a VPS or container platform so it has a persistent MySQL connection.
+
+### Option B — Self-hosted (VPS / Docker)
+
+Run each service as a long-lived process behind nginx:
+
+```nginx
+# nginx snippet — route by subdomain
+server {
+    server_name api.tolosaerronka.es;
+    location / { proxy_pass http://localhost:3001; }
+}
+server {
+    server_name tolosaerronka.es;
+    location / { proxy_pass http://localhost:3000; }
+}
+server {
+    server_name docs.tolosaerronka.es;
+    location / { proxy_pass http://localhost:3002; }
+}
+```
+
+Use Certbot to provision TLS certificates automatically.
+
+---
+
+## Cookie and CORS configuration
+
+The authentication flow uses an **HttpOnly `refresh_token` cookie** issued by the backend and sent automatically by the browser on every `/api/auth/refresh` call.
+
+For this to work cross-origin in production:
+
+| Setting | Development | Production |
+| --- | --- | --- |
+| `SameSite` (refresh cookie) | `Lax` | `None` |
+| `Secure` (refresh cookie) | `false` | `true` (requires HTTPS) |
+| CORS `credentials` | `true` | `true` |
+| CORS `origin` | `http://localhost:3000` | frontend origin (e.g. `https://tolosaerronka.es`) |
+
+If the frontend and backend are on **different subdomains**, the browser will only send the `None; Secure` cookie if TLS is active end-to-end. An HTTP-only deployment will silently drop the refresh cookie after login.
+
+> [!WARNING]
+> Never set `Access-Control-Allow-Origin: *` when `credentials: true` is required. The browser will reject such responses. Always specify the exact frontend origin.
+
+---
+
+## Health check endpoints
+
+There is no dedicated `/health` endpoint in the current codebase. The simplest proxy health check is:
+
+```
+GET /api/auth/me
+```
+
+This endpoint always responds with a JSON body (either `401 Unauthorized` or the authenticated user). A non-`5xx` response confirms the backend is up and MySQL is reachable.
+
+---
+
+## Common deployment pitfalls
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| Refresh token loop in production | `SameSite=None` cookie not sent over HTTP | Enable TLS; ensure `Secure` flag is set |
+| CORS error on credentialed request | `Access-Control-Allow-Origin: *` with `credentials: true` | Set exact frontend origin in CORS config |
+| `connect ECONNREFUSED` on backend start | MySQL not reachable from deployment host | Check `MYSQL_HOST`, firewall rules, VPC peering |
+| Route creation always fails | `GOOGLE_DIRECTIONS_API_KEY` not set or quota exceeded | Verify key in GCP console; check billing |
+| Emails not sent | `RESEND_API_KEY` missing or domain not verified | Add key to secrets; verify sending domain in Resend dashboard |
+| Token forgery risk | `JWT_SECRET` using source-code fallback | Set a strong unique `JWT_SECRET` in your secrets manager |

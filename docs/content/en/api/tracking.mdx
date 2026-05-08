@@ -1,0 +1,51 @@
+---
+description: "Public package tracking endpoint for pakAG: look up package status by opaque tracking token without authentication."
+---
+
+# Tracking
+
+Base URL: `/api/tracking` · Port 3001 in development.
+
+The tracking endpoint is **public** — no authentication required. Each package is assigned a 32-byte hex tracking token at creation time. The token is emailed to the recipient so they can follow their delivery status without logging in.
+
+Tokens expire after `TRACKING_EXPIRES_DAYS` days (default: 30). An expired or unknown token returns `404`.
+
+---
+
+### GET /api/tracking/[trackingToken]
+
+**Auth required**: No
+
+Returns the current status and address of a package identified by its opaque tracking token.
+
+**Path parameter**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `trackingToken` | string | ✓ | 32-byte hex tracking token from the recipient's email |
+
+**Response 200**
+
+```json
+{
+  "tracking_code": "PAK-20260001",
+  "recipient_name": "Ane Etxeberria",
+  "status": "in_transit",
+  "estimated_delivery": "2026-05-01",
+  "address": {
+    "street": "Kale Nagusia 12",
+    "city": "Tolosa",
+    "postal_code": "20400"
+  },
+  "last_update": "2026-04-26T09:00:00.000Z"
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 404 | `"Package not found"` | Token is unknown, revoked, or expired |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Note**: The response deliberately exposes no personal information beyond the recipient name and delivery address — both are already known to the recipient. No email address or user IDs are returned.

@@ -1,0 +1,406 @@
+---
+description: "JWT authentication flow in pakAG: login, access tokens, refresh token rotation, logout, and the tokens table schema."
+---
+
+# Backend — Auth Flow
+
+pakAG uses a **dual-token JWT strategy**: a short-lived access token carried as a Bearer header, and a long-lived refresh token stored in an HttpOnly cookie and persisted in the database.
+
+## Token overview
+
+| Token | Where stored | Lifetime | Purpose |
+|---|---|---|---|
+| **Access token** | Client memory (Authorization header) | 15 minutes (default) | Authenticate every API request |
+| **Refresh token** | HttpOnly cookie + `tokens` DB table | 7 days (default) | Issue new access tokens without re-login |
+
+The access token is a signed JWT. The refresh token is a random UUID — it is **not** a JWT; it is an opaque string that is looked up in the database on each refresh request.
+
+---
+
+## Full flow diagram
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  1. LOGIN                                                            │
+│                                                                      │
+│  Client → POST /api/auth/login { email, password }                  │
+│         ← 200 { user, access_token }                                │
+│            Set-Cookie: refresh_token=<uuid>; HttpOnly; SameSite=... │
+└──────────────────────────────────────────────────────────────────────┘
+          │                              │
+          │ access_token (15 min)        │ refresh_token cookie
+          ▼                              ▼
+┌─────────────────────────┐   ┌──────────────────────────────────────┐
+│  2. AUTHENTICATED        │   │  3. TOKEN REFRESH                    │
+│     REQUESTS             │   │                                      │
+│                          │   │  Client → POST /api/auth/refresh     │
+│  Authorization:          │   │           (cookie sent automatically)│
+│    Bearer <access_token> │   │         ← 200 { access_token }       │
+│                          │   │            Set-Cookie: refresh_token  │
+│  requireAuth() extracts  │   │            (old token revoked in DB)  │
+│  + verifies JWT locally  │   └──────────────────────────────────────┘
+└─────────────────────────┘
+          │
+          ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│  4. LOGOUT                                                           │
+│                                                                      │
+│  Client → POST /api/auth/logout                                      │
+│         ← 200 (revoked=TRUE in tokens table, cookie cleared)        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Step 1 — Login
+
+### Route
+
+```ts
+// src/app/api/auth/login/route.ts
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const dto = validateLoginDto(body);
+    const result = await loginService(dto, {
+      ipAddress: getClientIp(request),
+      userAgent: request.headers.get('user-agent')?.trim() || 'Unknown',
+    });
+
+    const { refresh_token, ...responseBody } = result;
+
+    return res.ok(responseBody, [
+      { name: 'refresh_token', value: refresh_token, httpOnly: true },
+    ]);
+  } catch (error) {
+    return handleError('[POST /api/auth/login]', error);
+  }
+}
+```
+
+The `refresh_token` is extracted from the service response and set as a cookie — it never appears in the JSON body.
+
+### Service
+
+```ts
+// src/app/api/auth/login/service/login.service.ts (excerpt)
+
+export async function loginService(
+  dto: LoginDto,
+  metadata: LoginRequestMetadata
+): Promise<LoginResponse> {
+  // Constant-time dummy comparison to prevent user enumeration via timing
+  const DUMMY_HASH = '$2b$10$j/waxomoVjsEiVu47WVHdu3CJIeGRfRsKOHasolKli6n2JNFjWnVq';
+
+  const user = await findUserByEmailForAuth(dto.email);
+  if (!user) {
+    await verifyPassword(dto.password, DUMMY_HASH); // consume bcrypt time
+    throw new UnauthorizedError('Invalid credentials');
+  }
+
+  const ok = await verifyPassword(dto.password, user.password_hash);
+  if (!ok) throw new UnauthorizedError('Invalid credentials');
+
+  if (!user.is_active) throw new ForbiddenError('User account is disabled');
+
+  // Sign a short-lived JWT with the user's id, email, and role
+  const access_token = signAccessToken({ sub: user.id, email: user.email, role: user.role });
+
+  // Generate and store an opaque refresh token
+  const refresh_token = randomUUID();
+  const expiresAt = new Date(Date.now() + jwt_refresh_expires_days * 24 * 60 * 60 * 1000);
+  await insertRefreshToken(refresh_token, user.id, expiresAt);
+
+  // Non-blocking: send login notification email
+  await sendLoginNotificationEmail(responseUser, metadata);
+
+  return { user: responseUser, access_token, refresh_token };
+}
+```
+
+> [!NOTE]
+> The `DUMMY_HASH` is used to prevent **timing-based user enumeration**: if the user does not exist, bcrypt would normally be skipped (fast), making it easy to detect which emails are registered by measuring response time. Running bcrypt against the dummy hash equalizes timing for both cases.
+
+### Repository
+
+```ts
+// src/app/api/auth/login/repository/login.repo.ts
+
+export async function findUserByEmailForAuth(email: string): Promise<UserAuthRow | null> {
+  const db = await connect();
+  const [rows] = await db.query<UserAuthRow[]>(
+    'SELECT id, name, email, password_hash, role, is_active FROM users WHERE email = ?',
+    [email]
+  );
+  return rows[0] ?? null;
+}
+
+export async function insertRefreshToken(
+  token: string,
+  userId: number,
+  expiresAt: Date
+): Promise<void> {
+  const db = await connect();
+  await db.execute<ResultSetHeader>(
+    `INSERT INTO tokens (token, type, user_id, expires_at, revoked)
+     VALUES (?, 'refresh_token', ?, ?, FALSE)`,
+    [token, userId, expiresAt]
+  );
+}
+```
+
+---
+
+## Step 2 — Authenticated requests
+
+Every protected endpoint calls `requireAuth` before doing anything else:
+
+```ts
+// src/app/lib/jwt.ts
+
+export function requireAuth(
+  req: Request,
+  allowedRoles?: UserRole[]
+): AccessTokenPayload {
+  const token = extractBearerToken(req);    // reads Authorization: Bearer <token>
+  const payload = verifyAccessToken(token); // verifies signature + expiry
+  if (allowedRoles && !allowedRoles.includes(payload.role)) {
+    throw new ForbiddenError('You do not have permission to access this resource');
+  }
+  return payload;
+}
+
+export function verifyAccessToken(token: string): AccessTokenPayload {
+  try {
+    const decoded = jwt.verify(token, jwt_secret);
+    // ... validate shape: sub (number), email (string), role (UserRole)
+    return { sub, email, role };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) throw error;
+    throw new UnauthorizedError('Invalid or expired token');
+  }
+}
+```
+
+The access token payload is:
+
+```ts
+interface AccessTokenPayload {
+  sub: number;        // user ID (numeric)
+  email: string;
+  role: UserRole;     // 'admin' | 'distributor'
+}
+```
+
+Verification is **purely local** — no database lookup. The JWT signature is verified against `JWT_SECRET`. If the token has expired, `jwt.verify` throws and `verifyAccessToken` rethrows as `UnauthorizedError` (→ HTTP 401).
+
+### Usage in a route handler
+
+```ts
+export async function GET(request: Request) {
+  try {
+    // Returns payload { sub, email, role } or throws
+    const payload = requireAuth(request, [USER_ROLES.admin]);
+
+    // payload.sub is the authenticated user's ID
+    const user = await getUserService(payload.sub);
+    return res.ok(user);
+  } catch (error) {
+    return handleError('[GET /api/users/getById]', error);
+  }
+}
+```
+
+---
+
+## Step 3 — Token refresh
+
+When the access token expires (HTTP 401 from any endpoint), the client silently calls the refresh endpoint:
+
+```ts
+// src/app/api/auth/refresh/route.ts
+
+export async function POST(request: Request) {
+  try {
+    const cookieHeader = request.headers.get('cookie') ?? '';
+    const refresh_token = cookieHeader
+      .split(';')
+      .map((c) => c.trim())
+      .find((c) => c.startsWith('refresh_token='))
+      ?.slice('refresh_token='.length) ?? null;
+
+    const dto = validateRefreshDto({ refresh_token });
+    const result = await refreshService(dto);
+
+    return res.ok(
+      { access_token: result.access_token },
+      [{ name: 'refresh_token', value: result.refresh_token, httpOnly: true }]
+    );
+  } catch (error) {
+    return handleError('[POST /api/auth/refresh]', error);
+  }
+}
+```
+
+### Refresh service — token rotation
+
+```ts
+// src/app/api/auth/refresh/service/refresh.service.ts
+
+export async function refreshService(dto: RefreshDto): Promise<RefreshResponse> {
+  const row = await findRefreshToken(dto.refresh_token);
+  if (!row) throw new UnauthorizedError('Refresh token not found');
+  if (row.revoked) throw new UnauthorizedError('Refresh token has been revoked');
+  if (new Date(row.expires_at).getTime() < Date.now()) {
+    throw new UnauthorizedError('Refresh token has expired');
+  }
+  if (!row.is_active) throw new ForbiddenError('User account is disabled');
+
+  // Rotate: revoke the old token
+  await revokeTokenById(row.id);
+
+  // Issue new access token
+  const access_token = signAccessToken({ sub: row.user_id, email: row.email, role: row.role });
+
+  // Issue new refresh token
+  const refresh_token = randomUUID();
+  const expiresAt = new Date(Date.now() + jwt_refresh_expires_days * 24 * 60 * 60 * 1000);
+  await insertRefreshToken(refresh_token, row.user_id, expiresAt);
+
+  return { access_token, refresh_token };
+}
+```
+
+**Token rotation** means every refresh call issues a brand-new refresh token and revokes the previous one. If an attacker somehow obtains a refresh token and uses it, the legitimate user's next refresh attempt will fail (the token is revoked), making the theft detectable.
+
+---
+
+## Step 4 — Logout
+
+Logout revokes the refresh token in the database and instructs the client to delete the cookie:
+
+```ts
+// src/app/api/auth/logout/route.ts (pattern)
+export async function POST(request: Request) {
+  try {
+    const cookieHeader = request.headers.get('cookie') ?? '';
+    // Extract refresh_token from cookie
+    const dto = validateLogoutDto({ refresh_token });
+    await logoutService(dto);
+    return res.ok({}, [], ['refresh_token']); // deleteCookies: ['refresh_token']
+  } catch (error) {
+    return handleError('[POST /api/auth/logout]', error);
+  }
+}
+```
+
+The third argument to `res.ok()` is `deleteCookies` — it appends `Max-Age=0` `Set-Cookie` headers that instruct the browser to delete the named cookie.
+
+After logout, any attempt to use the revoked refresh token returns `401 Unauthorized`.
+
+---
+
+## The `tokens` table
+
+All four token types share a single table. This is the actual schema from `schema.sql`:
+
+```sql
+CREATE TABLE tokens (
+  id          INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+  token       VARCHAR(512)    NOT NULL UNIQUE,
+  type        ENUM(
+    'refresh_token',
+    'tracking_token',
+    'reset_pwd_token',
+    'activate_account_token'
+  )           NOT NULL,
+  user_id     INT UNSIGNED    NULL,    -- used for refresh_token, reset_pwd_token, activate_account_token
+  package_id  INT UNSIGNED    NULL,    -- used for tracking_token
+  expires_at  TIMESTAMP       NOT NULL,
+  revoked     BOOLEAN         NOT NULL DEFAULT FALSE,
+  created_at  TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_tokens_user    FOREIGN KEY (user_id)    REFERENCES users (id)    ON DELETE CASCADE,
+  CONSTRAINT fk_tokens_package FOREIGN KEY (package_id) REFERENCES packages (id) ON DELETE CASCADE
+);
+```
+
+| `type` | `user_id` | `package_id` | Description |
+|---|---|---|---|
+| `refresh_token` | ✓ | — | Session token for POST /api/auth/refresh |
+| `tracking_token` | — | ✓ | Opaque token for public package tracking |
+| `reset_pwd_token` | ✓ | — | Single-use password reset link |
+| `activate_account_token` | ✓ | — | Single-use account activation link |
+
+> [!NOTE]
+> Cascading deletes are configured: if a `user` is deleted, all their tokens are automatically removed. Same for packages and their tracking tokens.
+
+---
+
+## Password reset and account activation
+
+These flows also use the `tokens` table with single-use tokens.
+
+### Forgot password
+
+```
+1. POST /api/auth/forgotPassword { email }
+   ← 200 (always — never reveals whether the email exists)
+   → If email found: generates reset_pwd_token (hex 32 bytes), stores in tokens table
+   → Sends email with link: {RESET_BASE_URL}{token}
+
+2. POST /api/auth/changePwd?token=<token> { password, confirmPassword }
+   → Looks up token: must be type=reset_pwd_token, revoked=FALSE, expires_at > now()
+   → Updates password_hash, sets revoked=TRUE on the token
+```
+
+### Account activation
+
+```
+1. Admin: POST /api/users/create { name, email, role }
+   → User created with is_active=FALSE and default password hash
+   → activate_account_token generated, stored in tokens
+   → Activation email sent with link: {RESET_BASE_URL}{token}
+
+2. User: POST /api/auth/activateAccount?token=<token> { password, confirmPassword }
+   → Verifies token: type=activate_account_token, revoked=FALSE, not expired
+   → Updates password_hash, sets is_active=TRUE, revokes token
+```
+
+> [!WARNING]
+> The activation link currently reuses `RESET_BASE_URL` — the same base URL used for password resets. The frontend must distinguish the flow by the page it lands on, not the URL structure. Keep this in mind when configuring email templates.
+
+---
+
+## Cookie settings
+
+The `Set-Cookie` attributes differ by environment, configured in `lib/response.ts`:
+
+| Attribute | Development | Production |
+|---|---|---|
+| `HttpOnly` | ✓ | ✓ |
+| `SameSite` | `Lax` | `None` |
+| `Secure` | — | ✓ |
+| `Path` | `/` | `/` |
+
+`SameSite=None; Secure` is required in production because the frontend and backend may be served from different origins (the frontend is a separate React app).
+
+---
+
+## Security notes
+
+> [!WARNING]
+> **JWT_SECRET has a hardcoded fallback.** If `JWT_SECRET` is not defined in environment variables, the codebase falls back to a known public secret. **Any token signed with this fallback can be forged by anyone who has read the source code.** Always set `JWT_SECRET` explicitly in production.
+
+> [!WARNING]
+> **DEFAULT_USER_PASSWORD has a hardcoded fallback** for the same reason. Set it explicitly in production so new user accounts don't get a known default password.
+
+| Risk | Severity | Mitigation |
+|---|---|---|
+| `JWT_SECRET` fallback is public | 🔴 High | Always set the env variable; validate at startup |
+| `DEFAULT_USER_PASSWORD` fallback is public | 🔴 High | Always set the env variable; validate at startup |
+| 500 errors expose internal messages | 🟡 Medium | In production, return generic `"Internal server error"` |
+| Rate limiting not implemented | 🟡 Medium | Install middleware on `login`, `forgotPassword`, `tracking/[token]` |
+
+For the full security audit, see [Security →](../security).

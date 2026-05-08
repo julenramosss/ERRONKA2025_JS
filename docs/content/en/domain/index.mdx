@@ -1,72 +1,258 @@
+---
+description: "pakAG domain model: all database entities, their fields, relationships, business rules, and the package lifecycle state machine."
+---
+
 # Domain Model
 
-## Users
+This page describes the full data model of pakAG as defined in `schema.sql`. All seven tables, their fields, foreign keys, and the business rules encoded in the application layer are documented here.
 
-Core fields observed across repositories/types:
+---
 
-- `id`, `name`, `email`, `password_hash`
-- `role` (`admin` or `distributor`)
-- `is_active`, `created_at`
+## Entity overview
 
-## Roles
+```
+addresses ──────────────────────────────────────┐
+                                                 │ address_id
+users ──┬──────────────────────────────────── packages ──┬── package_status_logs
+        │ assigned_to / created_by                       │
+        │                                                 │ package_id
+        └── routes ──── route_stops ───────────┘
+              │ route_id    │ package_id
+              └─────────────┘
+                                    tokens (user_id OR package_id)
+```
 
-`admin` and `distributor` constants are shared in backend and frontend type systems.
+```
+users          1 ──< routes          (one user, many routes — one per date)
+routes         1 ──< route_stops     (one route, many stops)
+packages       1 ──< route_stops     (one package, appears in many stops across routes)
+packages       1 ──< package_status_logs
+packages       1 ──  addresses       (each package has one delivery address)
+packages       1 ──< tokens          (tracking token per package)
+users          1 ──< tokens          (refresh / reset / activation tokens per user)
+users          1 ──< packages        (assigned_to — distributor)
+users          1 ──< packages        (created_by — admin)
+```
 
-## Packages
+---
 
-Package model includes recipient, assignment, status, weight/description, tracking code, timestamps, and related `address_id`.
+## Entities
 
-## Package statuses
+### addresses
 
-Defined lifecycle statuses:
+Stores geocoded delivery addresses. Coordinates are resolved at package creation time via the Google Geocoding API.
 
-- `pending`
-- `assigned`
-- `in_transit`
-- `delivered`
-- `undelivered`
-- `failed`
-
-Transition checks are enforced in package status service.
-
-## Routes
-
-Routes represent distributor work plans for a specific `route_date` and status:
-
-- `planned`
-- `in_progress`
-- `completed`
-
-## Stops
-
-`route_stops` ties route and package with execution metadata:
-
-- `stop_order`
-- `estimated_arrival`
-- `actual_arrival`
-
-## Tokens
-
-`tokens` table stores multiple token types:
-
-- `refresh_token`
-- `tracking_token`
-- `reset_pwd_token`
-- `activate_account_token`
-
-Each token supports expiry/revocation semantics.
-
-## Tracking
-
-Tracking endpoint resolves package summary by valid tracking token and returns status/address/last update fields.
-
-## Email events
-
-Email events are triggered by auth and package status flows (activation, reset, login notices, package status updates).
-
-## Status logs
-
-`package_status_logs` captures package state transitions (`old_status`, `new_status`, actor, timestamp).
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `id` | `INT UNSIGNED` | no | Auto-increment primary key |
+| `street` | `VARCHAR(255)` | no | Street name and number |
+| `city` | `VARCHAR(100)` | no | City name |
+| `postal_code` | `VARCHAR(20)` | no | Postal/ZIP code |
+| `country` | `VARCHAR(100)` | no | Defaults to `'España'` |
+| `latitude` | `DECIMAL(10,7)` | no | Geocoded latitude |
+| `longitude` | `DECIMAL(10,7)` | no | Geocoded longitude |
+| `created_at` | `TIMESTAMP` | no | Row creation time |
 
 > [!NOTE]
-> SQL schema migration files are not present in this repository snapshot, so table DDL is inferred from repository queries (**Needs verification** for exact column constraints/indexes).
+> Application code aliases `latitude`/`longitude` to `lat`/`lng` with SQL `AS` clauses. When writing new queries, always use `latitude AS lat` to stay consistent with TypeScript types.
+
+---
+
+### users
+
+Represents both **admins** and **distributors**. The `role` column is the single source of truth for authorization.
+
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `id` | `INT UNSIGNED` | no | Auto-increment primary key |
+| `name` | `VARCHAR(150)` | no | Display name |
+| `email` | `VARCHAR(255)` | no | Unique; used for login |
+| `password_hash` | `VARCHAR(255)` | no | bcrypt hash |
+| `role` | `ENUM('admin','distributor')` | no | Default `'distributor'` |
+| `is_active` | `BOOLEAN` | no | Default `TRUE`. New users created by admin start as `FALSE` until they activate their account |
+| `created_at` | `TIMESTAMP` | no | |
+| `updated_at` | `TIMESTAMP` | no | Auto-updated on any change |
+
+#### Roles
+
+| Role | Description |
+| --- | --- |
+| `admin` | Full access: manage users, packages, routes, view logs, see daily summaries |
+| `distributor` | Limited access: see own assigned packages and daily route, update package status, record stop arrivals |
+
+**Business rule:** An admin cannot delete themselves (`DELETE /api/users/remove` enforces this check in the service layer).
+
+#### Account activation flow
+
+```
+1. Admin creates user (is_active = FALSE, password = DEFAULT_USER_PASSWORD hashed)
+2. Backend generates activate_account_token (24h TTL)
+3. Email sent to user with activation link
+4. User submits new password → is_active = TRUE, token revoked
+```
+
+---
+
+### packages
+
+The central entity. A package moves through a defined lifecycle and is optionally assigned to a distributor and placed on a route.
+
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `id` | `INT UNSIGNED` | no | Auto-increment primary key |
+| `tracking_code` | `VARCHAR(50)` | no | Unique short code, e.g. `PAK-20260001` |
+| `recipient_name` | `VARCHAR(150)` | no | Name of the recipient |
+| `recipient_email` | `VARCHAR(255)` | no | Email used for delivery notifications |
+| `weight_kg` | `DECIMAL(6,3)` | no | Weight in kilograms |
+| `description` | `TEXT` | yes | Optional package contents description |
+| `status` | `ENUM(...)` | no | Current lifecycle status (see below) |
+| `estimated_delivery` | `DATE` | yes | Set when the package is added to a route |
+| `address_id` | `INT UNSIGNED` | no | FK → `addresses.id` |
+| `assigned_to` | `INT UNSIGNED` | yes | FK → `users.id` (distributor); `NULL` when unassigned. `SET NULL` on user delete |
+| `created_by` | `INT UNSIGNED` | yes | FK → `users.id` (admin); `SET NULL` on user delete |
+| `created_at` | `TIMESTAMP` | no | |
+| `updated_at` | `TIMESTAMP` | no | Auto-updated |
+
+#### Package status lifecycle
+
+```
+                ┌──────────────────────────────────────────┐
+                │                                          │
+  [created] → pending → assigned → in_transit → delivered │
+                                        │                  │
+                                        ├──→ undelivered   │
+                                        │                  │
+                                        └──→ failed        │
+                                                           │
+                └──────────────────────────────────────────┘
+```
+
+| Status | Meaning | Who sets it |
+| --- | --- | --- |
+| `pending` | Package created, not yet assigned to a distributor | System (on create) |
+| `assigned` | Assigned to a distributor and added to a route | Admin (route creation) |
+| `in_transit` | Distributor has started the route for that day | Distributor |
+| `delivered` | Successfully delivered to recipient | Distributor |
+| `undelivered` | Delivery attempted but failed; may retry | Distributor |
+| `failed` | Final failure — no further delivery attempts | Distributor |
+
+**Side effects on status change** (handled by `packageStatusSideEffects.service.ts`):
+
+| Transition | Email sent |
+| --- | --- |
+| `pending → assigned` | "Your package has been assigned" to recipient |
+| `assigned → in_transit` | "Your package is on the way" to recipient |
+| `in_transit → delivered` | "Your package has been delivered" to recipient |
+| `in_transit → undelivered` | "Delivery attempt failed" to recipient |
+| `in_transit → failed` | "Delivery failed" to recipient |
+
+Every transition is also recorded as a row in `package_status_logs`.
+
+---
+
+### tokens
+
+A unified token table handling four distinct token types. Each token is an opaque hex string.
+
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `id` | `INT UNSIGNED` | no | Auto-increment primary key |
+| `token` | `VARCHAR(512)` | no | Unique opaque token value (hex, 32 bytes) |
+| `type` | `ENUM(...)` | no | One of four types (see below) |
+| `user_id` | `INT UNSIGNED` | yes | FK → `users.id`. Used for `refresh_token`, `reset_pwd_token`, `activate_account_token`. `CASCADE` delete |
+| `package_id` | `INT UNSIGNED` | yes | FK → `packages.id`. Used for `tracking_token`. `CASCADE` delete |
+| `expires_at` | `TIMESTAMP` | no | Expiry time; checked on every token lookup |
+| `revoked` | `BOOLEAN` | no | Default `FALSE`; set to `TRUE` on use or logout |
+| `created_at` | `TIMESTAMP` | no | |
+
+#### Token types
+
+| Type | Linked to | TTL | Purpose |
+| --- | --- | --- | --- |
+| `refresh_token` | `user_id` | `JWT_REFRESH_EXPIRES_DAYS` days | Rotated on each `/api/auth/refresh` call; revoked on logout |
+| `tracking_token` | `package_id` | `TRACKING_EXPIRES_DAYS` days | Public opaque token used in `GET /api/tracking/[token]` |
+| `reset_pwd_token` | `user_id` | 24 hours | Sent via email for password reset |
+| `activate_account_token` | `user_id` | 24 hours | Sent via email to activate a newly created account |
+
+> [!NOTE]
+> Tracking tokens are **public** — they are embedded in emails sent to recipients and can be shared freely. They reveal only package status and address, not internal IDs.
+
+---
+
+### package_status_logs
+
+Immutable audit log of every package status change.
+
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `id` | `INT UNSIGNED` | no | Auto-increment primary key |
+| `package_id` | `INT UNSIGNED` | no | FK → `packages.id`. `CASCADE` delete |
+| `old_status` | `ENUM(...)` | yes | Previous status; `NULL` for the initial creation log |
+| `new_status` | `ENUM(...)` | no | Status after the change |
+| `changed_by` | `INT UNSIGNED` | yes | FK → `users.id`; `SET NULL` on user delete |
+| `notes` | `TEXT` | yes | Optional free-text note from the actor |
+| `changed_at` | `TIMESTAMP` | no | Time of the change |
+
+**Business rule:** Rows in this table are never updated or deleted (except via cascading package deletion). They form an append-only audit trail.
+
+---
+
+### routes
+
+A route is a single distributor's delivery plan for a specific calendar date. Each distributor can have at most one route per day (enforced by `UNIQUE KEY uq_route_user_date`).
+
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `id` | `INT UNSIGNED` | no | Auto-increment primary key |
+| `user_id` | `INT UNSIGNED` | yes | FK → `users.id` (distributor). `SET NULL` on user delete |
+| `route_date` | `DATE` | no | Delivery date for this route |
+| `status` | `ENUM('planned','in_progress','completed')` | no | Default `'planned'` |
+| `created_at` | `TIMESTAMP` | no | |
+| `updated_at` | `TIMESTAMP` | no | Auto-updated |
+
+#### Route statuses
+
+| Status | Meaning |
+| --- | --- |
+| `planned` | Route created by admin; distributor has not started yet |
+| `in_progress` | Distributor has started the route |
+| `completed` | All stops finished for the day |
+
+**Business rules:**
+- Route creation calls the Google Directions API with `optimize:true` to reorder stops for minimum travel time.
+- Maximum 20 stops per route.
+- "Carryover" packages — packages with status `assigned` from previous days belonging to the distributor — are automatically prepended to new routes.
+- If a distributor has unfinished stops from a previous day, `GET /api/routes/continueFromPast` returns them. `POST /api/routes/continueFromPast` migrates them into today's route.
+
+---
+
+### route_stops
+
+Junction table linking a route to its ordered package stops, with arrival time tracking.
+
+| Column | Type | Nullable | Notes |
+| --- | --- | --- | --- |
+| `id` | `INT UNSIGNED` | no | Auto-increment primary key |
+| `route_id` | `INT UNSIGNED` | no | FK → `routes.id`. `CASCADE` delete |
+| `package_id` | `INT UNSIGNED` | no | FK → `packages.id`. `CASCADE` delete |
+| `stop_order` | `SMALLINT` | no | 1-based position in the optimized route |
+| `estimated_arrival` | `TIME` | yes | Estimated arrival time at this stop (calculated from Google Maps leg durations) |
+| `actual_arrival` | `TIME` | yes | Recorded by the distributor when they arrive at the stop |
+| `created_at` | `TIMESTAMP` | no | |
+
+`UNIQUE KEY uq_stop_order (route_id, stop_order)` ensures no two stops share the same position in a route.
+
+**Business rule:** Stop reordering is available via `PATCH /api/stops/reorder` (admin only). The distributor records their actual arrival time via `PATCH /api/stops/updateArrival`.
+
+---
+
+## Database indexes
+
+| Index | Table | Columns | Purpose |
+| --- | --- | --- | --- |
+| `idx_packages_status` | `packages` | `status` | Fast filtering by status (e.g. daily summary, list by status) |
+| `idx_packages_assigned_to` | `packages` | `assigned_to` | Fast lookup of a distributor's packages |
+| `idx_packages_created_at` | `packages` | `created_at` | Date-range filtering on package lists |
+| `idx_tokens_type_expires` | `tokens` | `type, expires_at, revoked` | Efficient token validation queries |
+| `idx_logs_package_date` | `package_status_logs` | `package_id, changed_at` | Fast log history per package |
+| `idx_routes_date` | `routes` | `route_date` | Fast lookup of routes by date |

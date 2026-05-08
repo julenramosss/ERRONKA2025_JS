@@ -1,0 +1,223 @@
+---
+description: "Next.js App Router file conventions in pakAG, route groups, protected routes, and the RoleGuard component."
+---
+
+# Routing
+
+pakAG uses **Next.js App Router** conventions exclusively. There is no `pages/` directory and
+no Next.js `middleware.ts` file. Route protection is handled entirely in React with the
+`RoleGuard` component.
+
+---
+
+## File Conventions Used
+
+| Convention | Purpose |
+|---|---|
+| `app/layout.tsx` | Root HTML shell, mounts `AppProviders` |
+| `app/page.tsx` | Redirects `/` → `/dashboard` |
+| `app/not-found.tsx` | Global 404 page |
+| `app/(group)/layout.tsx` | Shared layout for routes in a route group |
+| `app/(group)/(pages)/[slug]/page.tsx` | Leaf page |
+| `'use client'` directive | Marks components that need the browser runtime |
+
+No `loading.tsx`, `error.tsx`, or `template.tsx` files are used — loading states are handled
+by React Query + skeleton components, and errors are surfaced inline.
+
+---
+
+## Route Groups
+
+The app uses two top-level route groups. Route groups (parenthesised folder names) do **not**
+affect the URL.
+
+### `(auth)` — unauthenticated pages
+
+```
+app/(auth)/
+├── layout.tsx        ← Passthrough — renders {children} with no shell
+└── login/
+    └── page.tsx      ← /login
+```
+
+The `(auth)` layout is a bare passthrough — it adds no chrome. Any future public pages
+(password reset, account activation landing) would live here.
+
+### `(main)` — authenticated shell
+
+```
+app/(main)/
+├── layout.tsx                  ← Mounts RoleGuard, shell components
+└── (pages)/
+    ├── dashboard/page.tsx      ← /dashboard
+    ├── myPackages/
+    │   ├── page.tsx            ← /myPackages
+    │   └── [packageId]/
+    │       └── page.tsx        ← /myPackages/42
+    ├── myRoute/page.tsx        ← /myRoute
+    ├── history/page.tsx        ← /history
+    └── settings/page.tsx       ← /settings
+```
+
+The `(main)` layout renders the full shell:
+
+```tsx
+// app/(main)/layout.tsx
+export default function AuthLayout({ children }) {
+  return (
+    <RoleGuard>
+      <TutorialProvider>
+        <main className="flex flex-row min-h-screen">
+          <PreferencesSync />
+          <SessionKeepAlive />
+          <AsideMenu />
+          <div className="flex flex-1 flex-col">
+            <Header />
+            <div className="flex-1">{children}</div>
+            <footer>pakAG © 2026 …</footer>
+          </div>
+        </main>
+      </TutorialProvider>
+    </RoleGuard>
+  );
+}
+```
+
+---
+
+## Route Map
+
+| URL | Route group | File |
+|---|---|---|
+| `/` | — | `app/page.tsx` → redirect |
+| `/login` | `(auth)` | `app/(auth)/login/page.tsx` |
+| `/dashboard` | `(main)` | `app/(main)/(pages)/dashboard/page.tsx` |
+| `/myPackages` | `(main)` | `app/(main)/(pages)/myPackages/page.tsx` |
+| `/myPackages/[packageId]` | `(main)` | `app/(main)/(pages)/myPackages/[packageId]/page.tsx` |
+| `/myRoute` | `(main)` | `app/(main)/(pages)/myRoute/page.tsx` |
+| `/history` | `(main)` | `app/(main)/(pages)/history/page.tsx` |
+| `/settings` | `(main)` | `app/(main)/(pages)/settings/page.tsx` |
+
+---
+
+## Protected Routes — RoleGuard
+
+Route protection is implemented with the `RoleGuard` client component, which wraps the
+entire `(main)` layout.
+
+```tsx
+// app/(main)/components/RoleGuard.tsx
+'use client';
+
+import { notFound, redirect, usePathname } from 'next/navigation';
+import { useMe } from '../../hooks/auth/useMe';
+import {
+  ALLOWED_ROLES,
+  AllowedRolesPath,
+  ROLE_GUARD_REDIRECTS,
+} from '../types/allowedRoles';
+
+export function RoleGuard({ children }: { children: React.ReactNode }) {
+  const { data: user, isLoading } = useMe();
+  const pathname = usePathname();
+  const segment = pathname.split('/')[1] as AllowedRolesPath;
+
+  if (isLoading || !user) return null;   // suspend render until identity resolves
+
+  if (!ALLOWED_ROLES[segment]?.includes(user.role)) {
+    const redirectTo = ROLE_GUARD_REDIRECTS[segment];
+    if (redirectTo) {
+      redirect(redirectTo);
+    } else {
+      notFound();
+    }
+  }
+
+  return <>{children}</>;
+}
+```
+
+### How it works
+
+1. `useMe()` queries `GET /auth/me` — it returns `null` if the user has no valid access token.
+2. While loading, `RoleGuard` renders `null` (blank screen) — no flash of protected content.
+3. Once resolved, it checks whether `user.role` is in `ALLOWED_ROLES[firstPathSegment]`.
+4. On failure it either **redirects** (if a redirect is configured) or **shows 404**.
+
+> [!NOTE]
+> The guard only checks the first URL segment (`pathname.split('/')[1]`). This means `/myPackages`
+> and `/myPackages/42` are both checked against the `myPackages` key in `ALLOWED_ROLES`.
+
+---
+
+## Role → Route Permission Matrix
+
+Defined in `app/(main)/types/allowedRoles.ts`:
+
+```ts
+export const ALLOWED_ROLES = {
+  dashboard:  ['distributor'],
+  myPackages: ['distributor'],
+  myRoute:    ['distributor'],
+  history:    ['distributor'],
+  settings:   ['distributor', 'admin'],
+};
+
+export const ROLE_GUARD_REDIRECTS = {
+  dashboard: '/settings',   // admin hitting /dashboard → /settings
+};
+```
+
+| Route | `distributor` | `admin` | Unknown / unauthenticated |
+|---|---|---|---|
+| `/dashboard` | ✅ | redirect → `/settings` | render `null` (no token) |
+| `/myPackages` | ✅ | 404 | render `null` |
+| `/myRoute` | ✅ | 404 | render `null` |
+| `/history` | ✅ | 404 | render `null` |
+| `/settings` | ✅ | ✅ | render `null` |
+| `/login` | ✅ (no guard) | ✅ (no guard) | ✅ |
+
+> [!WARNING]
+> When `useMe()` fails (no token, expired token, network error), `RoleGuard` renders `null`
+> indefinitely — there is no automatic redirect to `/login`. The user sees a blank page
+> until they navigate manually. Consider adding an `isError` branch that redirects to `/login`.
+
+---
+
+## Unauthenticated User Behaviour
+
+There is **no Next.js middleware** (`middleware.ts` was not found in the project). Route
+protection is purely client-side:
+
+1. User opens a protected URL (e.g. `/dashboard`).
+2. The browser loads the JS bundle and renders `RoleGuard`.
+3. `useMe()` fires `GET /auth/me` with the cookie.
+4. If the cookie is missing or expired, the backend returns `401`.
+5. The Axios interceptor attempts `POST /auth/refresh` (using the HttpOnly refresh token
+   cookie). If it also fails, the access token is cleared.
+6. `useMe()` resolves with `data: undefined`. `RoleGuard` renders `null`.
+
+> [!TIP]
+> Adding a Next.js `middleware.ts` that checks for the `access_token` cookie and redirects
+> unauthenticated requests to `/login` would improve UX (immediate redirect, no blank flash)
+> and reduce unnecessary API calls.
+
+---
+
+## Navigation
+
+Internal navigation uses the Next.js `<Link>` component. Programmatic navigation (e.g.
+post-login redirect) uses `redirect()` from `next/navigation` (server) or `useRouter().push()`
+(client).
+
+The `AsideMenu` component renders the main navigation links. Active state is determined with
+`usePathname()`.
+
+---
+
+## No Middleware
+
+> [!WARNING]
+> No `middleware.ts` file was found in `frontend-app/`. All route protection is client-side
+> via `RoleGuard`. Server-side protection (e.g. redirecting before the HTML is sent) is not
+> implemented. Verify this is acceptable for your security requirements.

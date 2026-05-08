@@ -1,0 +1,262 @@
+---
+description: "Authentication endpoints for pakAG: login, logout, token refresh, password reset, and account activation."
+---
+
+# Auth
+
+Base URL: `/api/auth` · Port 3001 in development.
+
+Auth endpoints handle login/logout, JWT token lifecycle, password reset, and new-account activation. Most are public (no Bearer token required). The access token is a short-lived JWT (default 15 min); the refresh token is a long-lived UUID stored in the `tokens` table.
+
+---
+
+## Token flow
+
+```
+1. POST /api/auth/login         → { user, access_token } + Set-Cookie: refresh_token
+2. Every authenticated request  → Authorization: Bearer <access_token>
+3. On 401 (token expired)       → POST /api/auth/refresh  → { access_token } (cookie rotated)
+4. POST /api/auth/logout        → refresh token revoked, cookie cleared
+```
+
+---
+
+### POST /api/auth/login
+
+**Auth required**: No
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | ✓ | Valid email address |
+| `password` | string | ✓ | User's plaintext password |
+
+```json
+{
+  "email": "admin@pakag.com",
+  "password": "mypassword"
+}
+```
+
+**Response 200**
+
+```json
+{
+  "user": {
+    "id": 1,
+    "name": "Admin User",
+    "email": "admin@pakag.com",
+    "role": "admin",
+    "is_active": true
+  },
+  "access_token": "<jwt>"
+}
+```
+
+Sets `Set-Cookie: refresh_token=...; HttpOnly; SameSite=Strict; Path=/`. Lifetime controlled by `JWT_REFRESH_EXPIRES_DAYS`.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"email is required and must be a valid email address"` | Missing or invalid email |
+| 400 | `"password is required"` | Missing password |
+| 401 | `"Invalid credentials"` | Wrong email or password |
+| 403 | `"User account is disabled"` | Account exists but `is_active = false` |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effect**: Inserts a refresh token row in `tokens`. Uses a dummy bcrypt comparison when user is not found to prevent timing attacks.
+
+---
+
+### POST /api/auth/refresh
+
+**Auth required**: No (cookie-based)
+
+Rotates the refresh token. The old token is revoked; a new one is issued and set as a cookie. Returns a fresh access token in the body.
+
+**Request**: No body. `refresh_token` cookie is read automatically.
+
+**Response 200**
+
+```json
+{ "access_token": "<new_jwt>" }
+```
+
+Sets a new `Set-Cookie: refresh_token=...`.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"refresh_token is required"` | Cookie missing or empty |
+| 401 | `"Refresh token not found"` | Token not in DB |
+| 401 | `"Refresh token has been revoked"` | Token already revoked |
+| 401 | `"Refresh token has expired"` | TTL exceeded |
+| 403 | `"User account is disabled"` | User linked to token is inactive |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effect**: Revokes old token, inserts new token in `tokens` table.
+
+---
+
+### POST /api/auth/logout
+
+**Auth required**: Yes — `admin` or `distributor` (Bearer token)
+
+Revokes the current refresh token and clears the cookie.
+
+**Request**: No body.
+
+**Response 200**
+
+```json
+{ "message": "Saioa itxi da" }
+```
+
+Sets `Set-Cookie: refresh_token=; Max-Age=0; HttpOnly; SameSite=Strict`.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Authorization header is missing"` | No `Authorization` header |
+| 401 | `"Invalid or expired token"` | Malformed or expired access token |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effect**: Marks the refresh token as revoked in the `tokens` table.
+
+---
+
+### GET /api/auth/me
+
+**Auth required**: Yes — `admin` or `distributor` (Bearer token)
+
+Returns the profile of the currently authenticated user.
+
+**Request**: No body.
+
+**Response 200**
+
+```json
+{
+  "id": 1,
+  "name": "Admin User",
+  "email": "admin@pakag.com",
+  "role": "admin",
+  "is_active": true,
+  "created_at": "2024-01-01T00:00:00.000Z"
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Authorization header is missing"` | No `Authorization` header |
+| 401 | `"Invalid or expired token"` | Malformed or expired access token |
+| 404 | `"User not found"` | User in token no longer exists in DB |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### POST /api/auth/forgotPassword
+
+**Auth required**: No
+
+Sends a password-reset email if the address is registered. Always returns the same response to prevent email enumeration.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | ✓ | Email address to send the reset link to |
+
+```json
+{ "email": "user@example.com" }
+```
+
+**Response 200**
+
+```json
+{ "message": "If that email exists, a reset link has been sent" }
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"email is required and must be a valid email"` | Invalid or missing email |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effect** (if email exists): Revokes existing reset tokens for the user, inserts a new `reset_pwd_token`, sends a password-reset email. Token expiry controlled by `RESET_EXPIRES_MINUTES`.
+
+---
+
+### PATCH /api/auth/changePwd
+
+**Auth required**: No (token-based via request body)
+
+Dual-mode endpoint. With only `reset_pwd_token` it validates the token (useful for showing an error page on invalid links). With both fields it sets the new password.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `reset_pwd_token` | string | ✓ | One-time token from reset/activation email |
+| `new_password` | string | ✗ | Min 6 characters. If omitted, only validates the token. |
+
+**Mode 1 — token check only**
+
+```json
+{ "reset_pwd_token": "a1b2c3d4-e5f6-7890-abcd-ef1234567890" }
+```
+
+Response 200: `{ "valid": true }`
+
+**Mode 2 — set new password**
+
+```json
+{
+  "reset_pwd_token": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "new_password": "newSecurePassword123"
+}
+```
+
+Response 200: `{ "message": "Password changed successfully" }`
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"reset_pwd_token is required"` | Missing token |
+| 400 | `"new_password must be at least 6 characters"` | Too-short password |
+| 401 | `"Invalid or expired email token"` | Token not found in DB or already used |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effect** (password change): Hashes and saves the new password. Sets `is_active = true`. Revokes all reset tokens for the user.
+
+---
+
+### POST /api/auth/activateAccount
+
+**Auth required**: No (activation token required)
+
+Activates a newly created user account. Called when the user follows the activation link from their email.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `email` | string | ✓ | Email of the account to activate |
+
+> [!WARNING] Needs verification
+> The exact request shape (body fields vs query params) was not confirmed from a `route.ts` file — the `activateAccount` folder has no `route.ts`. This endpoint is invoked internally by `sendActivationEmailService`; the public-facing handler may not exist yet or may share the `changePwd` flow via `reset_pwd_token`.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Invalid or expired email token"` | Token unknown, revoked, or expired |
+| 500 | `"Internal server error"` | Unhandled exception |

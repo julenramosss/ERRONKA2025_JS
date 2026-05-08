@@ -1,0 +1,186 @@
+---
+description: "Architecture Decision Records for pakAG: why Next.js Route Handlers, mysql2 over ORMs, JWT over sessions, pnpm workspaces, and no shared package."
+---
+
+# Architecture Decisions
+
+This page documents the key architectural choices made in pakAG using an ADR (Architecture Decision Record) format. Each entry explains the context, decision, rationale, and tradeoffs accepted.
+
+---
+
+## ADR-001 — Next.js Route Handlers instead of Express (or Fastify)
+
+### Context
+
+pakAG needed a REST API with JSON responses, JWT auth, and HTTP-only cookie management. The classic Node.js choice would have been an Express or Fastify server in a dedicated package.
+
+### Decision
+
+Use **Next.js 16 App Router Route Handlers** (`route.ts` files exporting `GET`, `POST`, etc.) as the API server.
+
+### Rationale
+
+1. **Team already uses Next.js for the frontend.** Choosing the same framework for the backend means the team writes TypeScript with the same toolchain, same `tsconfig.json` conventions, and same deployment model.
+2. **No custom server required.** Express requires a `server.js` entrypoint, process management, and port binding. Next.js handles all of that with `next dev` / `next start`.
+3. **Web API compatibility.** Route Handlers use the standard `Request` / `Response` types (not Express's `req` / `res`). This makes the code closer to web standards and portable to edge runtimes.
+4. **Zero extra dependencies.** No `express`, `body-parser`, `cors`, or routing library to install, version, or audit.
+5. **Middleware via `middleware.ts`.** If global concerns (rate limiting, CORS headers) are needed later, Next.js middleware covers them without additional packages.
+
+### Tradeoffs accepted
+
+| Tradeoff | Impact |
+|---|---|
+| Next.js is a heavier runtime than bare Express | Higher cold-start memory; acceptable for an always-on deployment |
+| No `app.use()` middleware chain | Auth is called manually in each `route.ts`; mitigated by the `requireAuth` helper |
+| Next.js opinionates the file structure | Cannot place route files arbitrarily — must follow `src/app/api/{resource}/{action}/route.ts` |
+| React and react-dom are installed even though the backend renders no UI | Dead weight; ~3 MB; acceptable for simplicity |
+
+---
+
+## ADR-002 — mysql2 directly instead of an ORM (Prisma, TypeORM, Drizzle)
+
+### Context
+
+The project needs to read and write to a MySQL 8 database. Modern TypeScript projects often choose Prisma or Drizzle for type-safe queries.
+
+### Decision
+
+Use **mysql2** with **raw SQL prepared statements**. No ORM or query builder.
+
+### Rationale
+
+1. **Complete control over queries.** The route optimization feature requires complex joins, subqueries, and MySQL-specific functions (e.g., date arithmetic). ORMs abstract these away in ways that frequently require raw query escapes anyway.
+2. **No migration layer needed.** `schema.sql` is the source of truth. The DB schema is managed directly, not through ORM migration files that need to stay in sync with the schema.
+3. **Explicit SQL is readable.** Developers reading `repository/` files see the exact query, the exact columns, and the exact indexes used. There is no intermediary that generates a different query than expected.
+4. **No code generation step.** Prisma requires `prisma generate` to regenerate the client after schema changes. mysql2 requires nothing beyond running the updated `schema.sql`.
+5. **Performance predictability.** Prepared statements are compiled by MySQL once and reused. No ORM query planner surprises.
+6. **Bundle size.** Prisma's generated client is several megabytes. mysql2 is under 500 KB.
+
+### Tradeoffs accepted
+
+| Tradeoff | Impact |
+|---|---|
+| No compile-time query type inference | Repository return types must be typed manually |
+| Developers must know SQL | Cannot hide SQL behind an abstraction layer |
+| `RowDataPacket[]` casting is manual | Each repository must cast results to domain types |
+| No automatic relation loading | Joins must be written explicitly |
+
+> [!NOTE]
+> The typing gap is partially mitigated by the strict architectural rule: repositories always return domain types, never raw `RowDataPacket`. This creates a typed boundary at the repository/service interface even if the SQL itself is untyped.
+
+---
+
+## ADR-003 — JWT (stateless) instead of server-side sessions
+
+### Context
+
+The API needs to authenticate requests from the frontend (same origin during development, potentially cross-origin in production). Options considered: session cookies backed by DB or Redis, or stateless JWTs.
+
+### Decision
+
+Use **JWT access tokens** (HS256, 15-minute TTL) delivered as `Authorization: Bearer` headers, paired with **opaque refresh tokens** stored in the database and delivered as HttpOnly cookies.
+
+### Rationale
+
+1. **Stateless access tokens.** The API can verify any access token by checking its signature and TTL without a DB lookup. This means every request other than refresh is pure CPU work — no extra roundtrip to a session store.
+2. **Short-lived access tokens limit the blast radius.** If a token is stolen, it expires in 15 minutes. There is no way to invalidate individual access tokens (no revocation list), so keeping them short-lived is the key mitigation.
+3. **Refresh token rotation in DB.** Refresh tokens are stored in the `tokens` table. Each `/api/auth/refresh` call deletes the old token and inserts a new one. This gives us revocability for long-lived sessions (logout, suspicious activity) without a Redis dependency.
+4. **No session store infrastructure.** Sessions require a shared store (Redis, Memcached, or DB table with tight index) that must stay available. JWTs move this complexity to the client.
+5. **Standard pattern for SPAs.** The frontend is an SPA; `Authorization` headers are the conventional approach for API-to-SPA auth.
+
+### Tradeoffs accepted
+
+| Tradeoff | Impact |
+|---|---|
+| Access tokens cannot be revoked mid-life | A stolen token is valid until expiry (15 min max) |
+| JWT payload is visible to anyone (only signed, not encrypted) | Do not put sensitive data in the payload — only `user_id` and `role` |
+| Refresh token storage adds a DB dependency | Every `POST /api/auth/refresh` hits the `tokens` table |
+| Two tokens to manage | Frontend must handle both; mitigated by Axios interceptors |
+
+> [!WARNING]
+> The current implementation has a known security issue: `JWT_SECRET` has a hardcoded fallback in `envConfig.ts`. In production, `JWT_SECRET` must be set as an environment variable and the fallback must be removed.
+
+---
+
+## ADR-004 — pnpm workspaces without Nx or Turborepo
+
+### Context
+
+The project has three packages that need to be developed and run together. Monorepo tooling options include Nx, Turborepo, Lerna, or plain workspace managers.
+
+### Decision
+
+Use **pnpm workspaces** with a minimal `pnpm-workspace.yaml`. No build orchestrator (no Nx, no Turborepo).
+
+### Rationale
+
+1. **Three packages only.** Nx and Turborepo solve build graph caching and parallel execution for projects with tens or hundreds of packages. With three packages, the overhead is not justified.
+2. **No shared build artifacts.** `backend-js`, `frontend-app`, and `docs` do not share compiled output. There is no need to track whether package A needs to be rebuilt before package B.
+3. **Simple developer experience.** `pnpm install` at the root installs everything. Three root scripts (`backend:dev`, `frontend:dev`, `docs:dev`) launch each package with `pnpm --filter`. No config files, no cache directories, no plugin system to learn.
+4. **Faster onboarding.** A new developer can understand the entire monorepo setup by reading 4 lines of `pnpm-workspace.yaml` and 9 lines of `package.json`. Nx/Turborepo configs routinely run to hundreds of lines.
+5. **pnpm's native workspace protocol.** The `workspace:*` version specifier (used by `docs` to depend on `frontend-app`) is a first-class pnpm feature that requires no extra tooling.
+
+### Tradeoffs accepted
+
+| Tradeoff | Impact |
+|---|---|
+| No incremental build caching | All three packages are rebuilt from scratch every time |
+| No dependency graph visualization | Not needed at this scale |
+| Root scripts must be extended manually for each new package | Low friction at three packages; would need tooling at 10+ |
+
+---
+
+## ADR-005 — No `shared/` package for cross-cutting code
+
+### Context
+
+In many monorepos, a `packages/shared/` or `packages/ui/` package exports types, utilities, and components used by multiple other packages. pakAG was evaluated for whether such a shared package is needed.
+
+### Decision
+
+**Do not create a `shared/` package.** Each package owns its types, utilities, and components in full.
+
+### Rationale
+
+1. **Backend and frontend have no shared types.** The backend is an API server; the frontend is a client. They communicate over HTTP/JSON. There are no TypeScript types that both need to compile against — the contract is the HTTP API, not shared source code.
+2. **Shared code creates coupling.** If `shared/` contains a type used by both backend and frontend, changing that type requires updating both packages and testing both in the same PR. This defeats one of the main benefits of a monorepo (independent deployability).
+3. **The three packages run in different runtimes.** `backend-js` runs in Node.js and uses mysql2, bcrypt, jsonwebtoken. `frontend-app` runs in the browser and uses React, Axios, Tailwind. There are very few utilities that make sense in both environments.
+4. **`docs` dependency on `frontend-app` is a documented exception.** `docs` imports `@repo/frontend-app` via `workspace:*` to reuse UI primitives in documentation examples. This is acceptable because it is build-time only and documented.
+5. **Avoiding premature abstraction.** Creating a shared package before a concrete need is identified leads to an anemic abstraction that either grows uncontrolled or remains empty.
+
+### Tradeoffs accepted
+
+| Tradeoff | Impact |
+|---|---|
+| Some type definitions may be duplicated | Acceptable — HTTP DTOs are intentionally decoupled from DB schemas |
+| No shared ESLint / TypeScript config package | Each package maintains its own config; consistent by convention |
+
+> [!TIP]
+> If a genuine cross-cutting need emerges (e.g., shared validation rules used by both frontend form validation and backend DTO validation), the correct response is to evaluate it case by case — not to preemptively create a shared package.
+
+---
+
+## ADR-006 — No Zod (or other runtime validation library) in DTOs
+
+### Context
+
+TypeScript's type system is compile-time only. At runtime, an API request body is `unknown`. Popular approaches to runtime validation include Zod, Yup, class-validator, and custom guards.
+
+### Decision
+
+Use **custom type guard functions** from `src/app/lib/dto.ts` (`isString`, `isEmail`, `isNumber`, etc.) instead of a schema validation library like Zod.
+
+### Rationale
+
+1. **Minimal bundle impact.** Zod is ~13 KB gzipped. In a server-only context (Route Handlers do not ship to the browser), this is not a critical concern, but keeping zero extra dependencies avoids supply chain risk.
+2. **Explicit error messages.** Each `if (!isEmail(body.email)) throw new ValidationError('email must be valid')` statement produces an error message written by the developer, not generated by a library. Validation messages are consistent with the rest of the error surface.
+3. **No schema duplication.** With Zod, developers write a schema (Zod shape) and a TypeScript interface, and then either use `z.infer` or write both manually. The custom guard approach writes the interface once and guards match it.
+4. **Easier to read for newcomers.** The DTO validation logic is plain TypeScript `if` statements — no DSL to learn.
+
+### Tradeoffs accepted
+
+| Tradeoff | Impact |
+|---|---|
+| More boilerplate per endpoint | Each DTO requires manually written guards |
+| No automatic type inference from schema | The TypeScript interface must be kept in sync with the guards manually |
+| No nested object validation helpers | Complex nested DTOs require nested guard composition |

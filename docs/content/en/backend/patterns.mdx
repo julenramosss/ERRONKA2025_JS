@@ -1,0 +1,411 @@
+---
+description: "How pakAG's 4-layer backend pattern works: DTOs, repositories, services, and route handlers with real TypeScript code examples."
+---
+
+# Backend — Layered Architecture Patterns
+
+Every endpoint in pakAG follows the same four-layer structure. This page walks through the pattern using the `POST /api/users/create` endpoint as a concrete reference — it is the canonical example used throughout the codebase.
+
+## Why a layered pattern?
+
+A flat handler that does validation, queries the database, applies business rules, and sends emails is impossible to reason about and impossible to test in isolation. The four layers enforce a single concern per file:
+
+| Layer | Concern | What it must NOT do |
+|---|---|---|
+| `route.ts` | HTTP boundary | SQL, business logic, validation logic |
+| `dtos/` | Input validation | SQL, side effects, business rules |
+| `service/` | Business logic | SQL, HTTP concerns |
+| `repository/` | SQL access | Business decisions, HTTP concerns |
+
+This makes it possible to read any file and immediately understand its scope.
+
+## Folder layout
+
+```
+src/app/api/{resource}/{action}/
+├── dtos/
+│   └── {action}.dto.ts
+├── repository/
+│   └── {action}.repo.ts
+├── service/
+│   └── {action}.service.ts
+├── types.ts
+└── route.ts
+```
+
+The folder for DTOs is always named `dtos/` (plural). The export function is always named `validateXxxDto(body: unknown)`.
+
+> [!NOTE]
+> Some older endpoints use `dto/` (singular). The correct convention is `dtos/` (plural), matching `users/create/dtos/`.
+
+---
+
+## Layer 1 — `types.ts`
+
+Define the data shapes first. `types.ts` holds the domain interfaces for this endpoint only — not global types (those live in `src/app/types/index.ts`).
+
+```ts
+// src/app/api/users/create/types.ts
+
+export interface CreateUserDto {
+  name: string;
+  email: string;
+  role: 'admin' | 'distributor';
+}
+
+export interface CreateUserResponse extends CreateUserDto {
+  id: number;
+  is_active: boolean;
+}
+```
+
+The DTO interface describes exactly the validated, trusted data that flows from `dtos/` to `service/`. The response interface describes what the HTTP layer returns to the client.
+
+---
+
+## Layer 2 — `dtos/` — Input validation
+
+The DTO module answers one question: **is the request body structurally valid?**
+
+```ts
+// src/app/api/users/create/dtos/createUser.dto.ts
+
+import { ValidationError } from '@/app/lib/errors';
+import { isEmail, isString, isUserRole } from '@/app/lib/dto';
+import { UserRole } from '@/app/types';
+import { CreateUserDto } from '../types';
+
+export function validateCreateUserDto(body: unknown): CreateUserDto {
+  if (!body || typeof body !== 'object') {
+    throw new ValidationError('Invalid request body');
+  }
+
+  const { name, email, role } = body as Record<string, unknown>;
+
+  if (!isString(name))
+    throw new ValidationError('name is required and must be a non-empty string');
+
+  if (!isEmail(email))
+    throw new ValidationError('email is required and must be a valid email address');
+
+  if (!isUserRole(role))
+    throw new ValidationError('role is required and must be one of: admin, distributor');
+
+  return {
+    name: name as string,
+    email: email as string,
+    role: role as UserRole,
+  };
+}
+```
+
+### Why no Zod?
+
+Zod (and similar schema libraries) add significant bundle weight and a runtime dependency for a validation task that pure TypeScript guards handle cleanly. The project uses a set of hand-written type guards in `src/app/lib/dto.ts`:
+
+```ts
+// src/app/lib/dto.ts (excerpt)
+export const isString = (v: unknown): v is string =>
+  typeof v === 'string' && v.trim().length > 0;
+
+export const isEmail = (v: unknown): v is string =>
+  isString(v) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+
+export const isUserRole = (v: unknown): v is UserRole =>
+  v === 'admin' || v === 'distributor';
+
+export const isNumber = (v: unknown): v is number =>
+  typeof v === 'number' && !isNaN(v);
+
+export const isPositiveInteger = (v: unknown): v is number =>
+  isNumber(v) && Number.isInteger(v) && v > 0;
+```
+
+These guards are composable, tree-shakeable, and produce zero runtime overhead beyond the checks themselves.
+
+### Rules for DTOs
+
+- Function signature is always `validateXxxDto(body: unknown): XxxDto`
+- Body parameter is `unknown` — never `any`
+- Throw `ValidationError` (from `lib/errors.ts`) for every constraint that fails
+- **Never call the database from a DTO** — existence checks belong in `service/`
+- Return the typed, narrowed DTO object on success
+
+> [!WARNING]
+> Some endpoints in the codebase violate this rule by calling `isValidPackage()` or `isValidUser()` from DTOs — these functions execute SQL queries. This is a known architectural violation tracked in the project's bug list.
+
+---
+
+## Layer 3 — `repository/` — SQL access
+
+The repository is the **only** place SQL is written. It receives typed inputs, executes prepared statements, and returns typed row data.
+
+```ts
+// src/app/api/users/create/repository/user.repo.ts
+
+import { CreateUserDto } from '../types';
+import { connect } from '@/app/config/dbConfig';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
+
+interface UserIdRow extends RowDataPacket {
+  id: number;
+}
+
+export async function findUserByEmail(email: string): Promise<boolean> {
+  const db = await connect();
+  const [rows] = await db.query<UserIdRow[]>(
+    'SELECT id FROM users WHERE email = ?',
+    [email]
+  );
+  return rows.length > 0;
+}
+
+export async function insertUser(
+  dto: CreateUserDto,
+  passwordHash: string
+): Promise<ResultSetHeader> {
+  const db = await connect();
+  const [result] = await db.execute<ResultSetHeader>(
+    `INSERT INTO users (name, email, password_hash, role, is_active)
+     VALUES (?, ?, ?, ?, false)`,
+    [dto.name, dto.email, passwordHash, dto.role]
+  );
+  return result;
+}
+```
+
+### Why prepared statements?
+
+`db.execute()` (not `db.query()`) uses server-side prepared statements, which:
+
+1. **Prevent SQL injection** — the database driver separates query structure from user data
+2. **Can be cached by MySQL** — repeated executions skip the parse step
+3. **Type-safe parameters** — mysql2 maps TypeScript types to MySQL column types
+
+The repository uses `db.query()` only for `SELECT` statements where the parameters are known-safe and the query shape is fixed.
+
+### Rules for repositories
+
+- No `if` statements, no business logic, no error throwing for business reasons
+- Accept typed inputs, return typed outputs using `RowDataPacket` extensions
+- Map column names to TypeScript properties in the query with `AS` aliases where needed (e.g. `latitude AS lat`)
+- Never import from `lib/errors.ts` — the only errors that should escape are unexpected DB errors
+
+---
+
+## Layer 4 — `service/` — Business logic
+
+The service owns all business decisions: existence checks, conflict detection, state transitions, orchestrating side effects.
+
+```ts
+// src/app/api/users/create/service/user.service.ts
+
+import { findUserByEmail, insertUser } from '../repository/user.repo';
+import { CreateUserDto, CreateUserResponse } from '../types';
+import { ConflictError } from '@/app/lib/errors';
+import { encryptPwd } from '@/app/lib/hashPasword';
+import { default_user_password } from '@/app/config/envConfig';
+import { sendActivationEmailService } from '@/app/api/auth/activateAccount/service/activateAccount.service';
+
+export async function createUserService(
+  dto: CreateUserDto
+): Promise<CreateUserResponse> {
+  // 1. Business rule: emails must be unique
+  if (await findUserByEmail(dto.email)) {
+    throw new ConflictError('A user with this email already exists');
+  }
+
+  // 2. Hash the default password before storage
+  const passwordHash = await encryptPwd(default_user_password);
+
+  // 3. Persist the new user
+  const result = await insertUser(dto, passwordHash);
+
+  // 4. Side effect: send the activation email
+  await sendActivationEmailService(dto.email);
+
+  return {
+    id: result.insertId,
+    name: dto.name,
+    email: dto.email,
+    role: dto.role,
+    is_active: false,
+  };
+}
+```
+
+### What belongs in a service
+
+- **Existence checks** — "does this email already exist?"
+- **State transition rules** — "is this status change allowed from the current state?"
+- **Derived data** — hashing passwords, generating tokens, computing ETAs
+- **Side effects** — sending emails, writing to audit logs, updating related records
+- **Cross-repository coordination** — calling multiple repos within a single transaction scope
+
+### What does NOT belong in a service
+
+- SQL strings — always delegate to a repository function
+- HTTP concerns — no `Request` or `Response` objects
+- Input parsing — trust that the DTO is already validated
+
+---
+
+## Layer 5 — `route.ts` — HTTP boundary
+
+The route handler is the orchestrator. It follows a strict, predictable sequence:
+
+```ts
+// src/app/api/users/create/route.ts
+
+import { validateCreateUserDto } from './dtos/createUser.dto';
+import { createUserService } from './service/user.service';
+import { handleError, res } from '@/app/lib/response';
+import { requireAuth } from '@/app/lib/jwt';
+import { USER_ROLES } from '@/app/types';
+
+export async function POST(request: Request) {
+  try {
+    // 1. Auth check (throws UnauthorizedError or ForbiddenError)
+    requireAuth(request, [USER_ROLES.admin]);
+
+    // 2. Parse + validate body (throws ValidationError)
+    const body = await request.json();
+    const dto = validateCreateUserDto(body);
+
+    // 3. Execute business logic (throws ConflictError, NotFoundError, etc.)
+    const created = await createUserService(dto);
+
+    // 4. Return typed response
+    return res.created(created);
+  } catch (error) {
+    // 5. Map errors to HTTP status codes
+    return handleError('[POST /api/users/create]', error);
+  }
+}
+```
+
+The pattern is always: **requireAuth → validateDto → service → res.xxx → catch handleError**.
+
+### `requireAuth`
+
+```ts
+// lib/jwt.ts
+export function requireAuth(
+  req: Request,
+  allowedRoles?: UserRole[]
+): AccessTokenPayload {
+  const token = extractBearerToken(req);      // throws UnauthorizedError
+  const payload = verifyAccessToken(token);   // throws UnauthorizedError
+  if (allowedRoles && !allowedRoles.includes(payload.role)) {
+    throw new ForbiddenError('You do not have permission to access this resource');
+  }
+  return payload;
+}
+```
+
+Pass `[USER_ROLES.admin]` to restrict to admins, `[USER_ROLES.distributor]` for distributors, or both to allow either. Omit `allowedRoles` to allow any authenticated user.
+
+### Response helpers (`res`)
+
+```ts
+res.ok(data)                  // 200 + JSON body
+res.ok(data, cookies)         // 200 + Set-Cookie headers
+res.created(data)             // 201 + JSON body
+res.noContent()               // 204
+res.validationError(message)  // 400 + { error }
+res.unauthorized(message)     // 401 + { error }
+res.forbidden(message)        // 403 + { error }
+res.notFound(message)         // 404 + { error }
+res.conflict(message)         // 409 + { error }
+res.serverError(message)      // 500 + { error }
+```
+
+### `handleError` mapping
+
+```ts
+export function handleError(tag: string, error: unknown): Response {
+  if (error instanceof ValidationError)  return res.validationError(error.message);
+  if (error instanceof UnauthorizedError) return res.unauthorized(error.message);
+  if (error instanceof ForbiddenError)   return res.forbidden(error.message);
+  if (error instanceof NotFoundError)    return res.notFound(error.message);
+  if (error instanceof ConflictError)    return res.conflict(error.message);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(tag, error);
+  return res.serverError(message);
+}
+```
+
+> [!WARNING]
+> In the current implementation, unexpected 500 errors include the raw error message in the response. This can expose internal details (table names, stack traces) to clients. In production, always return a generic `"Internal server error"` message and log internally only.
+
+---
+
+## Error flow end-to-end
+
+Here is what happens when a client sends `POST /api/users/create` with a malformed body:
+
+```
+Client → POST /api/users/create { name: "", email: "notanemail", role: "admin" }
+
+route.ts:
+  requireAuth(request, [USER_ROLES.admin])
+    → Bearer token valid, role = admin ✓
+
+  validateCreateUserDto(body)
+    → isString("") → false
+    → throw new ValidationError('name is required and must be a non-empty string')
+
+  ← ValidationError propagates to catch block
+
+  handleError('[POST /api/users/create]', error)
+    → error instanceof ValidationError → true
+    → return res.validationError('name is required...')
+
+Client ← 400 { "error": "name is required and must be a non-empty string" }
+```
+
+If the email was valid but already exists:
+
+```
+validateCreateUserDto(body) → { name: "Alice", email: "alice@example.com", role: "admin" }
+
+createUserService(dto)
+  → findUserByEmail("alice@example.com") → true
+  → throw new ConflictError('A user with this email already exists')
+
+handleError(...)
+  → error instanceof ConflictError → true
+  → return res.conflict('A user with this email already exists')
+
+Client ← 409 { "error": "A user with this email already exists" }
+```
+
+---
+
+## Error classes reference
+
+```ts
+// src/app/lib/errors.ts
+
+export class ValidationError extends Error { ... }  // 400
+export class NotFoundError extends Error { ... }     // 404
+export class UnauthorizedError extends Error { ... } // 401
+export class ForbiddenError extends Error { ... }    // 403
+export class ConflictError extends Error { ... }     // 409
+```
+
+Always import from `@/app/lib/errors`. Never throw `new Error()` for a condition that is a known business failure — that turns it into an unclassified 500.
+
+---
+
+## Checklist for a new endpoint
+
+When creating `POST /api/resources/action`:
+
+- [ ] Create `src/app/api/resources/action/types.ts` — define `ActionDto` and `ActionResponse`
+- [ ] Create `dtos/action.dto.ts` — export `validateActionDto(body: unknown): ActionDto`
+- [ ] Create `repository/action.repo.ts` — SQL only, no logic
+- [ ] Create `service/action.service.ts` — logic only, no SQL
+- [ ] Create `route.ts` — `requireAuth → validate → service → res.xxx → catch handleError`
+- [ ] Run `tsc --noEmit` — must pass with zero errors
+- [ ] No `any` — explicit or implicit

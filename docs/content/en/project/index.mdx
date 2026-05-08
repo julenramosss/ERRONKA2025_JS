@@ -1,34 +1,167 @@
+---
+description: "pakAG: a delivery operations platform for package orchestration, route planning, and recipient-facing tracking. Business domain overview."
+---
+
 # Project Overview
 
-## What PakAG is
+## What pakAG is
 
-PakAG is a delivery operations platform focused on package orchestration and delivery visibility. The system includes:
+pakAG is a **delivery operations platform** for small-to-medium logistics operations. It centralizes the full lifecycle of a package — from creation to doorstep delivery — for an organization that manages its own fleet of distributors.
 
-- an internal operations app (frontend) for admins/distributors,
-- an API backend (business logic + data persistence), and
-- a public package-tracking endpoint.
+The system is composed of three parts:
+
+1. **An internal web application** (`frontend-app`) used by admins and distributors to manage packages, plan routes, and report delivery outcomes.
+2. **A REST API backend** (`backend-js`) that enforces all business rules, persists data, and dispatches email notifications.
+3. **A public tracking endpoint** that allows package recipients to check their delivery status without logging in.
+
+> [!NOTE]
+> The project was developed as part of a competition ("erronka") — hence the repository name `erronka2025_js`. The product name in business logic and documentation is **pakAG**.
 
 ## Problem it solves
 
-PakAG centralizes package lifecycle management:
+Before pakAG, logistics operations managed package assignments, delivery sequences, and status updates through spreadsheets or disconnected tools. pakAG replaces that with:
 
-- package creation and assignment,
-- route planning and stop progression,
-- delivery-state transitions and status history,
-- notification emails,
-- recipient-facing tracking.
+- **Centralized package records** — every package has a lifecycle: `pending → assigned → in_transit → delivered / undelivered / failed`
+- **Route optimization** — admins assign packages to a distributor for a given day, and the system calls the Google Directions API to compute the optimal stop order
+- **Real-time status visibility** — every state transition is logged, and recipients receive automatic email notifications at key milestones
+- **Public tracking** — recipients get a unique tracking URL when their package is created; no account required
 
-## Backend/frontend relationship
+## Business domain
 
-- `frontend-app` consumes backend endpoints through Axios clients under `app/lib/api/*`.
-- `backend-js` exposes Next.js Route Handlers under `src/app/api/*` and enforces auth/roles with JWT bearer tokens.
-- Frontend keeps access tokens in a cookie; backend manages refresh token rotation via HTTP-only cookie.
+### Entities
 
-## Product actors
+| Entity | Description |
+|---|---|
+| **User** | System user with role `admin` or `distributor`; `is_active` flag controls login access |
+| **Package** | A physical parcel with a recipient, an address, and a current status |
+| **Address** | Geocoded delivery address — stored with `latitude`/`longitude` for route optimization |
+| **Route** | A day's delivery plan for one distributor — contains an ordered list of stops |
+| **Stop** | A single delivery stop on a route — links a route to a package, holds order and estimated arrival |
+| **PackageStatusLog** | Immutable audit trail — every status change records timestamp, new status, and optionally a note |
+| **Token** | Opaque hex tokens for: `refresh_token`, `tracking_token`, `reset_pwd_token`, `activate_account_token` |
 
-- **Admin**: user/account management, package and route administration.
-- **Distributor**: daily route execution, status changes, delivery operations.
-- **Recipient**: package-tracking view (token-based, no account login).
+### Package status machine
+
+```
+                    ┌──────────┐
+                    │  pending │  ← package created by admin
+                    └────┬─────┘
+                         │ admin assigns to route
+                         ▼
+                    ┌──────────┐
+                    │ assigned │
+                    └────┬─────┘
+                         │ distributor starts route
+                         ▼
+                    ┌────────────┐
+                    │ in_transit │
+                    └──┬──┬──┬──┘
+                       │  │  │
+          ─────────────┘  │  └─────────────────
+         │                │                    │
+         ▼                ▼                    ▼
+   ┌───────────┐   ┌─────────────┐   ┌──────────────┐
+   │ delivered │   │ undelivered │   │    failed    │
+   └───────────┘   └─────────────┘   └──────────────┘
+   (success)       (nobody home,     (refused,
+                    try again)        lost, etc.)
+```
+
+Each transition triggers a side effect: an entry in `package_status_logs` and an email to the recipient.
+
+### Route lifecycle
+
+1. **Admin** creates a route: selects a distributor user and a date, picks the packages to include (max 20 stops).
+2. The backend fetches any **carryover packages** — packages assigned to that distributor from previous days still in `assigned` status — and prepends them to the stop list.
+3. The Google Directions API is called with `optimize:true` to compute the optimal waypoint order.
+4. Estimated arrival times are calculated per stop and stored in the database.
+5. The **distributor** sees their daily route in the frontend, starts it, arrives at each stop, and marks packages as delivered / undelivered / failed.
+6. At end of day, any undelivered stops are eligible to carry over to the next route.
+
+## Users and roles
+
+### Admin
+
+Admins manage the full operational scope. They:
+
+- Create and manage user accounts (admins and distributors)
+- Create, update, and delete packages
+- Assign packages to routes
+- View all package and route history
+- Access system-wide logs and daily delivery summaries
+
+Admins access the internal dashboard in `frontend-app`.
+
+### Distributor
+
+Distributors execute the daily delivery work. They:
+
+- View their assigned route for the day
+- Progress through stops in the optimized order
+- Mark packages as delivered, undelivered, or failed at each stop
+- Record actual arrival time at each stop
+- Can continue a previous day's pending route if undelivered stops were carried over
+
+Distributors access the same internal app as admins but see a different, role-scoped view.
+
+### Recipient (package recipient)
+
+Recipients are not system users — they have no account and no login. They interact with pakAG only through:
+
+- **Email notifications** at each status transition (assigned, in_transit, delivered/failed)
+- **The public tracking page** — a URL containing a one-time tracking token that shows the current package status and history
+
+The tracking token is created when the package is created and expires after a configurable number of days (default: 30).
+
+## Key workflows
+
+### Creating a package (admin)
+
+1. Admin submits: recipient name, email, delivery address, package description
+2. Backend geocodes the address via Google Geocoding API → stores `lat`/`lng`
+3. Backend generates a tracking token and stores it in the `tokens` table
+4. Backend sends a "package created" notification email to the recipient with the tracking URL
+5. Package is in `pending` status until assigned to a route
+
+### Activating a new user account
+
+1. Admin creates a user via `POST /api/users/create`
+2. Backend stores the user with `is_active=false` and a hashed default password
+3. Backend generates an `activate_account_token` and sends an activation email
+4. User clicks the link and POSTs to `/api/auth/activateAccount?token=<token>` with their chosen password
+5. Backend verifies the token, hashes the password, sets `is_active=true`, revokes the token
+
+### Password reset
+
+1. User visits "forgot password" and submits their email
+2. Backend responds with a generic message (does not reveal whether the email exists)
+3. If the email matches a user, a `reset_pwd_token` is generated and an email is sent
+4. User clicks the link and POSTs to `/api/auth/changePwd?token=<token>` with a new password
+5. Backend verifies, changes the password, revokes the token
+
+## Technical stack summary
+
+| Layer | Technology | Version |
+|---|---|---|
+| API runtime | Next.js Route Handlers | 16.2.4 |
+| Language | TypeScript | 5.x |
+| Database | MySQL | 8.x |
+| DB client | mysql2 | 3.22.0 |
+| Auth | JWT (HS256) + bcrypt | jsonwebtoken 9.0.2 / bcrypt 6.0.0 |
+| Email | Resend | 6.12.2 |
+| Maps | Google Directions + Geocoding API | — |
+| Frontend framework | Next.js App Router | 16.2.4 |
+| Styling | Tailwind CSS | 4.x |
+| Data fetching (frontend) | TanStack React Query + Axios | 5.x / 1.x |
+| Monorepo | pnpm workspaces | 10.20.0 |
+| Documentation | Nextra | 4.6.1 |
+
+## What pakAG is NOT
+
+- Not a public SaaS product — it is designed for a single organization with internal users
+- Not a mobile app — the frontend is a web application (though responsive)
+- Not a warehouse management system — it handles packages after they leave the warehouse
+- Not a real-time tracking system — status updates are manual, entered by the distributor
 
 > [!WARNING]
-> Some UI labels are currently Basque in the frontend implementation. This docs site is intentionally in English for onboarding consistency.
+> Some UI labels in `frontend-app` are currently in Basque (Euskara). This is intentional for the target region. This documentation site is in English for developer onboarding consistency.

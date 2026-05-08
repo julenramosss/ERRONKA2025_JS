@@ -1,47 +1,241 @@
+---
+description: "Step-by-step guide to clone, install, configure, and run the pakAG monorepo locally on any machine."
+---
+
 # Local Setup
+
+This guide walks you through getting all three pakAG services — **backend**, **frontend**, and **docs** — running on your machine from scratch.
+
+---
 
 ## Prerequisites
 
-- Node.js 20+
-- pnpm 10+
-- MySQL database instance reachable by backend
-- Resend API key and Google APIs key for full feature parity
+Before you start, make sure the following are installed and available in your `PATH`:
 
-## Install dependencies
+| Tool | Minimum version | Check |
+| --- | --- | --- |
+| Node.js | **20 LTS** | `node -v` |
+| pnpm | **10** | `pnpm -v` |
+| MySQL | **8.0** | `mysql --version` |
+| Git | any recent | `git --version` |
 
-From repo root:
+> [!NOTE]
+> pnpm is the only supported package manager in this monorepo. Running `npm install` or `yarn` at the root will not install workspace dependencies correctly and may corrupt lock files.
+
+### Install pnpm (if needed)
+
+```bash
+npm install -g pnpm@10
+```
+
+### Install Node.js 20 (if needed)
+
+Use [nvm](https://github.com/nvm-sh/nvm) or [nvm-windows](https://github.com/coreybutler/nvm-windows) to manage multiple versions:
+
+```bash
+nvm install 20
+nvm use 20
+```
+
+---
+
+## 1. Clone the repository
+
+```bash
+git clone <repo-url> erronka2025_js
+cd erronka2025_js
+```
+
+---
+
+## 2. Install all dependencies
+
+From the **repo root** (not inside any sub-package), run:
 
 ```bash
 pnpm install
 ```
 
-## Run backend locally
+pnpm reads `pnpm-workspace.yaml` and installs dependencies for all three packages (`backend-js`, `frontend-app`, `docs`) in a single pass, with a shared `node_modules` at the root.
+
+> [!TIP]
+> If you see `ERR_PNPM_OUTDATED_LOCKFILE`, run `pnpm install --frozen-lockfile=false` once to regenerate the lockfile, then commit it.
+
+---
+
+## 3. Create and seed the database
+
+### 3a. Create a MySQL user and database
+
+Log in to MySQL as root (or any privileged user):
+
+```sql
+CREATE DATABASE IF NOT EXISTS erronka
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'pakag'@'localhost' IDENTIFIED BY 'yourpassword';
+GRANT ALL PRIVILEGES ON erronka.* TO 'pakag'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+> [!WARNING]
+> The database name in `schema.sql` is `erronka`. The `.env.example` shows `MYSQL_DATABASE="pakag"`. **Use `erronka`** when importing the schema — and set `MYSQL_DATABASE=erronka` in your `.env.local`.
+
+### 3b. Import the schema
+
+```bash
+mysql -u pakag -p erronka < schema.sql
+```
+
+Enter your password when prompted. This creates all seven tables: `addresses`, `users`, `packages`, `tokens`, `package_status_logs`, `routes`, and `route_stops`.
+
+### 3c. (Optional) Load development seed data
+
+```bash
+mysql -u pakag -p erronka < mocked_data.sql
+```
+
+This populates the database with sample users, packages, routes, and stops so you can explore the app immediately without creating data by hand.
+
+---
+
+## 4. Configure environment variables — backend
+
+Copy the example file:
+
+```bash
+cp backend-js/.env.example backend-js/.env.local
+```
+
+Edit `backend-js/.env.local` and fill in every value:
+
+```env
+# ─── Database ────────────────────────────────────────────────
+MYSQL_HOST=localhost
+MYSQL_USER=pakag
+MYSQL_PASSWORD=yourpassword
+MYSQL_DATABASE=erronka
+# MYSQL_PORT defaults to 3306; uncomment to override:
+# MYSQL_PORT=3306
+
+# ─── JWT ─────────────────────────────────────────────────────
+JWT_SECRET=change_me_to_a_long_random_secret_min_32_chars
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_DAYS=7
+
+# ─── Email (Resend) ───────────────────────────────────────────
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
+
+# ─── Google Maps ─────────────────────────────────────────────
+GOOGLE_DIRECTIONS_API_KEY=AIzaSy_xxxxxxxxxxxxxxxxxxxx
+
+# ─── App URLs ─────────────────────────────────────────────────
+TRACKING_BASE_URL=http://localhost:3000/tracking
+RESET_BASE_URL=http://localhost:3000/reset-password
+
+# ─── Tokens ──────────────────────────────────────────────────
+TRACKING_EXPIRES_DAYS=15
+
+# ─── Users ───────────────────────────────────────────────────
+DEFAULT_USER_PASSWORD=ChangeMe123!
+```
+
+> [!WARNING]
+> `JWT_SECRET` ships with a hardcoded fallback in `envConfig.ts`. Never rely on it — always set a strong secret. If it is missing in production, any attacker who reads the source can forge valid tokens. The same applies to `DEFAULT_USER_PASSWORD`.
+
+Next.js reads `.env.local` automatically in development. Never commit `.env.local` — it is listed in `.gitignore`.
+
+---
+
+## 5. Configure environment variables — frontend
+
+The frontend reads its env from `frontend-app/.env` (committed, no secrets) and optionally from `.env.local` (gitignored):
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
+NEXT_PUBLIC_DOCS_BASE_URL=http://localhost:3002/
+NEXT_PUBLIC_HERE_API_KEY=your_here_maps_api_key
+```
+
+Replace the IP/port in `NEXT_PUBLIC_API_BASE_URL` with the actual address where your backend is reachable. On a shared network (e.g. classroom), use the machine's LAN IP instead of `localhost`.
+
+> [!NOTE]
+> All `NEXT_PUBLIC_*` variables are embedded at build time and exposed to the browser. Never put secrets in them.
+
+---
+
+## 6. Run all services
+
+Open **three separate terminals** from the repo root, one per service.
+
+### Backend
 
 ```bash
 pnpm backend:dev
 ```
 
-Expected endpoint base: `http://localhost:3001/api`.
+Starts Next.js on port **3001**. API base: `http://localhost:3001/api`.
 
-## Run frontend locally
+The root script is a shortcut for:
+```bash
+pnpm --filter @repo/backend-js dev -p 3001
+```
+
+### Frontend
 
 ```bash
 pnpm frontend:dev
 ```
 
-Expected UI base: `http://localhost:3000`.
+Starts Next.js on port **3000** (bound to `0.0.0.0` so it is reachable from other devices on the same network). UI base: `http://localhost:3000`.
 
-## Run docs locally
+### Docs
 
 ```bash
 pnpm docs:dev
 ```
 
-Expected docs base: `http://localhost:3002`.
+Starts the Nextra documentation site on port **3002**. Docs base: `http://localhost:3002`.
 
-## Common startup issues
+> [!TIP]
+> The docs `predev` script regenerates the full-text search index automatically each time you start the dev server. You do not need to run it manually.
 
-- Missing backend env variables (MySQL/keys).
-- Frontend API base URL not pointing to backend.
-- Cookies blocked by browser/security settings.
-- MySQL SSL/proxy mismatch for local DB.
+---
+
+## 7. Verify everything works
+
+Once all three servers are running:
+
+1. **Backend health** — open `http://localhost:3001/api/auth/me` in your browser or curl it. You should get a `401 Unauthorized` JSON response (not a connection error), which confirms the API is up.
+
+   ```bash
+   curl -s http://localhost:3001/api/auth/me | python -m json.tool
+   # Expected: { "error": "Unauthorized" } or similar
+   ```
+
+2. **Frontend** — open `http://localhost:3000`. The login page should load without console errors.
+
+3. **Docs** — open `http://localhost:3002`. The documentation home page should render correctly with working navigation.
+
+4. **End-to-end smoke test** — log in with a seeded admin user (from `mocked_data.sql`), navigate to the packages list, and confirm data loads. This exercises the full stack: frontend → backend → MySQL.
+
+---
+
+## 8. Common first-run errors
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `Error: connect ECONNREFUSED 127.0.0.1:3306` | MySQL not running | Start MySQL service |
+| `Unknown database 'erronka'` | Schema not imported | Run `mysql ... < schema.sql` |
+| `Access denied for user 'pakag'@'localhost'` | Wrong credentials | Re-check `MYSQL_USER` / `MYSQL_PASSWORD` in `.env.local` |
+| `Error: JWT_SECRET is not set` | Missing env var | Add `JWT_SECRET` to `backend-js/.env.local` |
+| `Network Error` in browser console | Frontend can't reach backend | Verify `NEXT_PUBLIC_API_BASE_URL` matches backend port |
+| `TypeError: Failed to fetch` on HERE map | Missing API key | Set `NEXT_PUBLIC_HERE_API_KEY` in `frontend-app/.env` |
+| `504 Gateway Timeout` on route creation | Google API key invalid or quota exceeded | Check `GOOGLE_DIRECTIONS_API_KEY` in backend `.env.local` |
+| `Cookies not sent` / refresh token loop | `SameSite` mismatch in dev | Ensure frontend and backend are on the same host (`localhost`), not a mix of `localhost` and a LAN IP |
+| `pnpm: command not found` after install | pnpm not on PATH | Re-open terminal or add pnpm's global bin to PATH |
+| `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND` | Wrong root for `pnpm install` | Run `pnpm install` from the repo root, not inside a sub-package |
+
+> [!NOTE]
+> If the backend starts but email features silently fail (activation links, password reset, package notifications), the `RESEND_API_KEY` is probably missing or invalid. All other features work without it.

@@ -1,116 +1,300 @@
-# Frontend Documentation
+---
+description: "Complete overview of the pakAG frontend: stack, folder structure, component conventions, environment variables, and dev setup."
+---
 
-## Tech stack
+# Frontend — Architecture Overview
 
-- Next.js App Router
-- React 19
-- TanStack React Query
-- Axios
-- Tailwind CSS v4
-- HERE Maps integration
-- `boneyard-js` skeleton loader components
+The pakAG frontend is a **Next.js 16 App Router** application written in TypeScript. It is the
+distributor-facing web interface for daily route execution, package tracking, and account
+settings.
 
-## App structure
+---
 
-Main folders under `frontend-app/app`:
+## Tech Stack
 
-- `(auth)` route group: login experience.
-- `(main)` route group: authenticated dashboard flows.
-- `lib/api`: Axios clients and API helpers.
-- `hooks`: query/mutation hooks by domain.
-- `providers`: React Query and tutorial providers.
-- `utils/types/api`: typed response and request contracts.
-
-## Layout and providers
-
-`app/layout.tsx` wraps content with:
-
-- `AppProviders` → `ReactQueryProvider`
-- `RouteGuard` (auth gate)
-
-`(main)/layout.tsx` adds:
-
-- `SessionKeepAlive` (refresh session background query)
-- `PreferencesSync`
-- `AsideMenu` + `Header` + footer
-- `TutorialProvider`
-
-## React Query usage
-
-- Query keys organized in `app/query/keys/*`.
-- Query options in `app/query/options/*`.
-- Default retries disabled for common non-retriable HTTP statuses (400/401/403/404/409).
-
-## Axios API client
-
-`apiClient` setup includes:
-
-- `withCredentials: true`.
-- request interceptor injecting `Authorization: Bearer <access_token>`.
-- response interceptor that refreshes on `401` (except login/refresh/forgot-password/tracking endpoints), retries once, and clears token on failure.
-
-## Auth token storage
-
-- Frontend stores access token in cookie key `access_token` (`SameSite=Strict`, `max-age=15m`).
-- Refresh token remains backend-managed HTTP-only cookie.
-
-## Refresh-token flow
-
-- Background refresh query (`refreshTokenQueryOptions`) runs every 12 minutes.
-- Axios interceptor triggers refresh on unexpected 401 and replays original request once.
-
-## RouteGuard behavior
-
-- Public route list currently includes only `/login`.
-- If user hits protected route without valid token, app redirects to `/login`.
-- If user has valid token and accesses `/login`, app redirects to `/`.
-
-## Main pages/screens
-
-- `/dashboard`: profile summary, stats, next deliveries, map panel.
-- `/myPackages`: list/grid views and filtering.
-- `/myPackages/[packageId]`: package detail and logs history.
-- `/myRoute`: daily route execution view, progress, stops, map.
-- `/history`: historical package activity analytics.
-- `/settings`: profile/security/appearance controls.
-- `/login`: authentication + forgot password modal.
-
-## Hooks and API modules
-
-Hooks are grouped by domain:
-
-- `hooks/auth/*`
-- `hooks/packages/*`
-- `hooks/routes/*`
-- `hooks/tracking/*`
-
-API modules:
-
-- `lib/api/auth-api.ts`
-- `lib/api/packages-api.ts`
-- `lib/api/routes-api.ts`
-- `lib/api/logs-api.ts`
-- `lib/api/tracking-api.ts`
-
-## Types
-
-Canonical API models are in `app/utils/types/api/*.ts`.
-
-## Styling approach and PakAG identity
-
-`app/globals.css` defines the PakAG palette and semantic tokens (deep purple surfaces, violet accents, status colors). The docs theme in `/docs` intentionally mirrors this palette.
-
-## Skeleton/loading strategy
-
-Pages use `Skeleton` wrapper components with domain-specific loader components (e.g., dashboard, my-route, history loaders).
-
-## Tracking UI
-
-Frontend includes tracking API client (`tracking-api.ts`) and `TRACKING_PATH_PREFIX` constants. Public tracking behavior uses backend `/api/tracking/:trackingToken` endpoint.
-
-## Dashboard/distributor/admin flows
-
-Current frontend route set is distributor-oriented (dashboard, myPackages, myRoute, history, settings). Admin capabilities are primarily exposed through backend APIs and may require separate UI surfaces.
+| Layer | Library / Version |
+|---|---|
+| Framework | Next.js 16.2.4 (App Router) |
+| UI Runtime | React 19.2.4 |
+| Server-state | TanStack React Query 5.99.1 |
+| HTTP client | Axios 1.15.0 |
+| Styling | Tailwind CSS v4 |
+| Map engine | HERE Maps JS API (loaded via CDN) |
+| Skeleton loaders | boneyard-js 1.7.9 |
+| Guided tour | react-joyride 3.0.2 |
+| Language | TypeScript 5 |
 
 > [!NOTE]
-> Admin-facing web screens are not clearly present in `frontend-app/app` routes and should be treated as **Needs verification** for product scope completeness.
+> The package name in `package.json` is `@repo/frontend-app`, reflecting the monorepo workspace
+> structure. Both `frontend-app/` and `backend-js/` live alongside each other at the repo root.
+
+---
+
+## Repository Location
+
+```
+erronka2025_js/
+├── frontend-app/       ← THIS application
+├── backend-js/         ← Next.js API (separate app)
+├── docs/               ← Documentation site (this site)
+└── schema.sql          ← MySQL source of truth
+```
+
+All commands below assume `frontend-app/` as the working directory.
+
+---
+
+## Folder Structure
+
+```
+frontend-app/
+├── app/
+│   ├── layout.tsx                  ← Root layout — wraps with AppProviders
+│   ├── page.tsx                    ← Redirects "/" → "/dashboard"
+│   ├── not-found.tsx               ← Global 404 page
+│   ├── globals.css                 ← PakAG palette + Tailwind base
+│   │
+│   ├── (auth)/                     ← Route group: unauthenticated pages
+│   │   ├── layout.tsx              ← Passthrough layout (no shell)
+│   │   └── login/
+│   │       ├── page.tsx
+│   │       ├── hooks/
+│   │       └── components/
+│   │
+│   ├── (main)/                     ← Route group: authenticated shell
+│   │   ├── layout.tsx              ← Adds RoleGuard, SessionKeepAlive, AsideMenu, Header
+│   │   ├── (pages)/                ← Inner route group (pages under the shell)
+│   │   │   ├── dashboard/
+│   │   │   ├── myPackages/
+│   │   │   │   └── [packageId]/
+│   │   │   ├── myRoute/
+│   │   │   ├── history/
+│   │   │   └── settings/
+│   │   ├── components/             ← Shell UI: AsideMenu, Header, RoleGuard, StatusBadge…
+│   │   ├── hooks/                  ← Page-level hooks (e.g. useHereMaps)
+│   │   ├── lib/                    ← HERE Maps loader helper
+│   │   └── types/                  ← allowedRoles.ts (role → route mapping)
+│   │
+│   ├── components/                 ← App-wide shared components
+│   │   ├── SessionKeepAlive.tsx    ← Mounts refresh query in the background
+│   │   ├── PreferencesSync.tsx     ← Syncs user preferences on mount
+│   │   ├── PackLogo.tsx
+│   │   ├── icons.tsx
+│   │   └── tutorial/
+│   │
+│   ├── config/
+│   │   └── envConfig.ts            ← All env vars and URL constants
+│   │
+│   ├── hooks/                      ← Domain hooks (thin wrappers around query options)
+│   │   ├── auth/
+│   │   ├── packages/
+│   │   ├── routes/
+│   │   └── tracking/
+│   │
+│   ├── lib/
+│   │   └── api/
+│   │       ├── auth-api.ts
+│   │       ├── packages-api.ts
+│   │       ├── routes-api.ts
+│   │       ├── logs-api.ts
+│   │       ├── tracking-api.ts
+│   │       └── helpers/
+│   │           ├── client.ts       ← Axios instance + interceptors
+│   │           ├── auth-token.ts   ← Cookie read/write for access_token
+│   │           ├── errors.ts       ← toAppError() normalizer
+│   │           └── response-helpers.ts
+│   │
+│   ├── providers/
+│   │   ├── AppProviders.tsx        ← Root provider tree
+│   │   ├── ReactQueryProvider.tsx  ← QueryClient instantiation
+│   │   └── TutorialProvider.tsx    ← react-joyride context
+│   │
+│   ├── query/
+│   │   ├── keys/                   ← Query key factories by domain
+│   │   │   ├── auth.keys.ts
+│   │   │   ├── packages.keys.ts
+│   │   │   ├── routes.keys.ts
+│   │   │   ├── logs.keys.ts
+│   │   │   └── tracking.keys.ts
+│   │   └── options/                ← queryOptions() definitions by domain
+│   │       ├── auth.options.ts
+│   │       ├── packages.options.ts
+│   │       ├── routes.options.ts
+│   │       ├── logs.options.ts
+│   │       └── tracking.options.ts
+│   │
+│   └── utils/
+│       ├── date.utils.ts
+│       ├── preferences.ts
+│       ├── status.utils.ts
+│       ├── token.utils.ts
+│       ├── tutorial.storage.ts
+│       └── types/
+│           ├── index.ts            ← USER_ROLES, UserRole, etc.
+│           └── api/                ← Per-domain API type contracts
+│               ├── auth.types.ts
+│               ├── package.types.ts
+│               ├── route.types.ts
+│               ├── log.types.ts
+│               ├── tracking.types.ts
+│               └── common.types.ts ← AppError, ApiErrorResponse
+```
+
+---
+
+## Layout and Provider Tree
+
+```
+app/layout.tsx  (RootLayout)
+└── AppProviders
+    └── ReactQueryProvider  (QueryClientProvider)
+        └── {children}
+            └── (main)/layout.tsx  (AuthLayout)
+                └── RoleGuard
+                    └── TutorialProvider
+                        ├── PreferencesSync        (effect-only component)
+                        ├── SessionKeepAlive       (background refresh query)
+                        ├── AsideMenu
+                        ├── Header
+                        └── <page content>
+```
+
+`AppProviders` (`app/providers/AppProviders.tsx`) is the single place to add new global
+providers — it currently delegates entirely to `ReactQueryProvider`.
+
+---
+
+## Pages and Routes
+
+| URL | File | Description |
+|---|---|---|
+| `/` | `app/page.tsx` | Instant redirect → `/dashboard` |
+| `/login` | `app/(auth)/login/page.tsx` | Login + forgot-password modal |
+| `/dashboard` | `app/(main)/(pages)/dashboard/` | Profile summary, stats, map |
+| `/myPackages` | `app/(main)/(pages)/myPackages/` | List/grid view with filters |
+| `/myPackages/[packageId]` | `app/(main)/(pages)/myPackages/[packageId]/` | Package detail + log history |
+| `/myRoute` | `app/(main)/(pages)/myRoute/` | Daily route execution, stops, map |
+| `/history` | `app/(main)/(pages)/history/` | Historical analytics |
+| `/settings` | `app/(main)/(pages)/settings/` | Profile / security / appearance |
+
+> [!NOTE]
+> All `(main)` pages except `/settings` are restricted to the `distributor` role.
+> `/settings` allows both `distributor` and `admin`. See [`routing.mdx`](/frontend/routing) for
+> the full role-guard matrix.
+
+---
+
+## Component Conventions
+
+### `'use client'` directive
+
+Client components (hooks, event handlers, `useEffect`) must declare `'use client'` at the very
+top of the file. Server components omit it (layouts, pages that only compose client children).
+
+### Hook co-location
+
+Each page folder can have a local `hooks/` subfolder for page-scoped logic. App-wide domain
+hooks live in `app/hooks/{domain}/`.
+
+### Query / Mutation pattern
+
+1. Define the key factory in `app/query/keys/{domain}.keys.ts`
+2. Define `queryOptions()` in `app/query/options/{domain}.options.ts`
+3. Create a `use{Domain}{Action}` hook in `app/hooks/{domain}/` that calls `useQuery` or
+   `useMutation` with those options.
+
+```tsx
+// ✅ Correct layering
+// app/query/keys/packages.keys.ts
+export const packagesKeys = {
+  all: () => ['packages'] as const,
+  myPackages: () => [...packagesKeys.all(), 'myPackages'] as const,
+  detail: (id: number) => [...packagesKeys.all(), 'detail', id] as const,
+};
+
+// app/hooks/packages/useMyPackages.ts
+export function useMyPackages() {
+  return useQuery(myPackagesQueryOptions());
+}
+```
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | Dev only | Backend API origin (e.g. `http://localhost:3001/api`) |
+| `NEXT_PUBLIC_DOCS_BASE_URL` | Dev only | Docs site origin (e.g. `http://localhost:3002`) |
+| `NEXT_PUBLIC_HERE_API_KEY` | Always | HERE Maps JS API key |
+
+In production, `API_BASE_URL` is hard-coded in `app/config/envConfig.ts` to
+`https://api.tolosaerronka.es/api` and `DOCS_BASE_URL` to `https://docs.tolosaerronka.es`.
+
+> [!WARNING]
+> All three `NEXT_PUBLIC_*` variables use the `!` non-null assertion in `envConfig.ts`. If they
+> are undefined at build time the app will compile but may fail at runtime. Add startup
+> validation if deploying to new environments.
+
+Create `.env.local` at `frontend-app/`:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001/api
+NEXT_PUBLIC_DOCS_BASE_URL=http://localhost:3002
+NEXT_PUBLIC_HERE_API_KEY=your-here-api-key
+```
+
+---
+
+## Dev Server
+
+```bash
+# from the repo root — or from frontend-app/
+cd frontend-app
+npm run dev          # starts on 0.0.0.0 (all interfaces), port 3000 by default
+```
+
+The `--hostname 0.0.0.0` flag in `package.json` enables access from other devices on the local
+network. `next.config.ts` whitelists `192.168.1.*`, `10.23.*.*`, and `localhost` as allowed dev
+origins.
+
+---
+
+## Styling and PakAG Identity
+
+`app/globals.css` defines the PakAG design token palette using Tailwind CSS v4 custom properties:
+
+- **Deep purple surfaces** as primary backgrounds
+- **Violet accents** for interactive elements
+- **Semantic status colours** for package states (`pending`, `in_transit`, `delivered`, etc.)
+
+The documentation site under `/docs` intentionally mirrors this palette.
+
+---
+
+## Skeleton / Loading Strategy
+
+Pages do not use Next.js `loading.tsx` files. Instead, each domain has dedicated skeleton
+components (e.g. `DashboardSkeleton`, `MyRouteSkeleton`, `HistorySkeleton`) that are rendered
+while React Query is in a loading state. The `boneyard-js` library provides the low-level
+`Skeleton` primitive.
+
+---
+
+## HERE Maps Integration
+
+Maps are rendered client-side using the HERE Maps JS API v3, loaded via `<Script>` tags in
+`app/(main)/lib/here.ts`. The `HereMap` component in
+`app/(main)/components/Here/HereMap.tsx` handles initialisation and cleanup. The
+`useHereMap` hook manages the map lifecycle inside a `useEffect`.
+
+Remote images from `image.maps.ls.hereapi.com` are whitelisted in `next.config.ts` for use
+with the Next.js `<Image>` component.
+
+---
+
+## Further Reading
+
+- [State management →](/frontend/state) — React Query setup, query keys, mutations, error handling
+- [Auth flow →](/frontend/auth-flow) — Token storage, axios interceptors, refresh, logout
+- [Routing →](/frontend/routing) — App Router conventions, protected routes, role guard

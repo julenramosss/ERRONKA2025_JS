@@ -1,0 +1,330 @@
+---
+description: "How React Query is configured in pakAG: QueryClient defaults, query key conventions, mutation patterns, and error surfacing."
+---
+
+# State Management — React Query
+
+pakAG uses **TanStack React Query v5** as the single source of truth for all server state.
+There is no Redux, Zustand, or React Context for remote data — everything goes through the
+query cache.
+
+---
+
+## QueryClient Setup
+
+The client is created in `app/providers/ReactQueryProvider.tsx` and mounted once at the root
+via `AppProviders`.
+
+```tsx
+// app/providers/ReactQueryProvider.tsx
+'use client';
+
+import {
+  QueryClient,
+  QueryClientProvider,
+  type QueryClientConfig,
+} from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
+import { isAppError } from '../lib/api/helpers/errors';
+
+const NON_RETRIABLE_STATUSES = new Set([400, 401, 403, 404, 409]);
+
+function createQueryClientConfig(): QueryClientConfig {
+  return {
+    defaultOptions: {
+      queries: {
+        retry: (failureCount, error: unknown) => {
+          if (failureCount >= 1) return false;
+          if (
+            isAppError(error) &&
+            error.status !== undefined &&
+            NON_RETRIABLE_STATUSES.has(error.status)
+          ) {
+            return false;
+          }
+          return true;
+        },
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        gcTime: 10 * 60 * 1000, // cache kept 10 min after unmount
+      },
+      mutations: {
+        retry: false, // mutations never auto-retry
+      },
+    },
+  };
+}
+
+export function ReactQueryProvider({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(createQueryClient);
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+```
+
+### Key defaults
+
+| Setting | Value | Rationale |
+|---|---|---|
+| `queries.retry` | max 1, skip for 4xx | Avoid hammering the API on client errors |
+| `queries.refetchOnWindowFocus` | `true` | Data stays fresh when user returns to tab |
+| `queries.refetchOnReconnect` | `true` | Recover after network drop |
+| `queries.gcTime` | 10 minutes | Keep cache warm during navigation |
+| `mutations.retry` | `false` | Mutations are side-effectful — never auto-replay |
+
+> [!NOTE]
+> The `QueryClient` is created inside `useState(createQueryClient)` (not `useState(new QueryClient())`).
+> Passing the factory function prevents a new client being created on every render during SSR.
+
+---
+
+## Query Key Convention
+
+All query keys live in `app/query/keys/` — one file per domain. Keys are expressed as
+**factory objects** returning `readonly` tuples. This makes `invalidateQueries` scoped and safe.
+
+```ts
+// app/query/keys/auth.keys.ts
+export const authKeys = {
+  all: () => ['auth'] as const,
+  me: () => [...authKeys.all(), 'me'] as const,
+  refresh: () => [...authKeys.all(), 'refresh'] as const,
+};
+
+// app/query/keys/packages.keys.ts
+export const packagesKeys = {
+  all: () => ['packages'] as const,
+  myPackages: () => [...packagesKeys.all(), 'myPackages'] as const,
+  detail: (id: number) => [...packagesKeys.all(), 'detail', id] as const,
+};
+
+// app/query/keys/routes.keys.ts
+export const routesKeys = {
+  all: () => ['routes'] as const,
+  daily: (date = 'today') => [...routesKeys.all(), 'daily', date] as const,
+  pendingPast: () => [...routesKeys.all(), 'pendingPast'] as const,
+};
+```
+
+### Key hierarchy
+
+```
+['auth']                          → invalidates ALL auth queries
+['auth', 'me']                    → only the /auth/me query
+['auth', 'refresh']               → only the background refresh query
+
+['packages']                      → invalidates ALL package queries
+['packages', 'myPackages']        → distributor's assigned packages list
+['packages', 'detail', 42]        → single package by ID
+
+['routes']                        → all route queries
+['routes', 'daily', 'today']      → today's daily route
+['routes', 'pendingPast']         → pending past route migration check
+```
+
+> [!TIP]
+> When a mutation affects multiple domains (e.g. updating a package status also invalidates
+> the route), call `queryClient.invalidateQueries` for each root key. See the mutation example
+> below.
+
+---
+
+## Query Options Pattern
+
+Query options objects are defined in `app/query/options/` using `queryOptions()` from React
+Query. This gives TypeScript inference for `queryKey` and `queryFn` without duplication.
+
+```ts
+// app/query/options/auth.options.ts
+import { queryOptions } from '@tanstack/react-query';
+import { getMe, refresh } from '../../lib/api/auth-api';
+import { authKeys } from '../keys/auth.keys';
+import { setAccessToken } from '../../lib/api/helpers/auth-token';
+
+const ME_STALE_TIME = 10 * 60 * 1000; // 10 minutes
+
+export function meQueryOptions() {
+  return queryOptions({
+    queryKey: authKeys.me(),
+    queryFn: getMe,
+    staleTime: ME_STALE_TIME,
+  });
+}
+
+export const refreshTokenQueryOptions = () =>
+  queryOptions({
+    queryKey: authKeys.refresh(),
+    queryFn: async () => {
+      const response = await refresh();
+      setAccessToken(response.access_token);
+      return response;
+    },
+    staleTime: 10 * 60 * 1000,
+    refetchInterval: 12 * 60 * 1000,       // refresh every 12 min
+    refetchIntervalInBackground: true,       // keep refreshing even if tab is hidden
+  });
+```
+
+Hooks import these options objects rather than duplicating query keys and fetch functions:
+
+```ts
+// app/hooks/auth/useMe.ts
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { meQueryOptions } from '../../query/options/auth.options';
+
+export function useMe() {
+  return useQuery(meQueryOptions());
+}
+```
+
+---
+
+## Mutation Pattern
+
+Mutations follow a consistent structure:
+
+1. `mutationFn` calls the API module function.
+2. `onSuccess` invalidates the affected query keys via `queryClient.invalidateQueries`.
+3. The hook returns the full `useMutation` result (callers access `mutate`, `isPending`,
+   `error`, etc.).
+
+```ts
+// app/hooks/packages/useUpdatePackageStatus.ts
+'use client';
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updatePackageStatus } from '../../lib/api/packages-api';
+import { logsKeys } from '../../query/keys/logs.keys';
+import { packagesKeys } from '../../query/keys/packages.keys';
+import { routesKeys } from '../../query/keys/routes.keys';
+import type {
+  UpdatePackageStatusRequest,
+  UpdatePackageStatusResponse,
+} from '../../utils/types/api/package.types';
+import type { AppError } from '../../utils/types/api/common.types';
+
+export function useUpdatePackageStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    UpdatePackageStatusResponse,
+    AppError,
+    UpdatePackageStatusRequest
+  >({
+    mutationFn: updatePackageStatus,
+    onSuccess: async (_response, variables) => {
+      const packageIds =
+        'package_ids' in variables && Array.isArray(variables.package_ids)
+          ? variables.package_ids
+          : typeof variables.package_id === 'number'
+            ? [variables.package_id]
+            : [];
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: packagesKeys.myPackages() }),
+        ...packageIds.map((id) =>
+          queryClient.invalidateQueries({ queryKey: packagesKeys.detail(id) })
+        ),
+        ...packageIds.map((id) =>
+          queryClient.invalidateQueries({ queryKey: logsKeys.package(id) })
+        ),
+        queryClient.invalidateQueries({ queryKey: routesKeys.all() }),
+      ]);
+    },
+  });
+}
+```
+
+### Login mutation — cache warm-up on success
+
+The `useLogin` hook also **prefetches** the `me` query immediately after a successful login so
+the `RoleGuard` resolves without an extra network round-trip:
+
+```ts
+// app/hooks/auth/useLogin.ts
+onSuccess: async (response) => {
+  setAccessToken(response.access_token);
+  await queryClient.invalidateQueries({ queryKey: authKeys.all() });
+  await queryClient.prefetchQuery(meQueryOptions());
+},
+```
+
+### Logout mutation — full cache wipe
+
+`useLogout` uses `onSettled` (not `onSuccess`) so the cache is wiped even if the backend
+request fails:
+
+```ts
+// app/hooks/auth/useLogout.ts
+onSettled: () => {
+  clearAccessToken();
+  queryClient.removeQueries({ queryKey: authKeys.all() });
+  queryClient.removeQueries({ queryKey: packagesKeys.all() });
+  queryClient.removeQueries({ queryKey: logsKeys.all() });
+  queryClient.removeQueries({ queryKey: routesKeys.all() });
+},
+```
+
+---
+
+## Axios API Client
+
+All API calls go through a single Axios instance defined in
+`app/lib/api/helpers/client.ts`:
+
+```ts
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,          // send cookies (refresh_token) automatically
+  headers: JSON_HEADERS,          // { Accept: 'application/json', Content-Type: 'application/json' }
+});
+```
+
+A separate `refreshClient` (no interceptors, same `baseURL`) is used exclusively for the
+`POST /auth/refresh` call to avoid infinite retry loops.
+
+---
+
+## Error Handling
+
+### `AppError` shape
+
+Every error thrown by the API layer is normalised into an `AppError`:
+
+```ts
+// app/utils/types/api/common.types.ts
+export interface AppError {
+  message: string;
+  status?: number;        // HTTP status code (undefined for network errors)
+  isNetworkError: boolean;
+  payload?: unknown;      // raw response body if available
+}
+```
+
+The `toAppError(error: unknown): AppError` utility in `app/lib/api/helpers/errors.ts`
+converts any thrown value (Axios error, `Error` instance, unknown) into this shape before
+it reaches React Query.
+
+### Surfacing errors in components
+
+```tsx
+const { error, isPending } = useUpdatePackageStatus();
+
+if (error) {
+  // error is typed as AppError
+  return <p>{error.message}</p>;
+}
+```
+
+### Retry behaviour
+
+The `QueryClient` suppresses retries for `400 | 401 | 403 | 404 | 409`. These are
+deterministic client-side errors — retrying would not change the outcome.
+Network errors (`isNetworkError: true`) get one automatic retry.
+
+> [!WARNING]
+> There is no global error boundary wired to React Query's `onError` at the `QueryClient`
+> level. Each component is responsible for reading and displaying `error`. Consider adding a
+> `QueryCache` error observer if you need app-wide toast notifications.

@@ -1,0 +1,294 @@
+---
+description: "Delivery route endpoints for pakAG: create optimized routes, query daily routes, update status, and migrate past pending stops."
+---
+
+# Routes
+
+Base URL: `/api/routes` · Port 3001 in development.
+
+Routes represent an ordered set of delivery stops for a distributor on a specific date. Route creation calls the Google Directions API to optimize stop order (TSP) and compute estimated arrival times.
+
+**Route statuses**: `planned` | `in_progress` | `completed`
+
+---
+
+### POST /api/routes/create
+
+**Auth required**: Yes — `admin` only
+
+Creates an optimized delivery route for a distributor on a given future date. Packages must already be `assigned` to the target distributor. The service also includes any "carryover" packages (packages still `assigned` from previous days) up to a maximum of 20 stops total.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | number | ✓ | Distributor user ID (must exist and be `distributor` role) |
+| `date` | string | ✓ | Route date in `YYYY-MM-DD` format (must be at least tomorrow) |
+| `package_ids` | number[] | ✓ | Non-empty array of package IDs (no duplicates; all must be `assigned` to `user_id`) |
+
+```json
+{
+  "user_id": 3,
+  "date": "2024-04-25",
+  "package_ids": [42, 43, 44]
+}
+```
+
+**Response 201**
+
+```json
+{
+  "route": {
+    "id": 7,
+    "user_id": 3,
+    "route_date": "2024-04-25",
+    "status": "planned",
+    "created_at": "2024-04-19T10:00:00.000Z"
+  },
+  "stops": [
+    {
+      "id": 21,
+      "package_id": 43,
+      "stop_order": 1,
+      "estimated_arrival": "09:30:00",
+      "package": {
+        "recipient_name": "Maria Garcia",
+        "address": {
+          "street": "Calle Mayor 10",
+          "city": "Bilbao",
+          "lat": 43.263,
+          "lng": -2.935
+        }
+      }
+    }
+  ],
+  "meta": {
+    "totalStops": 3,
+    "totalDistanceKm": 45.2,
+    "totalDurationMin": 72
+  }
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"user_id is required and must be a positive integer"` | Missing or invalid `user_id` |
+| 400 | `"date must be in YYYY-MM-DD format"` | Invalid date format |
+| 400 | `"date must be at least tomorrow"` | Date is today or in the past |
+| 400 | `"package_ids must be a non-empty array with no duplicates"` | Empty or duplicate IDs |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 404 | `"User not found"` | `user_id` does not exist |
+| 500 | `"Internal server error"` | Unhandled exception or Maps API failure |
+
+> **Side effects**: Inserts route and stops rows. Updates `estimated_delivery` on each package. The warehouse origin coordinates are hardcoded (`PAKAG_ORIGIN`) — see `routes/create/service`.
+
+---
+
+### GET /api/routes/getByUserAndDate
+
+**Auth required**: Yes — `admin` only
+
+Returns the route and its stops for a specific distributor on a specific date.
+
+**Query parameters**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user_id` | number | ✓ | Distributor user ID |
+| `date` | string | ✓ | Date in `YYYY-MM-DD` format |
+
+**Response 200**
+
+```json
+{
+  "route": {
+    "id": 7,
+    "user_id": 3,
+    "route_date": "2024-04-25",
+    "status": "planned",
+    "created_at": "2024-04-19T10:00:00.000Z"
+  },
+  "stops": [
+    {
+      "id": 21,
+      "stop_order": 1,
+      "estimated_arrival": "09:30:00",
+      "actual_arrival": null,
+      "package": {
+        "id": 43,
+        "recipient_name": "Maria Garcia",
+        "status": "assigned",
+        "address": {
+          "street": "Calle Mayor 10",
+          "city": "Bilbao",
+          "lat": 43.263,
+          "lng": -2.935
+        }
+      }
+    }
+  ]
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"user_id is required and must be a positive integer"` | Missing or invalid param |
+| 400 | `"date is required and must be a valid date"` | Missing or invalid date |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 404 | `"Route not found"` | No route for that user/date |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### GET /api/routes/getMyDaily
+
+**Auth required**: Yes — `distributor` only
+
+Returns today's route and stops for the authenticated distributor.
+
+**Request**: No body, no query params.
+
+**Response 200**
+
+```json
+{
+  "route": {
+    "id": 5,
+    "route_date": "2026-04-26",
+    "status": "in_progress"
+  },
+  "stops": [
+    {
+      "id": 21,
+      "stop_order": 1,
+      "estimated_arrival": "09:30:00",
+      "actual_arrival": "09:28:00",
+      "package": {
+        "id": 42,
+        "recipient_name": "Ane Etxeberria",
+        "status": "delivered",
+        "address": {
+          "street": "Kale Nagusia 12",
+          "city": "Tolosa",
+          "lat": 43.1298,
+          "lng": -2.0773
+        }
+      }
+    }
+  ]
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `distributor` |
+| 404 | `"Route not found"` | No route for today |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### PATCH /api/routes/updateStatus/[id]
+
+**Auth required**: Yes — `admin` or `distributor` (scoped)
+
+Updates the status of a route. Distributors can only update their own routes.
+
+**Path parameter**: `id` — route ID.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `status` | string | ✓ | `"in_progress"` or `"completed"` |
+
+```json
+{ "status": "in_progress" }
+```
+
+**Response 200**
+
+```json
+{ "message": "Route status updated" }
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"status must be 'in_progress' or 'completed'"` | Invalid status value |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"Access denied"` | Distributor updating a route not assigned to them |
+| 404 | `"Route not found"` | No route with that ID |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### GET /api/routes/continueFromPast
+
+**Auth required**: Yes — `distributor` only
+
+Checks whether the distributor has a past route with undelivered stops. Returns the pending route info so the frontend can prompt the user to continue.
+
+**Request**: No body, no query params.
+
+**Response 200**
+
+```json
+{
+  "pending": {
+    "route_id": 3,
+    "route_date": "2026-04-25",
+    "status": "in_progress",
+    "pending_count": 2,
+    "route_count": 5
+  }
+}
+```
+
+`pending` is `null` if no past pending route exists.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `distributor` |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### POST /api/routes/continueFromPast
+
+**Auth required**: Yes — `distributor` only
+
+Migrates the undelivered stops from the distributor's last past pending route into today's route. If today's route does not exist it is created.
+
+**Request**: No body.
+
+**Response 200**
+
+```json
+{
+  "route_id": 6,
+  "new_route_date": "2026-04-26",
+  "migrated_stops": 2
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `distributor` |
+| 404 | `"No past pending route found"` | Nothing to migrate |
+| 500 | `"Internal server error"` | Unhandled exception |

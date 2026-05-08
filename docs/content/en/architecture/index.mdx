@@ -1,37 +1,188 @@
+---
+description: "pakAG system architecture: three-package monorepo, layered backend pattern, and inter-package communication model."
+---
+
 # Architecture
 
-PakAG is a **pnpm monorepo** with three packages:
+pakAG is a **pnpm monorepo** composed of three independently deployed packages. Each package has a single, well-defined responsibility. They share no source code at runtime — the only shared resource is the MySQL database.
+
+## Package map
 
 ```
-ERRONKA2025_JS/
-  backend-js/    -> @repo/backend-js  (REST API)
-  frontend-app/  -> @repo/frontend-app (Next.js App)
-  docs/          -> @repo/docs        (This documentation)
-  schema.sql     -> Database schema
+erronka2025_js/
+├── backend-js/      (@repo/backend-js)   — REST API, port 3001
+├── frontend-app/    (@repo/frontend-app) — Admin / Distributor UI, port 3000
+└── docs/            (@repo/docs)         — This site, port 3002
 ```
 
-## Data flow
+| Package | Framework | Language | Role |
+|---|---|---|---|
+| `backend-js` | Next.js 16 App Router | TypeScript | API server (Route Handlers only) |
+| `frontend-app` | Next.js 16 App Router | TypeScript + Tailwind CSS 4 | SPA-style admin / distributor UI |
+| `docs` | Next.js + Nextra 4 | MDX | Developer documentation |
+
+## System context diagram
 
 ```
-Client (frontend-app)
-  -> REST API (backend-js /api/*)
-    -> Service (logic)
-      -> Repository (SQL / mysql2)
-        -> MySQL (pakAG_db)
+┌─────────────────────────────────────────────────────────┐
+│  Browser                                                 │
+│                                                          │
+│  ┌───────────────────┐      ┌────────────────────────┐  │
+│  │   frontend-app    │─────▶│     backend-js         │  │
+│  │   :3000           │ HTTP │     :3001/api/*        │  │
+│  │                   │◀─────│                        │  │
+│  │  React Query      │ JSON │  Route Handlers        │  │
+│  │  Axios clients    │      │  JWT auth              │  │
+│  └───────────────────┘      │  Service layer         │  │
+│                              │  Repository layer      │  │
+│                              │       │                │  │
+│                              │       ▼                │  │
+│                              │    MySQL (pakAG_db)    │  │
+│                              └────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## Communication between layers
+## Package responsibilities
 
-- **route.ts**: receives Request, validates with DTO, calls the service, returns Response
-- **service**: pure logic, no HTTP or SQL dependencies
-- **repository**: prepared statements only, returns domain types
+### `backend-js` — the API
 
-## Authentication
+`backend-js` is a **pure API server**. It uses Next.js only for its Route Handler infrastructure; no React pages or UI components are rendered. Every file under `src/app/api/` exports HTTP verb functions (`GET`, `POST`, `PATCH`, `DELETE`).
 
-JWT signed with `HS256`. The token is sent in the `Authorization: Bearer <token>` header.  
-The `src/lib/jwt.ts` middleware verifies and extracts the payload on every protected request.
+Key responsibilities:
+- Authentication and authorization (JWT HS256, role enforcement)
+- Package lifecycle management (create → assign → transit → deliver)
+- Route optimization (Google Directions API + stop ordering)
+- Email notifications (Resend via transactional templates)
+- Public package tracking (token-based, no auth required)
+- MySQL connection pooling via `mysql2`
 
-## Emails
+### `frontend-app` — the UI
 
-Resend with custom HTML templates (no external template library). Templates live in  
-`src/app/lib/email/templates/` and include responsive design with package status tracking.
+`frontend-app` is a Next.js application that acts as a Single Page Application for two user roles (admin and distributor). It communicates with `backend-js` exclusively over HTTP using Axios.
+
+Key responsibilities:
+- Admin dashboard: user management, package creation, route planning
+- Distributor dashboard: daily route view, stop progression, status updates
+- Token management: stores `access_token` in a cookie, relies on the backend's HttpOnly `refresh_token` cookie for silent refresh
+- Map visualization via the HERE Maps API (frontend only)
+
+### `docs` — the documentation site
+
+The `docs` package is a Nextra-powered documentation site. It imports `@repo/frontend-app` as a workspace dependency to reuse UI primitives in documentation examples.
+
+## Backend internal layers
+
+Every API endpoint under `backend-js` follows a **strict four-layer structure**:
+
+```
+src/app/api/{resource}/{action}/
+├── dtos/           — Input validation only (no DB, no Zod)
+├── service/        — Business logic only (no SQL, no HTTP)
+├── repository/     — SQL only (mysql2 prepared statements)
+└── route.ts        — Orchestration only (try/catch, no logic)
+```
+
+### Layer responsibilities in detail
+
+#### `route.ts` — the entry point
+
+```ts
+export async function POST(request: Request) {
+  try {
+    requireAuth(request, [USER_ROLES.admin]);   // 1. Auth guard
+    const body = await request.json();
+    const dto = validateCreateUserDto(body);    // 2. Input validation
+    const created = await createUserService(dto); // 3. Business logic
+    return res.created(created);                // 4. HTTP response
+  } catch (error) {
+    return handleError('[POST /api/users/create]', error);
+  }
+}
+```
+
+Rules:
+- No SQL statements
+- No business logic
+- One try/catch block, always delegated to `handleError`
+- Calls `requireAuth` before anything else on protected routes
+
+#### `dtos/` — data transfer objects
+
+Each DTO module exports a single `validateXxxDto(body: unknown): XxxDto` function. It:
+- Checks field presence and types using guard functions from `src/app/lib/dto.ts`
+- Throws `ValidationError` on failure
+- Returns a strongly typed DTO on success
+- Never touches the database
+
+#### `service/` — business logic
+
+The service layer contains all decisions: existence checks, state machine transitions, orchestration of multiple repositories, email dispatch. It:
+- Calls one or more repository functions
+- Throws domain errors (`NotFoundError`, `ConflictError`, etc.) when preconditions fail
+- Never imports from `next/server` or constructs HTTP responses
+
+#### `repository/` — data access
+
+The repository layer owns all SQL. It:
+- Uses `mysql2` prepared statements exclusively
+- Returns domain types (never raw `RowDataPacket[]` to callers)
+- Contains no business decisions or conditional logic beyond query construction
+
+## Shared infrastructure (`src/app/lib/`)
+
+| File | Purpose |
+|---|---|
+| `errors.ts` | Domain error classes: `ValidationError`, `NotFoundError`, `UnauthorizedError`, `ForbiddenError`, `ConflictError` |
+| `response.ts` | `res.ok`, `res.created`, `res.noContent`, `res.validationError`, `res.notFound`, `res.serverError` + `handleError()` |
+| `jwt.ts` | `signAccessToken`, `verifyAccessToken`, `extractBearerToken`, `requireAuth` |
+| `dto.ts` | Type guards: `isString`, `isEmail`, `isNumber`, `isBoolean`, `isPositiveInteger`, `isUserRole`, `isPackageValidStatus` |
+| `hashPasword.ts` | `encryptPwd`, `verifyPassword` (bcrypt wrapper) |
+| `email/email.service.ts` | Transactional email dispatch via Resend |
+| `maps/maps.service.ts` | `optimizeRoute`, `geocodeAddress` (Google Directions + Geocoding APIs) |
+| `packageStatus/packageStatusSideEffects.service.ts` | State transition side effects: insert status log + send tracking email |
+
+## Authentication model
+
+```
+Access token  — JWT HS256, 15-minute TTL, sent as Authorization: Bearer header
+Refresh token — opaque hex, 7-day TTL, stored in DB, sent as HttpOnly cookie
+```
+
+Refresh token rotation is implemented: every `/api/auth/refresh` call revokes the previous token and issues a new one. This prevents replay attacks if a refresh token is stolen.
+
+Protected routes call `requireAuth(request, roles)` as the first statement. It:
+1. Extracts the `Authorization: Bearer` header
+2. Verifies the JWT signature and expiry
+3. Checks the decoded role is in the allowed `roles` array
+4. Throws `UnauthorizedError` (→ 401) or `ForbiddenError` (→ 403) otherwise
+
+## Email notifications
+
+Emails are sent via [Resend](https://resend.com) using custom HTML templates stored in `src/app/lib/email/templates/`. No external template engine. Templates include:
+
+| Trigger | Template |
+|---|---|
+| New user created | Account activation link |
+| Password reset requested | Reset link |
+| Package assigned to route | Assignment notification to recipient |
+| Package in transit | In-transit notification |
+| Package delivered / undelivered / failed | Delivery outcome notification |
+
+## Route optimization
+
+When an admin creates a route, `backend-js` calls the Google Directions API with `optimize:true` to reorder stops for minimum travel time. The response waypoint order is mapped back to package stop positions, and estimated arrival times are calculated per stop and stored in the database.
+
+> [!NOTE]
+> Routes are capped at 20 stops. The system also carries over undelivered packages from previous days ("carryover" stops) when building a new route.
+
+## Inter-package communication
+
+The three packages are **share-nothing at runtime** — they do not import each other's source code (except `docs` importing `frontend-app` UI primitives). All runtime communication is:
+
+- `frontend-app` → `backend-js`: HTTP (Axios, JSON)
+- `backend-js` → MySQL: TCP (mysql2 connection pool)
+- `backend-js` → Resend API: HTTPS
+- `backend-js` → Google APIs: HTTPS
+
+> [!WARNING]
+> `docs` lists `@repo/frontend-app` as a workspace dependency. This creates a build-time coupling. Do not import `backend-js` modules from `docs` — the backend package uses `mysql2` and other Node-only dependencies that will break the docs build.

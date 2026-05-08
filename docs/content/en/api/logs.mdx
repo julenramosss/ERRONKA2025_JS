@@ -1,0 +1,111 @@
+---
+description: "Package status log endpoints for pakAG: list all status changes across the system or filtered by package."
+---
+
+# Logs
+
+Base URL: `/api/logs` · Port 3001 in development.
+
+Every time a package status changes, a log entry is inserted into the `package_status_logs` table. This resource exposes read-only access to those entries for admin auditing. Distributors can query logs only for packages assigned to them.
+
+---
+
+### GET /api/logs/listAll
+
+**Auth required**: Yes — `admin` only
+
+Returns a paginated log of all package status changes across the system, with optional filters.
+
+**Query parameters**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `packageId` | number | — | Filter by package ID (must exist) |
+| `changedBy` | number | — | Filter by user ID who made the change |
+| `fromDate` | string | — | Start date filter (any valid date string) |
+| `toDate` | string | — | End date filter (any valid date string) |
+| `page` | number | `1` | Page number |
+| `limit` | number | `20` | Results per page (1–100) |
+
+**Response 200**
+
+```json
+{
+  "logs": [
+    {
+      "id": 10,
+      "packageId": 42,
+      "changedBy": 3,
+      "oldStatus": "assigned",
+      "newStatus": "in_transit",
+      "notes": null,
+      "changedAt": "2024-04-19T09:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"packageId must be a valid package ID"` | Non-existent package |
+| 400 | `"changedBy must be a valid user ID"` | Non-existent user |
+| 400 | `"fromDate must be a valid date string"` | Unparseable date |
+| 400 | `"toDate must be a valid date string"` | Unparseable date |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### GET /api/logs/listByPackage
+
+**Auth required**: Yes — `admin` or `distributor`
+
+Returns the status-change history for a specific package. Admins see all logs. Distributors are automatically scoped to packages assigned to them by the service layer.
+
+**Query parameters**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `packageId` | number | — | Package ID (required, must exist) |
+| `page` | number | `1` | Page number |
+| `limit` | number | `20` | Results per page (1–100) |
+
+**Response 200**
+
+```json
+{
+  "logs": [
+    {
+      "id": 10,
+      "packageId": 42,
+      "oldStatus": null,
+      "newStatus": "pending",
+      "changedBy": 1,
+      "notes": null,
+      "changedAt": "2024-04-15T10:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
+}
+```
+
+> **Note**: `oldStatus` is `null` for the first log entry (package creation).
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"packageId is required"` | Missing query param |
+| 400 | `"packageId must be a positive integer"` | Non-integer value |
+| 400 | `"packageId must be a valid package ID"` | Non-existent package |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller role not allowed |
+| 500 | `"Internal server error"` | Unhandled exception |

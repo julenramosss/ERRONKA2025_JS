@@ -1,42 +1,188 @@
+---
+description: "Complete reference for all environment variables used by backend-js, frontend-app, and docs, including loading order and security rules."
+---
+
 # Environment Variables
 
-## Backend variables (`backend-js/src/app/config/envConfig.ts`)
+This page documents every environment variable used by each package in the monorepo, explains how Next.js loads `.env` files, and lists which variables are security-sensitive.
 
-| Variable | Required | Default | Notes |
+---
+
+## How Next.js loads environment variables
+
+Next.js loads `.env` files in the following order (later files override earlier ones):
+
+1. `.env` — base defaults, can be committed
+2. `.env.local` — local overrides, **never committed** (gitignored)
+3. `.env.development` / `.env.production` — per-environment defaults
+4. `.env.development.local` / `.env.production.local` — per-environment local overrides
+
+> [!NOTE]
+> Variables are resolved at **server startup** (development) or **build time** (production). Changing a `.env` file requires restarting the dev server or rebuilding.
+
+### `NEXT_PUBLIC_` prefix
+
+Any variable prefixed with `NEXT_PUBLIC_` is inlined into the JavaScript bundle at build time and **exposed to the browser**. Never put secrets in `NEXT_PUBLIC_` variables.
+
+### `NODE_ENV` behavior
+
+| `NODE_ENV` | When active |
+| --- | --- |
+| `development` | `next dev` |
+| `production` | `next build` + `next start` |
+| `test` | test runners (vitest, jest) |
+
+The frontend `envConfig.ts` conditionally sets the production API URL based on `NODE_ENV`:
+
+```ts
+// Pseudocode — actual implementation in frontend-app/app/config/envConfig.ts
+const apiBase =
+  process.env.NODE_ENV === "production"
+    ? "https://api.tolosaerronka.es/api"
+    : process.env.NEXT_PUBLIC_API_BASE_URL;
+```
+
+This means **you do not need `NEXT_PUBLIC_API_BASE_URL` in a production build** unless you want to override the default domain.
+
+---
+
+## backend-js variables
+
+**Source of truth:** `backend-js/.env.example`  
+**Config loader:** `src/app/config/envConfig.ts`
+
+Place your values in `backend-js/.env.local` for local development.
+
+### Database
+
+| Variable | Required | Example | Description |
 | --- | --- | --- | --- |
-| `MYSQL_USER` | Yes | none | DB user. |
-| `MYSQL_PASSWORD` | Yes | none | DB password (secret). |
-| `MYSQL_HOST` | Yes | none | DB host. |
-| `MYSQL_PORT` | No | `3306` | DB port. |
-| `MYSQL_DATABASE` | Yes | none | DB schema. |
-| `RESEND_API_KEY` | Yes (for email features) | none | Required for login/reset/activation/status emails. |
-| `GOOGLE_DIRECTIONS_API_KEY` | Yes | none | Used for route optimization and geocoding. |
-| `JWT_SECRET` | **No in code, but must be set in prod** | hardcoded fallback string | Development fallback exists; production must override. |
-| `JWT_ACCESS_EXPIRES_IN` | No | `15m` | Access token TTL. |
-| `JWT_REFRESH_EXPIRES_DAYS` | No | `7` | Refresh token TTL. |
-| `TRACKING_EXPIRES_DAYS` | No | `30` | Tracking token TTL. |
-| `TRACKING_BASE_URL` | No | localhost/prod URL by mode | Used in tracking email links. |
-| `RESET_BASE_URL` | No | localhost/prod URL by mode | Used in reset/activation links. |
-| `DEFAULT_USER_PASSWORD` | **No in code, but security-sensitive** | hardcoded fallback string | Seed password for created users; must be overridden. |
+| `MYSQL_HOST` | ✅ | `localhost` | Hostname or IP of the MySQL server |
+| `MYSQL_USER` | ✅ | `pakag` | MySQL user with access to the database |
+| `MYSQL_PASSWORD` | ✅ | `yourpassword` | Password for `MYSQL_USER` — treat as secret |
+| `MYSQL_DATABASE` | ✅ | `erronka` | Database name (the schema creates it as `erronka`) |
+| `MYSQL_PORT` | optional | `3306` | MySQL port; defaults to `3306` if unset |
 
 > [!WARNING]
-> `JWT_SECRET` and `DEFAULT_USER_PASSWORD` include hardcoded fallbacks in source. Treat them as development-only and override in production immediately.
+> The four MySQL variables can be `undefined` at runtime if `.env.local` is missing or misspelled. The MySQL pool will accept `undefined` values without throwing at startup, but every query will fail. Always verify the pool connects on first request.
 
-## Frontend variables (`frontend-app/app/config/envConfig.ts`)
+### JWT
 
-| Variable | Required | Default | Notes |
+| Variable | Required | Example | Description |
 | --- | --- | --- | --- |
-| `NEXT_PUBLIC_API_BASE_URL` | Yes in dev | none | API base URL for local/development frontend. |
-| `NEXT_PUBLIC_HERE_API_KEY` | Yes | none | HERE map integration key. |
+| `JWT_SECRET` | ✅ (in prod) | `a-very-long-random-string-here` | Secret used to sign and verify access tokens |
+| `JWT_ACCESS_EXPIRES_IN` | optional | `15m` | Access token TTL (jsonwebtoken format) |
+| `JWT_REFRESH_EXPIRES_DAYS` | optional | `7` | Refresh token TTL in days |
 
-Frontend hardcodes production API base URL as `https://api.tolosaerronka.es/api` when `NODE_ENV=production`.
+> [!WARNING]
+> `JWT_SECRET` ships with a hardcoded fallback value in `src/app/config/envConfig.ts`. This fallback is visible in the public repository. Any attacker can use it to forge valid JWT tokens. **Always override this variable in production.**
 
-## Security-sensitive vars
+### Email
 
-- Backend: `MYSQL_PASSWORD`, `RESEND_API_KEY`, `GOOGLE_DIRECTIONS_API_KEY`, `JWT_SECRET`, `DEFAULT_USER_PASSWORD`.
-- Frontend: public variables are exposed client-side by design; do not place secrets in `NEXT_PUBLIC_*`.
+| Variable | Required | Example | Description |
+| --- | --- | --- | --- |
+| `RESEND_API_KEY` | ✅ (for emails) | `re_xxxxxxxxxxxxxxxxxxxx` | API key for [Resend](https://resend.com). Required for all email flows: account activation, password reset, package status notifications |
 
-## Source of truth
+### Google Maps
 
-- `backend-js/.env.example` is the seed reference.
-- Real production values should be supplied by deployment platform secrets.
+| Variable | Required | Example | Description |
+| --- | --- | --- | --- |
+| `GOOGLE_DIRECTIONS_API_KEY` | ✅ (for routes) | `AIzaSy_xxxx` | Google Directions + Geocoding API key. Required for `POST /api/routes/create` and `POST /api/packages/create` |
+
+> [!NOTE]
+> `GOOGLE_DIRECTIONS_API_KEY` uses a TypeScript non-null assertion (`!`) in `envConfig.ts`, which suppresses compile-time errors but allows `undefined` to slip through at runtime. The key must be present or route creation and geocoding will throw uncaught errors.
+
+### Application URLs
+
+| Variable | Required | Example | Description |
+| --- | --- | --- | --- |
+| `TRACKING_BASE_URL` | ✅ (for tracking emails) | `http://localhost:3000/tracking` | Base URL prepended to the tracking token in tracking notification emails |
+| `RESET_BASE_URL` | ✅ (for auth emails) | `http://localhost:3000/reset-password` | Base URL prepended to the reset/activation token in auth emails |
+
+### Tokens and users
+
+| Variable | Required | Example | Description |
+| --- | --- | --- | --- |
+| `TRACKING_EXPIRES_DAYS` | optional | `15` | Number of days before a tracking token expires. Default: `15` |
+| `DEFAULT_USER_PASSWORD` | ✅ (in prod) | `ChangeMe123!` | Temporary password assigned to newly created users until they activate their account. Override in production |
+
+> [!WARNING]
+> `DEFAULT_USER_PASSWORD` also has a hardcoded fallback. Every user created while this fallback is active can be accessed with the known default password until they change it.
+
+---
+
+## frontend-app variables
+
+**Config loader:** `frontend-app/app/config/envConfig.ts`  
+**Committed defaults:** `frontend-app/.env`
+
+| Variable | Required | Example | Description |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | ✅ in dev | `http://localhost:3001/api` | Backend API base URL. In `NODE_ENV=production` this is overridden by the hardcoded production domain. Override here to change the production API endpoint |
+| `NEXT_PUBLIC_HERE_API_KEY` | ✅ | `e7HQklfajNcKR8ke8SLwwHZiGzll84RtOU6hYnXS9es` | HERE Maps API key used for map rendering in the frontend |
+| `NEXT_PUBLIC_DOCS_BASE_URL` | optional | `http://localhost:3002/` | URL to the documentation site; used in navigation links |
+
+> [!NOTE]
+> All three frontend variables are prefixed with `NEXT_PUBLIC_` and therefore embedded in the client bundle. They are visible to anyone who inspects the page source. This is expected for URL configuration; it is only a concern if you accidentally add a secret key here.
+
+---
+
+## docs variables
+
+The docs package (`@repo/docs`) does not define its own `.env` variables. It runs a standard Next.js + Nextra build with no runtime secrets. The `predev` and `prebuild` scripts regenerate the search index (`scripts/generate-search-index.mjs`) automatically — no extra configuration is needed.
+
+---
+
+## Security rules
+
+### What MUST NOT go in `.env` or version control
+
+- `MYSQL_PASSWORD`
+- `JWT_SECRET`
+- `DEFAULT_USER_PASSWORD`
+- `RESEND_API_KEY`
+- `GOOGLE_DIRECTIONS_API_KEY`
+- Any SSL certificates or private keys
+
+### What `.env.local` is for
+
+`.env.local` is gitignored and is the right place for:
+- Local database credentials
+- Local copies of secret API keys for development
+
+### What `.env` (committed) is for
+
+Only non-secret defaults that are safe to share publicly:
+- `MYSQL_HOST=localhost` (acceptable — obvious for local dev)
+- `NEXT_PUBLIC_*` variables (by design, these are public)
+- `JWT_ACCESS_EXPIRES_IN=15m` (safe configuration)
+
+### Never put secrets in `NEXT_PUBLIC_*`
+
+Variables starting with `NEXT_PUBLIC_` are inlined into the JavaScript bundle and sent to every browser. Even if the variable is not rendered visibly, it can be extracted by anyone with DevTools.
+
+---
+
+## Quick reference — all variables
+
+| Package | Variable | Secret? | Required? |
+| --- | --- | --- | --- |
+| backend-js | `MYSQL_HOST` | no | ✅ |
+| backend-js | `MYSQL_USER` | no | ✅ |
+| backend-js | `MYSQL_PASSWORD` | **yes** | ✅ |
+| backend-js | `MYSQL_DATABASE` | no | ✅ |
+| backend-js | `MYSQL_PORT` | no | optional |
+| backend-js | `JWT_SECRET` | **yes** | ✅ |
+| backend-js | `JWT_ACCESS_EXPIRES_IN` | no | optional |
+| backend-js | `JWT_REFRESH_EXPIRES_DAYS` | no | optional |
+| backend-js | `RESEND_API_KEY` | **yes** | ✅ |
+| backend-js | `GOOGLE_DIRECTIONS_API_KEY` | **yes** | ✅ |
+| backend-js | `TRACKING_BASE_URL` | no | ✅ |
+| backend-js | `RESET_BASE_URL` | no | ✅ |
+| backend-js | `TRACKING_EXPIRES_DAYS` | no | optional |
+| backend-js | `DEFAULT_USER_PASSWORD` | **yes** | ✅ |
+| frontend-app | `NEXT_PUBLIC_API_BASE_URL` | no | dev only |
+| frontend-app | `NEXT_PUBLIC_HERE_API_KEY` | no* | ✅ |
+| frontend-app | `NEXT_PUBLIC_DOCS_BASE_URL` | no | optional |
+
+\* HERE Maps keys are client-side by design and can be domain-restricted in the HERE developer console. They are not secret in the traditional sense, but should be restricted to your domain.

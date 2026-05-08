@@ -1,0 +1,269 @@
+---
+description: "User management endpoints for pakAG: create, list, get, update, delete users, and change own password."
+---
+
+# Users
+
+Base URL: `/api/users` · Port 3001 in development.
+
+All endpoints in this group require an authenticated admin unless noted. `changeMyPwd` is the only exception — it is available to any authenticated role.
+
+**Role values**: `"admin"` | `"distributor"`
+
+---
+
+### POST /api/users/create
+
+**Auth required**: Yes — `admin` only
+
+Creates a new user account. The user is created with a default hashed password and `is_active = false`. An activation email is sent so they can set their own password via [`PATCH /api/auth/changePwd`](/en/api/auth#patch-apiauthchangepwd).
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | ✓ | Full name of the user |
+| `email` | string | ✓ | Valid email address (must be unique) |
+| `role` | string | ✓ | `"admin"` or `"distributor"` |
+
+```json
+{
+  "name": "John Doe",
+  "email": "john@pakag.com",
+  "role": "distributor"
+}
+```
+
+**Response 201**
+
+```json
+{
+  "id": 5,
+  "name": "John Doe",
+  "email": "john@pakag.com",
+  "role": "distributor",
+  "is_active": false
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"name is required and must be a non-empty string"` | Missing or empty name |
+| 400 | `"email is required and must be a valid email address"` | Missing or invalid email |
+| 400 | `"role is required and must be one of: admin, distributor"` | Invalid or missing role |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 409 | `"A user with this email already exists"` | Duplicate email |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effect**: Inserts user row with bcrypt-hashed default password. Sends an activation email with a one-time token link (expires in 7 days).
+
+---
+
+### GET /api/users/list
+
+**Auth required**: Yes — `admin` only
+
+Returns a paginated list of users, optionally filtered by role and/or active status.
+
+**Query parameters**
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `role` | string | — | Filter by `"admin"` or `"distributor"` |
+| `is_active` | string | — | Filter by `"true"` or `"false"` |
+| `page` | number | `1` | Page number |
+| `limit` | number | `20` | Results per page (1–100) |
+
+**Response 200**
+
+```json
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Admin User",
+      "email": "admin@pakag.com",
+      "role": "admin",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"role must be one of: admin, distributor"` | Invalid role value |
+| 400 | `"is_active must be 'true' or 'false'"` | Invalid boolean string |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### GET /api/users/getById
+
+**Auth required**: Yes — `admin` only
+
+Returns the full profile of a single user by ID.
+
+**Query parameters**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | number | ✓ | User ID (positive integer) |
+
+**Response 200**
+
+```json
+{
+  "id": 3,
+  "name": "Jane Smith",
+  "email": "jane@pakag.com",
+  "role": "distributor",
+  "is_active": true,
+  "created_at": "2024-01-15T10:00:00.000Z",
+  "updated_at": "2024-03-01T08:30:00.000Z"
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"id is required"` | Missing `id` query param |
+| 400 | `"id must be a positive integer"` | Non-integer or negative value |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 404 | `"User not found"` | No user with that ID |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### PATCH /api/users/update
+
+**Auth required**: Yes — `admin` only
+
+Partially updates one or more fields of an existing user. At least one field (besides `id`) must be provided.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | number | ✓ | ID of the user to update |
+| `name` | string | ✗ | New full name |
+| `email` | string | ✗ | New email (must be unique) |
+| `role` | string | ✗ | `"admin"` or `"distributor"` |
+| `is_active` | boolean | ✗ | Activate or deactivate the account |
+
+```json
+{
+  "id": 3,
+  "name": "Jane Doe",
+  "is_active": false
+}
+```
+
+**Response 200**
+
+```json
+{
+  "id": 3,
+  "name": "Jane Doe",
+  "email": "jane@pakag.com",
+  "role": "distributor",
+  "is_active": false
+}
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"id must be a positive integer"` | Missing or invalid ID |
+| 400 | `"name must be a non-empty string"` | Invalid name |
+| 400 | `"email must be a valid email address"` | Invalid email |
+| 400 | `"is_active must be a boolean"` | Non-boolean value |
+| 400 | `"role must be one of: admin, distributor"` | Invalid role |
+| 400 | `"at least one field must be provided to update"` | Empty update body |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 404 | `"User not found"` | No user with that ID |
+| 409 | `"This email is already in use by another user"` | Duplicate email |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+---
+
+### DELETE /api/users/remove
+
+**Auth required**: Yes — `admin` only
+
+Permanently deletes a user. A user cannot delete themselves.
+
+**Query parameters**
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | number | ✓ | User ID to delete |
+
+**Response 204** — No content.
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"id is required"` | Missing query param |
+| 400 | `"id must be a positive integer"` | Non-integer value |
+| 401 | `"Authorization header is missing"` | No token |
+| 403 | `"You do not have permission to access this resource"` | Caller is not `admin` |
+| 404 | `"User not found"` | No user with that ID |
+| 409 | `"User cannot be deleted because it has related records"` | User has DB foreign key references |
+| 500 | `"Internal server error"` | Unhandled exception |
+
+> **Side effect**: Deletes the user row. Refresh, reset, and activation tokens linked to the user are removed by DB cascade.
+
+---
+
+### PATCH /api/users/changeMyPwd
+
+**Auth required**: Yes — `admin` or `distributor` (Bearer token)
+
+Allows any authenticated user to change their own password.
+
+**Request body**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `current_password` | string | ✓ | Current plaintext password |
+| `new_password` | string | ✓ | New password (min 6 characters) |
+
+```json
+{
+  "current_password": "oldSecret",
+  "new_password": "newSecret123"
+}
+```
+
+**Response 200**
+
+```json
+{ "message": "Password updated successfully" }
+```
+
+**Errors**
+
+| Status | Message | Condition |
+|--------|---------|-----------|
+| 400 | `"current_password is required"` | Missing current password |
+| 400 | `"new_password must be at least 6 characters"` | Too-short new password |
+| 401 | `"Authorization header is missing"` | No token |
+| 401 | `"Invalid credentials"` | Current password doesn't match |
+| 500 | `"Internal server error"` | Unhandled exception |

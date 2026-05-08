@@ -1,0 +1,304 @@
+---
+description: "Full HTTP request lifecycle in pakAG: from client call through route handler, DTO, service, repository, and back — including the error flow."
+---
+
+# Request Lifecycle
+
+This page traces a single HTTP request end-to-end through the pakAG backend. The example used is `POST /api/users/create` — one of the most complete flows, touching auth, validation, service logic, and the database.
+
+## Overview
+
+```
+Client (frontend-app)
+  │
+  │  POST /api/users/create
+  │  Authorization: Bearer <access_token>
+  │  Content-Type: application/json
+  │  { "name": "Ana", "email": "ana@example.com", "role": "distributor" }
+  │
+  ▼
+Next.js Route Handler  (backend-js/src/app/api/users/create/route.ts)
+  │
+  ├─▶ requireAuth()           → verify JWT, check role
+  ├─▶ request.json()          → parse body
+  ├─▶ validateCreateUserDto() → validate shape and types
+  ├─▶ createUserService()     → business logic
+  │     ├─▶ findUserByEmail() → check for duplicate (repository)
+  │     ├─▶ createUser()      → INSERT (repository)
+  │     ├─▶ createToken()     → INSERT activation token (repository)
+  │     └─▶ sendActivationEmail() → Resend API call
+  │
+  └─▶ res.created(user)       → HTTP 201 JSON response
+```
+
+## Step 1 — HTTP in (Next.js edge)
+
+Next.js receives the request and routes it to the exported `POST` function in `route.ts` based on the file-system path `src/app/api/users/create/route.ts`. No Express, no custom router.
+
+The function signature is:
+
+```ts
+export async function POST(request: Request): Promise<Response>
+```
+
+`Request` is the standard Web API `Request` object. `Response` is a standard `Response`. The `res.*` helpers in `src/app/lib/response.ts` wrap `NextResponse.json()` with pre-set status codes.
+
+## Step 2 — Auth guard (`requireAuth`)
+
+```ts
+requireAuth(request, [USER_ROLES.admin]);
+```
+
+`requireAuth` (from `src/app/lib/jwt.ts`) executes synchronously:
+
+1. Reads the `Authorization` header.
+2. Strips the `Bearer ` prefix to get the raw JWT string.
+3. Calls `jwt.verify(token, JWT_SECRET)` from the `jsonwebtoken` library.
+4. Decodes the payload and checks `payload.role` is in the allowed roles array.
+
+**Throws on failure:**
+
+| Condition | Error thrown | HTTP status |
+|---|---|---|
+| Missing or malformed `Authorization` header | `UnauthorizedError` | 401 |
+| JWT expired or invalid signature | `UnauthorizedError` | 401 |
+| Valid JWT but wrong role | `ForbiddenError` | 403 |
+
+If `requireAuth` throws, execution jumps immediately to the `catch` block — the body is never read.
+
+## Step 3 — Body parsing
+
+```ts
+const body = await request.json();
+```
+
+Standard `Request.json()` call. If the body is not valid JSON, `request.json()` throws a `SyntaxError`. The catch block will handle it via `handleError`, which maps unknown errors to a 500 response.
+
+> [!NOTE]
+> Content-Type is not validated explicitly — if a client sends the wrong content type, `request.json()` will still attempt to parse the raw body as JSON and throw `SyntaxError` if it fails.
+
+## Step 4 — DTO validation (`validateXxxDto`)
+
+```ts
+const dto = validateCreateUserDto(body);
+```
+
+The DTO function (in `dtos/createUser.dto.ts`) receives `body: unknown` and:
+
+1. Checks each required field exists and has the correct type using guards from `src/app/lib/dto.ts`:
+   - `isString(body.name)` — must be a non-empty string
+   - `isEmail(body.email)` — must match email regex
+   - `isUserRole(body.role)` — must be `"admin"` or `"distributor"`
+2. Returns a strongly typed `CreateUserDto` object.
+3. Throws `ValidationError("field is required")` if any check fails.
+
+**The DTO layer must never:**
+- Touch the database
+- Import from `next/server`
+- Be async (unless there is a documented exception)
+
+```ts
+// dtos/createUser.dto.ts
+export interface CreateUserDto {
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+export function validateCreateUserDto(body: unknown): CreateUserDto {
+  if (!isString((body as any).name)) throw new ValidationError('name is required');
+  if (!isEmail((body as any).email)) throw new ValidationError('email must be valid');
+  if (!isUserRole((body as any).role)) throw new ValidationError('role must be admin or distributor');
+  return body as CreateUserDto;
+}
+```
+
+## Step 5 — Service layer (`createUserService`)
+
+```ts
+const created = await createUserService(dto);
+```
+
+The service owns all business logic:
+
+```ts
+// service/user.service.ts (simplified)
+export async function createUserService(dto: CreateUserDto) {
+  // 1. Guard: check duplicate email
+  const existing = await findUserByEmail(dto.email);
+  if (existing) throw new ConflictError('email already in use');
+
+  // 2. Hash the default password
+  const hash = await encryptPwd(DEFAULT_USER_PASSWORD);
+
+  // 3. Persist the new user
+  const user = await createUser({ ...dto, password: hash });
+
+  // 4. Generate and store activation token
+  const token = await createActivationToken(user.id);
+
+  // 5. Send activation email
+  await sendActivationEmail(user.email, token.value);
+
+  return user;
+}
+```
+
+The service layer **must never**:
+- Import `NextResponse` or construct HTTP responses
+- Write raw SQL strings
+- Return `RowDataPacket[]` — always map to domain types before returning
+
+## Step 6 — Repository layer (SQL)
+
+Each repository function wraps one or more prepared SQL statements using the mysql2 connection pool from `src/app/config/dbConfig.ts`.
+
+```ts
+// repository/user.repo.ts (simplified)
+import { connect } from '@/app/config/dbConfig';
+
+export async function findUserByEmail(email: string): Promise<User | null> {
+  const pool = await connect();
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    'SELECT id, name, email, role, is_active FROM users WHERE email = ? LIMIT 1',
+    [email]
+  );
+  return rows[0] ? (rows[0] as User) : null;
+}
+
+export async function createUser(data: CreateUserData): Promise<User> {
+  const pool = await connect();
+  const [result] = await pool.execute<ResultSetHeader>(
+    'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+    [data.name, data.email, data.password, data.role]
+  );
+  return { id: result.insertId, ...data, is_active: false };
+}
+```
+
+**Rules enforced in this layer:**
+- All SQL uses `?` placeholders — never string interpolation
+- Returns typed domain objects, not raw `RowDataPacket`
+- No conditional logic, no side effects beyond the SQL operation
+
+## Step 7 — Response construction
+
+```ts
+return res.created(created);
+```
+
+`res.created` (from `src/app/lib/response.ts`) is:
+
+```ts
+created: (data: unknown) => NextResponse.json(data, { status: 201 })
+```
+
+The full response helper surface:
+
+| Helper | Status | When to use |
+|---|---|---|
+| `res.ok(data)` | 200 | Successful GET or PATCH |
+| `res.created(data)` | 201 | Successful POST that creates a resource |
+| `res.noContent()` | 204 | Successful DELETE |
+| `res.validationError(msg)` | 400 | DTO validation failure |
+| `res.unauthorized(msg)` | 401 | Missing or invalid JWT |
+| `res.forbidden(msg)` | 403 | Valid JWT but wrong role |
+| `res.notFound(msg)` | 404 | Resource does not exist |
+| `res.conflict(msg)` | 409 | Duplicate / state conflict |
+| `res.serverError(msg)` | 500 | Unexpected internal error |
+
+## Error flow
+
+The `catch` block in every `route.ts` delegates to `handleError`:
+
+```ts
+catch (error) {
+  return handleError('[POST /api/users/create]', error);
+}
+```
+
+`handleError` inspects the error class and maps it to the appropriate HTTP status:
+
+```
+ValidationError   → 400  res.validationError(error.message)
+UnauthorizedError → 401  res.unauthorized(error.message)
+ForbiddenError    → 403  res.forbidden(error.message)
+NotFoundError     → 404  res.notFound(error.message)
+ConflictError     → 409  res.conflict(error.message)
+SyntaxError       → 400  res.validationError("Invalid JSON")
+anything else     → 500  res.serverError("Internal server error")
+                         (logs the real error server-side only)
+```
+
+The complete error class hierarchy:
+
+```ts
+// src/app/lib/errors.ts
+export class ValidationError  extends Error { name = 'ValidationError' }
+export class NotFoundError    extends Error { name = 'NotFoundError' }
+export class UnauthorizedError extends Error { name = 'UnauthorizedError' }
+export class ForbiddenError   extends Error { name = 'ForbiddenError' }
+export class ConflictError    extends Error { name = 'ConflictError' }
+```
+
+> [!WARNING]
+> The 500 handler currently passes `error.message` to `res.serverError()`. This can leak internal details (MySQL table names, stack traces) to the client. Production deployments should always return `"Internal server error"` and log the detail server-side only — see the known bugs section in the docs.
+
+## Complete sequence diagram
+
+```
+Client          route.ts         DTO            Service       Repository    MySQL
+  │                │               │               │               │           │
+  │─POST /create──▶│               │               │               │           │
+  │                │               │               │               │           │
+  │                │─requireAuth() │               │               │           │
+  │                │  [throws 401/403 if fails]    │               │           │
+  │                │               │               │               │           │
+  │                │─request.json()│               │               │           │
+  │                │               │               │               │           │
+  │                │─validateDto()▶│               │               │           │
+  │                │               │ [throws 400]  │               │           │
+  │                │◀──────────────│               │               │           │
+  │                │               │               │               │           │
+  │                │─createUserService()──────────▶│               │           │
+  │                │               │               │─findByEmail()▶│           │
+  │                │               │               │               │─SELECT ──▶│
+  │                │               │               │               │◀──rows────│
+  │                │               │               │◀──────────────│           │
+  │                │               │               │ [throws 409]  │           │
+  │                │               │               │               │           │
+  │                │               │               │─createUser()─▶│           │
+  │                │               │               │               │─INSERT ──▶│
+  │                │               │               │               │◀─result───│
+  │                │               │               │◀──────────────│           │
+  │                │               │               │               │           │
+  │                │               │               │─createToken()▶│           │
+  │                │               │               │               │─INSERT ──▶│
+  │                │               │               │◀──────────────│           │
+  │                │               │               │               │           │
+  │                │               │               │─sendEmail() → Resend API  │
+  │                │               │               │               │           │
+  │                │◀──────────────────────────────│               │           │
+  │                │─res.created() │               │               │           │
+  │◀──201 JSON─────│               │               │               │           │
+```
+
+## Token refresh flow
+
+When the `access_token` expires (15 minutes default), the frontend calls:
+
+```
+POST /api/auth/refresh
+Cookie: refresh_token=<opaque-token>
+```
+
+The backend:
+1. Reads the `refresh_token` cookie
+2. Looks it up in the `tokens` table (must be type `refresh_token`, not revoked, not expired)
+3. Issues a new `access_token` JWT
+4. Rotates the refresh token (DELETE old, INSERT new in DB)
+5. Sets the new `refresh_token` as an HttpOnly cookie
+6. Returns the new `access_token` in the response body
+
+> [!TIP]
+> The frontend (React Query + Axios interceptors) handles token expiry transparently. When a 401 is received, it retries the refresh and then replays the original request.

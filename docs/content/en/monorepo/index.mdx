@@ -1,50 +1,213 @@
+---
+description: "pakAG monorepo structure: pnpm workspaces, package responsibilities, root scripts, TypeScript config, and how to add a new package."
+---
+
 # Monorepo Structure
+
+pakAG is a **pnpm workspace monorepo** with three packages. The root directory does not contain application code — it only holds workspace configuration, the database schema, and root-level scripts.
 
 ## Root layout
 
-The root workspace contains three packages declared in `pnpm-workspace.yaml`:
+```
+erronka2025_js/
+├── pnpm-workspace.yaml        — workspace membership (3 entries)
+├── package.json               — root scripts only, no dependencies
+├── schema.sql                 — MySQL schema (source of truth)
+├── mocked_data.sql            — Development seed data
+├── backend-js/                — @repo/backend-js  (API, port 3001)
+├── frontend-app/              — @repo/frontend-app (UI, port 3000)
+└── docs/                      — @repo/docs         (this site, port 3002)
+```
 
-- `backend-js`
-- `frontend-app`
-- `docs`
+## Workspace declaration
 
-## Root scripts
+`pnpm-workspace.yaml` declares workspace membership:
 
-From root `package.json`:
+```yaml
+packages:
+  - "backend-js"
+  - "frontend-app"
+  - "docs"
+```
 
-- `pnpm install` installs backend and frontend dependencies via filters.
-- `pnpm backend:dev` runs backend on port `3001`.
-- `pnpm frontend:dev` runs frontend on port `3000`.
-- `pnpm docs:dev` runs docs on port `3002`.
+All three packages are in the root directory (not nested under `packages/`). pnpm treats each directory listed here as a workspace package and hoists their dependencies to `node_modules/` at the root where possible.
+
+## Root `package.json`
+
+```json
+{
+  "name": "mi-monorepo",
+  "private": true,
+  "scripts": {
+    "backend:dev":  "pnpm --filter @repo/backend-js dev -p 3001",
+    "frontend:dev": "pnpm --filter @repo/frontend-app dev -p 3000",
+    "docs:dev":     "pnpm --filter @repo/docs dev -p 3002"
+  }
+}
+```
+
+The root `package.json` has **no runtime dependencies**. All dependencies live in the individual packages. The `private: true` flag prevents accidental publishing.
+
+### Root scripts
+
+| Script | Command | What it does |
+|---|---|---|
+| `pnpm backend:dev` | `pnpm --filter @repo/backend-js dev -p 3001` | Starts the API in dev mode on port 3001 |
+| `pnpm frontend:dev` | `pnpm --filter @repo/frontend-app dev -p 3000` | Starts the UI in dev mode on port 3000 |
+| `pnpm docs:dev` | `pnpm --filter @repo/docs dev -p 3002` | Starts the docs site in dev mode on port 3002 |
+
+`pnpm --filter @repo/<name>` runs the named script in the matching workspace package. The package names are defined in each `package.json` under the `name` field.
+
+> [!TIP]
+> To start all three packages simultaneously, open three terminal tabs and run each script, or use a process manager like `tmux` with three panes. There is no root `dev:all` script — this is intentional: starting only what you need keeps resource usage low.
 
 ## Package responsibilities
 
-### `backend-js`
+### `backend-js` — `@repo/backend-js`
 
-- Next.js app used as API server via Route Handlers.
-- Domain modules under `src/app/api/{auth,users,packages,routes,stops,logs,tracking}`.
-- Shared infrastructure under `src/app/lib` and `src/app/config`.
+**Framework:** Next.js 16 App Router (API only, no UI rendering)  
+**Port:** 3001  
+**Key dependencies:** `mysql2`, `jsonwebtoken`, `bcrypt`, `resend`
 
-### `frontend-app`
+The backend package is a pure API server. Next.js is used exclusively for its Route Handler infrastructure — no pages, no components, no SSR. Every request enters through a `route.ts` file and follows the four-layer pattern: `route → service → repository → DB`.
 
-- Next.js App Router UI.
-- Route groups:
-  - `(auth)` for login,
-  - `(main)` for authenticated app pages,
-  - `(not-found)` for custom 404 route.
-- API integration through `app/lib/api`.
+Key directory structure:
 
-### `docs`
+```
+backend-js/src/
+├── app/
+│   ├── api/
+│   │   ├── auth/       — login, refresh, logout, me, forgotPassword, changePwd, activateAccount
+│   │   ├── users/      — create, list, getById, update, remove, changeMyPwd
+│   │   ├── packages/   — create, list, getById, update, delete, updateStatus, getMyPackages, getDailySummary
+│   │   ├── routes/     — create, getByUserAndDate, getMyDaily, updateStatus, continueFromPast
+│   │   ├── stops/      — reorder, updateArrival
+│   │   ├── logs/       — listAll, listByPackage
+│   │   └── tracking/   — [trackingToken] (public endpoint)
+│   ├── config/
+│   │   ├── envConfig.ts   — all environment variable reads
+│   │   └── dbConfig.ts    — mysql2 connection pool singleton
+│   ├── lib/
+│   │   ├── errors.ts      — domain error classes
+│   │   ├── response.ts    — res.ok / res.created / handleError etc.
+│   │   ├── jwt.ts         — sign / verify / requireAuth
+│   │   ├── dto.ts         — type guards (isString, isEmail, etc.)
+│   │   ├── hashPasword.ts — bcrypt wrapper (note: filename has typo)
+│   │   ├── email/         — Resend email service + templates
+│   │   ├── maps/          — Google Directions / Geocoding wrappers
+│   │   └── packageStatus/ — status transition side effects
+│   └── types/
+│       └── index.ts       — USER_ROLES, PACKAGE_STATUSES, TOKEN_TYPES
+```
 
-- Nextra documentation app.
-- Content pages under `docs/content`.
-- i18n dictionaries under `docs/app/i18n`.
+### `frontend-app` — `@repo/frontend-app`
 
-## Important configuration files
+**Framework:** Next.js 16 App Router  
+**Port:** 3000  
+**Key dependencies:** `@tanstack/react-query`, `axios`, `tailwindcss` 4, `boneyard-js`
 
-- `pnpm-workspace.yaml`: workspace membership.
-- `backend-js/src/app/config/envConfig.ts`: backend env and defaults.
-- `backend-js/src/app/config/dbConfig.ts`: MySQL connection pool.
-- `frontend-app/app/config/envConfig.ts`: frontend API/HERE keys and constants.
-- `frontend-app/next.config.ts`: image host allowlist + allowed dev origins.
-- `docs/next.config.mjs`: Nextra integration.
+The frontend is a Next.js application that acts as a Single Page Application. It uses the App Router for layouts and navigation but does not perform server-side data fetching — all data comes from `backend-js` via Axios.
+
+Route group structure:
+
+```
+frontend-app/app/
+├── (auth)/     — login page (no auth required)
+├── (main)/     — protected app pages (admin and distributor views)
+└── (not-found) — custom 404 route
+```
+
+API integration lives in `app/lib/api/` — one Axios client module per backend resource.
+
+### `docs` — `@repo/docs`
+
+**Framework:** Next.js 16 + Nextra 4  
+**Port:** 3002  
+**Key dependencies:** `nextra`, `nextra-theme-docs`, `@theguild/remark-mermaid`
+
+The docs package is a Nextra-powered documentation site. Content is written in MDX and lives under `docs/content/en/`. The `docs` package is the only package that imports from another workspace package:
+
+```json
+"dependencies": {
+  "@repo/frontend-app": "workspace:*"
+}
+```
+
+This `workspace:*` dependency resolves to the local `frontend-app` package and is used to import UI components into documentation examples.
+
+> [!WARNING]
+> Never import `@repo/backend-js` from `docs`. The backend package uses Node.js-only dependencies (`mysql2`, `bcrypt`) that will break the docs build. If you need to document backend code, copy the snippet directly into the MDX file.
+
+## Inter-package dependencies
+
+```
+backend-js     — no workspace dependencies
+frontend-app   — no workspace dependencies
+docs           — depends on @repo/frontend-app (workspace:*)
+```
+
+At runtime, `backend-js` and `frontend-app` are independent processes communicating over HTTP. There are no TypeScript type imports between them — the HTTP API is the contract.
+
+## TypeScript configuration
+
+Each package has its own `tsconfig.json`. There is no root-level shared TypeScript config. This is intentional: each package has different runtime targets and compiler requirements.
+
+| Package | `target` | Notable settings |
+|---|---|---|
+| `backend-js` | `ES2017` | `moduleResolution: bundler`, path alias `@/` → `./src/` |
+| `frontend-app` | `ES2017` | Next.js defaults + `strict: true` |
+| `docs` | `ES2017` | Next.js defaults |
+
+> [!NOTE]
+> `tsc --noEmit` must pass in `backend-js` at all times. There must be no `any` (explicit or implicit). Run it manually before committing: `pnpm --filter @repo/backend-js exec tsc --noEmit`.
+
+## Environment variables
+
+Each package manages its own environment variables. There is no root `.env` file.
+
+| Package | Environment file | Key variables |
+|---|---|---|
+| `backend-js` | `.env.local` | `MYSQL_*`, `JWT_SECRET`, `RESEND_API_KEY`, `GOOGLE_DIRECTIONS_API_KEY` |
+| `frontend-app` | `.env.local` | `NEXT_PUBLIC_API_URL`, HERE Maps API key |
+| `docs` | n/a | No environment variables required |
+
+Copy `.env.example` from `backend-js/` to `backend-js/.env.local` and fill in all required values before running the backend.
+
+## Database: shared resource
+
+The only shared runtime resource is the **MySQL database**. Both the backend and (indirectly, through the backend API) the frontend operate on the same database. The schema is defined in `schema.sql` at the root of the repository.
+
+> [!WARNING]
+> `schema.sql` creates the database with the name `erronka`. The `.env.example` file shows `MYSQL_DATABASE=pakag`. Verify which name your local and production environments use, and set `MYSQL_DATABASE` accordingly.
+
+## How to add a new package
+
+1. Create a new directory at the root level: `mkdir my-new-package`
+2. Initialize it: `cd my-new-package && pnpm init`
+3. Set the package name following the convention: `"name": "@repo/my-new-package"`
+4. Add the directory to `pnpm-workspace.yaml`:
+   ```yaml
+   packages:
+     - "backend-js"
+     - "frontend-app"
+     - "docs"
+     - "my-new-package"   # ← add this
+   ```
+5. Run `pnpm install` from the root to link the new package.
+6. Add a root script to `package.json` if the package has a dev server.
+
+To depend on the new package from another workspace package:
+
+```json
+"dependencies": {
+  "@repo/my-new-package": "workspace:*"
+}
+```
+
+Then run `pnpm install` again.
+
+## No build orchestration
+
+pakAG does **not** use Turborepo or Nx. See [ADR-004](/architecture/decisions#adr-004-pnpm-workspaces-without-nx-or-turborepo) for the full reasoning. The short version: three packages do not need a build graph — the overhead of configuring a build orchestrator would exceed the benefit.
+
+If the monorepo grows beyond five packages with shared build artifacts, re-evaluate adding Turborepo.

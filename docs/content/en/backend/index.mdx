@@ -1,136 +1,300 @@
-# Backend Documentation
+---
+description: "Complete reference for the pakAG backend: Next.js 15 Route Handlers, MySQL, JWT auth, and the layered architecture pattern."
+---
+
+# Backend — Overview
+
+The pakAG backend is a **Next.js 15 App Router** application that exclusively uses [Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) as its API layer. There are no pages, no React server components serving HTML — only JSON endpoints.
 
 ## Tech stack
 
-- Next.js Route Handlers (`src/app/api/*`)
-- TypeScript
-- MySQL via `mysql2/promise`
-- JWT (`jsonwebtoken`)
-- Email via Resend
-- Google Maps Directions + Geocoding
+| Technology | Role |
+|---|---|
+| **Next.js 15** (App Router) | HTTP server + routing |
+| **TypeScript** | Type safety end-to-end |
+| **mysql2/promise** | MySQL connection pool with prepared statements |
+| **jsonwebtoken** | Access token signing and verification |
+| **bcrypt** | Password hashing |
+| **Resend** | Transactional email (activation, reset, status notifications) |
+| **Google Directions API** | Route optimization and stop ordering |
+| **Google Geocoding API** | Address → lat/lng conversion for package creation |
 
-## API route organization
+## Monorepo location
 
-Domain folders under `backend-js/src/app/api`:
+```
+erronka2025_js/
+├── backend-js/          ← THIS SERVICE
+│   ├── src/app/api/     ← All Route Handlers
+│   ├── src/app/lib/     ← Shared utilities (jwt, errors, response, dto guards)
+│   ├── src/app/config/  ← Environment variables + DB pool singleton
+│   ├── src/app/types/   ← Global domain enums and types
+│   └── schema.sql       ← MySQL schema (source of truth, at repo root)
+├── docs/                ← This documentation site
+├── erronkaFrontend-React/  ← Admin frontend
+└── frontend-app/        ← Distributor mobile app
+```
 
-- `auth`
-- `users`
-- `packages`
-- `routes`
-- `stops`
-- `logs`
-- `tracking`
+## Folder structure per endpoint
 
-Each use-case follows a layered pattern:
+Every use-case lives in its own folder under `src/app/api/{resource}/{action}/`:
 
-- `route.ts` (transport)
-- `dto`/`dtos` (validation)
-- `service` (business logic)
-- `repository` (SQL access)
+```
+src/app/api/users/create/
+├── dtos/
+│   └── createUser.dto.ts    ← validateCreateUserDto(body: unknown): CreateUserDto
+├── repository/
+│   └── user.repo.ts         ← SQL only, prepared statements, no logic
+├── service/
+│   └── user.service.ts      ← Business logic, no SQL
+├── types.ts                 ← CreateUserDto, CreateUserResponse interfaces
+└── route.ts                 ← Orchestrates: requireAuth → validate → service → res.xxx
+```
 
-## DTO validation pattern
+> [!NOTE]
+> The canonical reference implementation is `src/app/api/users/create/`. Read it first when learning the pattern. See [Patterns →](./patterns) for a full walkthrough.
 
-DTO modules validate query/body inputs before service execution and throw `ValidationError` when invalid. Route handlers centralize errors through `handleError` in `lib/response.ts`.
+## API resources
 
-## Service and repository patterns
+### Auth (`/api/auth/`)
 
-- Services coordinate rules, transitions, and side effects.
-- Repositories encapsulate SQL queries and return row-mapped objects.
-- Shared cross-domain behavior is extracted (for example package status side effects).
+| Method | Path | Auth required | Description |
+|---|---|---|---|
+| POST | `/api/auth/login` | — | Credentials → access token (body) + refresh token (HttpOnly cookie) |
+| POST | `/api/auth/refresh` | Cookie `refresh_token` | Rotate refresh token, issue new access token |
+| POST | `/api/auth/logout` | — | Revoke refresh token in DB |
+| GET | `/api/auth/me` | Bearer (any role) | Return authenticated user |
+| POST | `/api/auth/forgotPassword` | — | Send password reset email (always 200, never leaks existence) |
+| POST | `/api/auth/changePwd` | Reset token (query param) | Set new password with valid reset token |
+| POST | `/api/auth/activateAccount` | Activation token (query param) | Set password and activate new account |
 
-## Error handling and response helpers
+### Users (`/api/users/`) — admin only
 
-- Custom errors: `ValidationError`, `UnauthorizedError`, `ForbiddenError`, `NotFoundError`, `ConflictError`.
-- `handleError(tag, error)` maps errors to HTTP status and consistent `{ error }` shape.
-- `res.ok` supports setting/deleting cookies.
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/users/create` | Create user, send activation email |
+| GET | `/api/users/list` | List users with filters |
+| GET | `/api/users/getById` | Get single user |
+| PATCH | `/api/users/update` | Update name/email/role/is_active |
+| DELETE | `/api/users/remove` | Delete user (cannot self-delete) |
+| PATCH | `/api/users/changeMyPwd` | Change own password (any role) |
 
-## Authentication and authorization
+### Packages (`/api/packages/`)
 
-- Access token: Bearer JWT required for protected endpoints.
-- `requireAuth(request, allowedRoles?)` verifies token and optional role constraints.
-- Roles are defined in `src/app/types/index.ts` as `admin` and `distributor`.
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/packages/create` | admin | Create package + geocode address + issue tracking token + send email |
+| GET | `/api/packages/list` | admin | List with filters and pagination |
+| GET | `/api/packages/getById` | admin | Get single package |
+| PATCH | `/api/packages/update` | admin | Update package and address |
+| DELETE | `/api/packages/delete` | admin | Delete package |
+| PATCH | `/api/packages/updateStatus` | distributor | Advance status(es) + write log + send email |
+| GET | `/api/packages/getMyPackages` | distributor | Packages assigned to the authenticated distributor |
+| GET | `/api/packages/getDailySummary` | admin | Count by status for today |
 
-## MySQL connection
+### Routes (`/api/routes/`)
 
-`connect()` lazily builds and caches a pool with connection limit 10. SSL is enabled with `rejectUnauthorized: false` in current implementation.
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/routes/create` | admin | Create optimized route via Google Directions |
+| GET | `/api/routes/getByUserAndDate` | admin | Route by user + date |
+| GET | `/api/routes/getMyDaily` | distributor | Authenticated distributor's route for today |
+| PATCH | `/api/routes/updateStatus/[id]` | admin \| distributor | Update route status |
+| GET | `/api/routes/continueFromPast` | distributor | Check if there is a pending past route |
+| POST | `/api/routes/continueFromPast` | distributor | Migrate pending stops from yesterday to today |
 
-## Email sending
+### Stops (`/api/stops/`)
 
-Resend client is used for:
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| PATCH | `/api/stops/reorder` | admin | Reorder stops within a route |
+| PATCH | `/api/stops/updateArrival` | distributor | Record actual arrival time for own stop |
 
-- account activation,
-- password reset,
-- login notifications,
-- package status emails (pending/assigned/in_transit/delivered/undelivered/failed).
+### Logs (`/api/logs/`)
 
-## Google Directions integration
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/logs/listAll` | admin | All status-change logs with filters |
+| GET | `/api/logs/listByPackage` | admin | Logs for a specific package |
 
-`mapsService.optimizeRoute`:
+### Tracking — public (`/api/tracking/`)
 
-- calls Google Directions with waypoints optimization,
-- computes ordered stops + ETA,
-- returns total duration and distance.
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/tracking/[trackingToken]` | — | Public package status lookup by opaque token |
 
-`mapsService.geocodeAddress` converts textual address into coordinates for package creation/update flows.
+## The 4-layer pattern
+
+Every endpoint is split across exactly four layers. This is a hard constraint, not a style preference:
+
+```
+request
+   │
+   ▼
+route.ts          ← HTTP boundary: parse, orchestrate, return
+   │
+   ▼
+dtos/             ← Validation only: typed interface + guard functions
+   │
+   ▼
+service/          ← Business logic: rules, transitions, side effects
+   │
+   ▼
+repository/       ← SQL only: prepared statements, row mapping
+   │
+   ▼
+MySQL
+```
+
+**The rules:**
+- No SQL in `route.ts`, `service/`, or `dtos/`
+- No business logic in `repository/`
+- No Zod — validation uses guard functions from `src/app/lib/dto.ts`
+- `route.ts` always follows: `requireAuth → validateDto → service → res.xxx`
+
+See [Patterns →](./patterns) for detailed code examples.
+
+## Error types
+
+All errors are thrown from `src/app/lib/errors.ts` and caught by `handleError` in `route.ts`:
+
+| Class | HTTP status | When to throw |
+|---|---|---|
+| `ValidationError` | 400 | Invalid or missing input in a DTO |
+| `UnauthorizedError` | 401 | Missing or invalid token |
+| `ForbiddenError` | 403 | Valid token but insufficient role |
+| `NotFoundError` | 404 | Resource does not exist |
+| `ConflictError` | 409 | Duplicate resource (e.g. email already taken) |
+
+```ts
+// route.ts always ends with:
+} catch (error) {
+  return handleError('[POST /api/users/create]', error);
+}
+```
+
+Never throw `new Error()` directly. Always use one of the five typed error classes.
+
+## Shared library modules
+
+| File | What it provides |
+|---|---|
+| `lib/errors.ts` | Five typed error classes |
+| `lib/response.ts` | `res.ok / created / noContent / validationError / notFound / conflict / serverError` + `handleError()` |
+| `lib/jwt.ts` | `signAccessToken`, `verifyAccessToken`, `extractBearerToken`, `requireAuth` |
+| `lib/dto.ts` | Type guards: `isString`, `isEmail`, `isNumber`, `isBoolean`, `isPositiveInteger`, `isUserRole`, `isPackageValidStatus` |
+| `lib/hashPasword.ts` | `encryptPwd`, `verifyPassword` (bcrypt) |
+| `lib/email/email.service.ts` | Send transactional emails via Resend |
+| `lib/maps/maps.service.ts` | `optimizeRoute`, `geocodeAddress` (Google APIs) |
+| `lib/packageStatus/packageStatusSideEffects.service.ts` | Insert status log + dispatch tracking email |
+
+## Global domain types
+
+Defined in `src/app/types/index.ts`:
+
+```ts
+export const USER_ROLES = {
+  admin: 'admin',
+  distributor: 'distributor',
+} as const;
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
+export const PACKAGE_STATUSES = {
+  pending: 'pending',
+  assigned: 'assigned',
+  in_transit: 'in_transit',
+  delivered: 'delivered',
+  undelivered: 'undelivered',
+  failed: 'failed',
+} as const;
+export type PackageStatus = (typeof PACKAGE_STATUSES)[keyof typeof PACKAGE_STATUSES];
+
+export const TOKEN_TYPES = {
+  refresh_token: 'refresh_token',
+  tracking_token: 'tracking_token',
+  reset_pwd_token: 'reset_pwd_token',
+  activate_account_token: 'activate_account_token',
+} as const;
+```
+
+## Environment variables
+
+Copy `.env.example` to `.env.local` and fill in all values before running:
+
+```env
+# Database
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=yourpassword
+MYSQL_DATABASE=erronka
+MYSQL_PORT=3306
+
+# JWT
+JWT_SECRET=<minimum-32-char-random-secret>
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_DAYS=7
+
+# Email
+RESEND_API_KEY=re_xxxx
+
+# Google Maps
+GOOGLE_DIRECTIONS_API_KEY=AIzaSy_xxxx
+
+# URLs for email links
+TRACKING_BASE_URL=https://yourhost.example/tracking/
+RESET_BASE_URL=https://yourhost.example/resetPassword/
+
+# Tokens
+TRACKING_EXPIRES_DAYS=30
+
+# Users
+DEFAULT_USER_PASSWORD=ChangeMe123!
+```
+
+> [!WARNING]
+> `JWT_SECRET` and `DEFAULT_USER_PASSWORD` have insecure hardcoded fallbacks in the current codebase. **Always set these explicitly in production.** The fallback secrets are public in the repository and cannot be trusted.
+
+> [!NOTE]
+> The `schema.sql` at the repository root creates the database as `erronka`. The `.env.example` shows `pakag`. Use the name that matches your actual MySQL database — both names appear in different places.
+
+## MySQL connection pool
+
+`src/app/config/dbConfig.ts` exposes a single `connect()` function that lazily initializes a `mysql2` connection pool (limit: 10). All repositories call `await connect()` to acquire the pool.
+
+SSL is enabled with `rejectUnauthorized: false`. This is appropriate for development with self-signed certificates; review for production.
 
 ## Package status side effects
 
-`applyPackageStatusSideEffects` performs:
+Every time a package status changes, `applyPackageStatusSideEffects` runs automatically:
 
-1. log insertion into `package_status_logs`,
-2. tracking token lookup,
-3. distributor name lookup,
-4. status email dispatch to recipients.
+1. Inserts a row into `package_status_logs`
+2. Looks up the package's tracking token
+3. Looks up the assigned distributor's name
+4. Dispatches a status email to the recipient
 
-## Tracking links
+The allowed transitions are:
 
-Tracking tokens are stored in `tokens` table with type `tracking_token`, linked to package, and used by public endpoint:
+```
+pending     → assigned
+assigned    → in_transit
+in_transit  → delivered
+in_transit  → undelivered
+in_transit  → failed
+```
 
-- `GET /api/tracking/:trackingToken`
+## Route optimization flow
 
-## Reset password flow
+When an admin creates a route (`POST /api/routes/create`):
 
-1. `POST /api/auth/forgotPassword` creates/revokes reset token and sends email.
-2. `PATCH /api/auth/changePwd`:
-   - with token only: validation check,
-   - with `newPassword`: updates password, activates user, revokes reset/activation tokens.
+1. Verifies the target user has role `distributor`
+2. Merges **carryover packages** (assigned packages from previous days for that distributor)
+3. Combined list is capped at 20 stops
+4. Calls Google Directions API with `optimize:true` to reorder waypoints
+5. Computes `estimated_arrival` per stop from the response legs
+6. Inserts the route and stop rows, updates `estimated_delivery` on each package
+7. Returns the ordered route with total distance and duration
 
-## Account activation flow
+## Further reading
 
-User creation triggers activation email generation through `sendActivationEmailService`. Activation token type is `activate_account_token` and is validated by the same `changePwd` token-verification mechanism.
-
-> [!WARNING]
-> Activation URL currently reuses `RESET_BASE_URL` in code. Keep this in mind when configuring email links.
-
-## Logs
-
-Status changes are written to `package_status_logs` and exposed through:
-
-- `GET /api/logs/listAll` (admin)
-- `GET /api/logs/listByPackage` (admin/distributor)
-
-## Routes/stops/packages domain flows
-
-### Route creation
-
-- Validates distributor user and one-route-per-day constraint.
-- Merges carryover packages.
-- Optimizes stop order via Google Directions.
-- Inserts route + route stops and updates package estimated delivery.
-
-### Route continuation from past
-
-- Finds latest pending past route.
-- Migrates pending stops to current-day route.
-- Moves pending package statuses to `in_transit` with side effects.
-
-### Stop operations
-
-- `PATCH /api/stops/reorder` (admin) updates stop order.
-- `PATCH /api/stops/updateArrival` (distributor) stamps `actual_arrival` for own stop.
-
-### Package operations
-
-- Create package + address + tracking token + initial log + tracking email.
-- Update package details/address and related side effects.
-- Distributor status transitions enforced with allowed-transition matrix and route-order constraints.
+- [Layered architecture patterns →](./patterns) — full DTO/repository/service/route walkthrough with real code
+- [Auth flow →](./auth-flow) — JWT lifecycle, token table, refresh rotation, logout
+- [Security →](../security) — known vulnerabilities and remediation steps
