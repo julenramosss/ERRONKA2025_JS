@@ -50,11 +50,17 @@ function filePathToDocPath(filePath, lang) {
   return `/${lang}/${rel}`;
 }
 
+function docPathToCategory(docPath, lang) {
+  const normalizedPath = docPath.replace(/^\/+/, "");
+  const segments = normalizedPath.split("/").filter(Boolean);
+  return segments[0] === lang && segments[1] ? segments[1] : "root";
+}
+
 const langs = fs
   .readdirSync(contentDir)
   .filter((d) => fs.statSync(path.join(contentDir, d)).isDirectory());
 
-/** @type {Record<string, Array<{title:string,path:string,content:string,excerpt:string}>>} */
+/** @type {Record<string, Array<{title:string,path:string,category:string,content:string,excerpt:string}>>} */
 const index = {};
 
 for (const lang of langs) {
@@ -63,9 +69,16 @@ for (const lang of langs) {
     const raw = fs.readFileSync(file, "utf-8");
     const title = extractTitle(raw, file);
     const content = stripMdx(raw);
+    const docPath = filePathToDocPath(file, lang);
     const excerpt =
       content.slice(0, 160).trim() + (content.length > 160 ? "…" : "");
-    return { title, path: filePathToDocPath(file, lang), content, excerpt };
+    return {
+      title,
+      path: docPath,
+      category: docPathToCategory(docPath, lang),
+      content,
+      excerpt,
+    };
   });
 }
 

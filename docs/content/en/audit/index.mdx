@@ -2,6 +2,22 @@
 
 This page tracks the current state of the documentation site: what was verified, what is still unconfirmed, known risks, and architecture decisions for future maintainers.
 
+## Locale coverage status
+
+The documentation navigation is translated across all supported locales, but the content depth is not yet synchronized. English is the source of truth for the deeper page set.
+
+| Locale | Current coverage | Recommended next action |
+| --- | --- | --- |
+| EN | Complete/deeper coverage: 31 MDX pages, including detailed child pages for API, backend, frontend, and architecture topics | Keep EN as the verified source while parity work continues |
+| ES | Partial/top-level coverage: 17 MDX pages, mostly section landing pages | Translate or summarize the missing EN child pages, or mark each pending translation explicitly |
+| EUS | Partial/top-level coverage: 17 MDX pages, mostly section landing pages | Translate or summarize the missing EN child pages, or mark each pending translation explicitly |
+
+### Locale parity checklist
+
+- When adding a docs page, create or update the corresponding `en`, `es`, and `eus` content in the same change.
+- If a full translation is not ready, add the locale page with a translated heading and an explicit `Translation pending` / `Traduccion pendiente` / `Itzulpena pendiente` note.
+- Keep navigation, `_meta.ts` entries, and page links aligned across all three locales.
+
 ## What was verified
 
 The following claims were cross-referenced against the actual codebase under `backend-js/`, `frontend-app/`, and `docs/`:
@@ -67,7 +83,7 @@ The following items could not be confirmed without access to a running environme
 
 1. **Adding a new backend endpoint**: update `docs/content/en/api/index.mdx`. Add request/response examples. Verify from the actual `route.ts` and `dtos/` files. Mark anything unverified with `> [!NOTE] Needs verification`.
 2. **Adding a new frontend page or hook**: update `docs/content/en/frontend/index.mdx`.
-3. **Adding a new doc section**: create `docs/content/en/{section}/index.mdx` and `docs/content/en/{section}/_meta.ts`. Add the section to `docs/content/en/_meta.ts`. Add a nav item in `docs/app/[lang]/layout.tsx` and update all three i18n dictionaries.
-4. **Creating ES/EUS counterparts**: create the content files under `docs/content/es/` and `docs/content/eus/`. If full translation is not complete, add a translated header and mark the page as pending.
+3. **Adding a new doc section or page**: create/update the content in all three locale trees (`docs/content/en/`, `docs/content/es/`, and `docs/content/eus/`) in the same change. If full translation is not complete, add a translated heading and mark the page as `Translation pending`.
+4. **Keeping locale depth aligned**: when EN gets a deeper child page, add matching ES/EUS placeholders or translations so the locale page counts and nav structure do not drift silently.
 5. **Fixing a broken link**: all internal links should be locale-prefixed (e.g. `/en/setup`). Locale-less links also work via middleware redirect, but explicit locale links are preferred.
 6. **Keeping docs truthful**: never document behavior that cannot be verified from the codebase. Use `> [!NOTE]` callouts with "Needs verification" for anything uncertain.

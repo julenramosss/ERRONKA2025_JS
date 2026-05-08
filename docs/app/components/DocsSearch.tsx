@@ -1,13 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-
-export interface SearchEntry {
-  title: string;
-  path: string;
-  content: string;
-  excerpt: string;
-}
+import type { SearchEntry } from '../lib/search-index';
 
 interface SearchResult {
   entry: SearchEntry;

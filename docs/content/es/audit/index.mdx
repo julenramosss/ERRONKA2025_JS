@@ -2,6 +2,22 @@
 
 Esta pagina registra el estado actual del sitio de documentacion: que se verifico, que sigue sin confirmarse, riesgos conocidos y decisiones de arquitectura para futuros mantenedores.
 
+## Estado de cobertura por locale
+
+La navegacion de la documentacion esta traducida en todos los locales soportados, pero la profundidad del contenido todavia no esta sincronizada. Ingles es la fuente de verdad para el conjunto de paginas mas profundo.
+
+| Locale | Cobertura actual | Siguiente accion recomendada |
+| --- | --- | --- |
+| EN | Cobertura completa/mas profunda: 31 paginas MDX, incluyendo paginas hijas detalladas para API, backend, frontend y arquitectura | Mantener EN como fuente verificada mientras avanza el trabajo de paridad |
+| ES | Cobertura parcial/top-level: 17 paginas MDX, principalmente paginas landing de seccion | Traducir o resumir las paginas hijas faltantes de EN, o marcar cada traduccion pendiente explicitamente |
+| EUS | Cobertura parcial/top-level: 17 paginas MDX, principalmente paginas landing de seccion | Traducir o resumir las paginas hijas faltantes de EN, o marcar cada traduccion pendiente explicitamente |
+
+### Checklist de paridad de locales
+
+- Al anadir una pagina de docs, crear o actualizar el contenido correspondiente en `en`, `es` y `eus` dentro del mismo cambio.
+- Si la traduccion completa no esta lista, anadir la pagina del locale con un heading traducido y una nota explicita `Translation pending` / `Traduccion pendiente` / `Itzulpena pendiente`.
+- Mantener alineados la navegacion, las entradas `_meta.ts` y los links de pagina en los tres locales.
+
 ## Que se verifico
 
 Las siguientes afirmaciones se cruzaron contra el codigo real bajo `backend-js/`, `frontend-app/` y `docs/`:
@@ -67,7 +83,7 @@ Los siguientes items no pudieron confirmarse sin acceso a un entorno en ejecucio
 
 1. **Anadir un endpoint backend**: actualizar `docs/content/en/api/index.mdx`. Anadir ejemplos request/response. Verificar desde los `route.ts` y `dtos/` reales. Marcar lo no verificado con `> [!NOTE] Needs verification`.
 2. **Anadir una pagina o hook frontend**: actualizar `docs/content/en/frontend/index.mdx`.
-3. **Anadir una seccion de docs**: crear `docs/content/en/{section}/index.mdx` y `docs/content/en/{section}/_meta.ts`. Anadir la seccion a `docs/content/en/_meta.ts`. Anadir item de nav en `docs/app/[lang]/layout.tsx` y actualizar los tres diccionarios i18n.
-4. **Crear equivalentes ES/EUS**: crear archivos de contenido bajo `docs/content/es/` y `docs/content/eus/`. Si la traduccion completa no esta terminada, anadir cabecera traducida y marcar la pagina como pendiente.
+3. **Anadir una seccion o pagina de docs**: crear/actualizar el contenido en los tres arboles de locale (`docs/content/en/`, `docs/content/es/` y `docs/content/eus/`) en el mismo cambio. Si la traduccion completa no esta terminada, anadir heading traducido y marcar la pagina como `Traduccion pendiente`.
+4. **Mantener alineada la profundidad por locale**: cuando EN reciba una pagina hija mas profunda, anadir placeholders o traducciones equivalentes en ES/EUS para que el conteo de paginas y la estructura de nav no diverjan silenciosamente.
 5. **Arreglar un link roto**: todos los links internos deben llevar prefijo de locale (por ejemplo `/es/setup`). Los links sin locale tambien funcionan via redirect de middleware, pero se prefieren links con locale explicito.
 6. **Mantener docs veraces**: no documentar comportamiento que no pueda verificarse desde el codigo. Usar callouts `> [!NOTE]` con "Needs verification" para cualquier cosa incierta.

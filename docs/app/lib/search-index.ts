@@ -3,6 +3,7 @@ import searchData from './search-data.json';
 export interface SearchEntry {
   title: string;
   path: string;
+  category: string;
   content: string;
   excerpt: string;
 }

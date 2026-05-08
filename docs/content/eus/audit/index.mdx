@@ -2,6 +2,22 @@
 
 Orri honek dokumentazio gunearen uneko egoera jasotzen du: zer egiaztatu den, zer dagoen oraindik baieztatu gabe, arrisku ezagunak eta etorkizuneko mantentzaileentzako arkitektura erabakiak.
 
+## Locale estalduraren egoera
+
+Dokumentazioaren nabigazioa locale guztietan itzulita dago, baina edukien sakonera oraindik ez dago sinkronizatuta. Ingelesezko edukia da orri multzo sakonenaren egiaztatutako iturburua.
+
+| Locale | Uneko estaldura | Gomendatutako hurrengo ekintza |
+| --- | --- | --- |
+| EN | Estaldura osoagoa/sakonagoa: 31 MDX orri, API, backend, frontend eta arkitektura gaien child page xeheekin | EN mantendu egiaztatutako iturburu gisa paritate lana egin bitartean |
+| ES | Estaldura partziala/top-level: 17 MDX orri, batez ere sekzio landing orriak | EN-ko falta diren child page-ak itzuli edo laburtu, edo itzulpen pendientea esplizituki markatu |
+| EUS | Estaldura partziala/top-level: 17 MDX orri, batez ere sekzio landing orriak | EN-ko falta diren child page-ak itzuli edo laburtu, edo itzulpen pendientea esplizituki markatu |
+
+### Locale paritate checklist-a
+
+- Docs orri bat gehitzean, sortu edo eguneratu dagokion edukia `en`, `es` eta `eus` localeetan aldaketa berean.
+- Itzulpen osoa prest ez badago, gehitu locale orria itzulitako heading batekin eta `Translation pending` / `Traduccion pendiente` / `Itzulpena pendiente` ohar esplizituarekin.
+- Mantendu nabigazioa, `_meta.ts` sarrerak eta orri linkak lerrokatuta hiru localeetan.
+
 ## Zer egiaztatu da
 
 Ondorengo baieztapenak `backend-js/`, `frontend-app/` eta `docs/` barruko benetako kodearekin kontrastatu dira:
@@ -67,7 +83,7 @@ Ondorengo elementuak ezin izan dira baieztatu exekuzio ingurune bat edo integraz
 
 1. **Backend endpoint berri bat gehitzean**: eguneratu `docs/content/en/api/index.mdx`. Gehitu request/response adibideak. Egiaztatu benetako `route.ts` eta `dtos/` fitxategietatik. Egiaztatu gabe dagoena markatu `> [!NOTE] Needs verification` erabilita.
 2. **Frontend orri edo hook berri bat gehitzean**: eguneratu `docs/content/en/frontend/index.mdx`.
-3. **Docs atal berri bat gehitzean**: sortu `docs/content/en/{section}/index.mdx` eta `docs/content/en/{section}/_meta.ts`. Gehitu atala `docs/content/en/_meta.ts`-ra. Gehitu nav item bat `docs/app/[lang]/layout.tsx`-n eta eguneratu hiru i18n hiztegiak.
-4. **ES/EUS parekoak sortzean**: sortu edukia `docs/content/es/` eta `docs/content/eus/` azpian. Itzulpen osoa bukatu gabe badago, gehitu goiburu itzulia eta markatu orria pendiente gisa.
+3. **Docs atal edo orri berri bat gehitzean**: sortu/eguneratu edukia hiru locale zuhaitzetan (`docs/content/en/`, `docs/content/es/` eta `docs/content/eus/`) aldaketa berean. Itzulpen osoa bukatu gabe badago, gehitu heading itzulia eta markatu orria `Itzulpena pendiente` gisa.
+4. **Locale sakonera lerrokatuta mantentzean**: EN-k child page sakonago bat jasotzen duenean, gehitu ES/EUS placeholder-ak edo itzulpenak, orri kopurua eta nav egitura isilean ez aldentzeko.
 5. **Link hautsi bat konpontzean**: barne link guztiek locale prefijoa eraman behar dute (adibidez `/eus/setup`). Locale gabeko linkek ere funtzionatzen dute middleware redirect bidez, baina locale esplizitudun linkak hobesten dira.
 6. **Docs-ak egiazko mantentzea**: ez dokumentatu kodetik egiaztatu ezin den jokabiderik. Erabili `> [!NOTE]` callout-ak "Needs verification" testuarekin zalantzazko edozerentzat.
